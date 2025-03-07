@@ -1,0 +1,4 @@
+server nexus
+{
+	host: 'nexus.atomlab.com';
+}

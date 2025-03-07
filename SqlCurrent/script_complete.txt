@@ -1,0 +1,283 @@
+server nexus
+{
+	host: 'nexus.atomlab.com';
+}
+
+server proxima
+{
+	host: 'proxima.atomlab.com';
+}
+
+database nexus_postgres
+{
+	server: nexus;
+	connectionString: 'Server=${nexus.host};database=atomlab';
+	tag: 'desk';
+} 
+
+database proxima_postgres
+{
+	server: nexus;
+	connectionString: 'Server=${proxima.host};database=atomlab';
+	tag: 'dev_environment';
+}
+
+database[] desk_postgreses
+{
+	database: proxima_postgres;
+	database: nexus_postgres;
+} 
+
+version 1.0.0.0
+{
+	name: 'brilliant_sagan';
+	dir: 'version_1.0.0.0';
+	precheck: 'check1.sql';
+	precheck: 'check2.sql';
+	apply: 'apply.sql';
+	check: 'check3.sql';
+	check: 'check4.sql';
+}
+
+upgrade database proxima_postgres to version 1.0.0.0;
+check database proxima_postgres;
+check database proxima_postgres where version 1.0.0.0;
+precheck database proxima_postgres where version 1.0.0.0;
+
+
+upgrade databases to version 1.0.0.0 where name like 'proxima%';
+upgrade databases to version 1.0.0.0 where name matches '^proxima$';
+upgrade proxima_postgres to version 1.0.0.0 where tag in ('desk');
+upgrade proxima_postgres to version 1.0.0.0 where server = nexus;
+upgrade proxima_postgres to version 1.0.0.0 where server = proxima;
+
+
+
+
+upgrade proxima_postgres to version 1.0.0.0 where tag in ('desk');
+
+
+downgrade proxima_postgres to version 1.0.0.0;
+
+
+
+
+build atomlab_webapp;
+build atomlab_webapi;
+build atomlab_xrunner;
+build atomlab_postgres;
+build atomlab_influx;
+
+
+app atomlab_webapp
+{
+	in
+	{
+	};
+	
+	command <<<
+	cd /devRoot
+	npm run build
+	>>>;
+	
+	
+	out
+	{
+	}
+}
+
+
+
+build file e in series
+{
+}
+
+file e
+{
+	meta
+	{
+		string title = 'experiment_name';
+		string author = '';
+		string createdFromTemplate = '';
+		string abstract = '';
+		string experimentId = '';
+		datetime createDate = '2015-01-01';
+	};
+
+	in
+	{
+		int startTemp = 100;
+		int stopTemp = 200;
+		credentials creds1;
+		instrument dsc1 = {url = 'https://192.168.10.11'; credentials = creds1};
+		instrument dsc2;
+		credentials creds2;
+	};
+	
+	credentials creds1
+	{
+		userName = 'cory.walker';
+		password = 'abc';
+		apiKey = '';
+	};
+	
+	instrument dsc1
+	{
+		url = 'https://192.168.10.11';
+		credentials = creds;
+	};
+	
+	sample s1
+	{
+		position = 3;
+		instrument = dsc1;
+	};
+	
+	measurement =
+	{
+		procedure = heatCoolHeat;
+		
+	};
+	
+	measurement measurement1 = procedure heatCoolHeat on sample s1
+	{
+		start = 100;
+		mid = 300;
+		end = 100;
+	};
+	
+	run measurement1 in series
+	run procedure heatCoolHeat on sample s1
+	
+	
+	
+	run procedure heatCoolHeat against sample s1 in series
+	{
+		start = 100;
+		mid = 300;
+		end = 100;
+	};
+	
+	foreach (instrument currentInstrument in [dsc1, dsc2]) in parallel
+	{
+		foreach (sample currentSample in sampleSet1) in series
+		{
+			
+		}
+	}
+	
+	
+	
+	foreach (sample currentSample in sampleSet1) in parallel 
+	{
+		foreach 
+	
+	
+		run measurement heatCoolHeat against sample currentSample on instrument dsc1
+		{
+			start = 100;
+			mid = 300;
+			end = 100;
+		};
+	};
+	
+	foreach in parallel ()
+	{
+		
+	
+	}
+	
+	
+	foreach (instrument currentInstrument in [dsc1, dsc2]) 
+	
+	foreach (sample currentSample in samples)
+	{
+		foreach (instrument currentInstrument in [dsc1, dsc2])
+		{
+			foreach (measurement currentMeasurement in [heatCoolHeat])
+			{
+				run measurement currentMeasurement against sample currentSample on currentInstrument dsc1
+				{
+					start = 100;
+					mid = 300;
+					end = 100;
+				};
+			}
+		}
+	};
+
+	out
+	{
+		string message = heatCoolHeat.message;
+	};
+}
+
+
+procedure heatCoolHeat
+{
+	meta
+	{
+		instrument i;
+		sample s;
+	};
+
+	requirements
+	{
+		i.model == 'dsc2500p';
+		i.platform == "dsc";
+		i.accessories contains 'usb_photo';
+	};
+
+	in
+	{
+		int startTemp;
+		int midTemp;
+		int endTemp;
+		int sample;
+	};
+	
+	call loadSample on instrument i
+	{
+		position = s.position;
+	}
+
+	call rampTemperature as segment1 on instrument i
+	{
+		temp = startTemp;
+	};
+
+	call rampTemperature as segment2 on instrument i
+	{
+		temp = midTemp;
+	};
+
+	call rampTemperature as segment3 on instrument i
+	{
+		temp = endTemp;
+	};
+	
+	out
+	{
+		Array[Float] temps = dsc.output;
+	}
+}
+
+task rampTemperature
+{
+	requirements
+	{
+		i.exact_instrument_model = 'dsc2500p',
+		i.platform = "dsc",
+		i.accessory = "usb_photo"
+	};
+}
+
+task loadSample
+{
+	requirements
+	{
+		i.exact_instrument_model = 'dsc2500p',
+		i.platform = "dsc",
+		i.accessory = "usb_photo"
+	};
+}
