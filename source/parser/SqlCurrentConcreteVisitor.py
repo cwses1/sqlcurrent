@@ -40,10 +40,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		currentSymbolTable = self._symbolTableManager.getCurrentSymbolTable()
 		print(SymbolTableFormatter.formatText(currentSymbolTable))
 
-	def visitStatement(self, ctx:SqlCurrentParser.StatementContext):
-		print('visitStatement')
-		return self.visitChildren(ctx)
-
 	def visitServerStatement(self, ctx:SqlCurrentParser.ServerStatementContext):
 		#
 		# serverStatement: 'server' SYMBOL_ID '{' serverPropList '}';
@@ -118,3 +114,28 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			contextSymbol.setProp(propName, propValue)
 		else:
 			contextSymbol.appendProp(propName, propValue)
+
+	def visitDatabaseStatement(self, ctx:SqlCurrentParser.DatabaseStatementContext):
+		#
+		# databaseStatement: 'database' SYMBOL_ID '{' databasePropList '}';
+		#
+		return self.visitChildren(ctx)
+
+	def visitDatabasePropList(self, ctx:SqlCurrentParser.DatabasePropListContext):
+		#
+		# databasePropList: (databaseProp ';')+;
+		#
+		return self.visitChildren(ctx)
+
+	def visitDatabaseProp(self, ctx:SqlCurrentParser.DatabasePropContext):
+		#
+		# databaseProp: SYMBOL_ID ':' expr
+		#	| 'server' ':' SYMBOL_ID;
+		#
+		return self.visitChildren(ctx)
+
+	def visitExpr(self, ctx:SqlCurrentParser.ExprContext):
+		#
+		# expr: STRING_LITERAL | SYMBOL_ID;
+		#
+		return self.visitChildren(ctx)

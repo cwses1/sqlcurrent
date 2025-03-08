@@ -1,9 +1,3 @@
-database proxima_postgres
-{
-	server: nexus;
-	connectionString: 'Server=${proxima.host};database=atomlab';
-	tag: 'dev_env';
-}
 database nexus_postgres
 {
 	type: 'postgres';

@@ -13,3 +13,13 @@ server proxima
 	tag: 'location_newcastle';
 	tag: 'location_lab';
 }
+
+database proxima_embedded
+{
+	type: 'postgres';
+	server: proxima;
+	connString: 'Server=${proxima};database=embedded';
+	environment: 'dev';
+	tag: 'location_newcastle';
+	tag: 'location_lab';
+}

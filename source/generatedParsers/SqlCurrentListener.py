@@ -53,5 +53,41 @@ class SqlCurrentListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SqlCurrentParser#databaseStatement.
+    def enterDatabaseStatement(self, ctx:SqlCurrentParser.DatabaseStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#databaseStatement.
+    def exitDatabaseStatement(self, ctx:SqlCurrentParser.DatabaseStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#databasePropList.
+    def enterDatabasePropList(self, ctx:SqlCurrentParser.DatabasePropListContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#databasePropList.
+    def exitDatabasePropList(self, ctx:SqlCurrentParser.DatabasePropListContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#databaseProp.
+    def enterDatabaseProp(self, ctx:SqlCurrentParser.DatabasePropContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#databaseProp.
+    def exitDatabaseProp(self, ctx:SqlCurrentParser.DatabasePropContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#expr.
+    def enterExpr(self, ctx:SqlCurrentParser.ExprContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#expr.
+    def exitExpr(self, ctx:SqlCurrentParser.ExprContext):
+        pass
+
+
 
 del SqlCurrentParser

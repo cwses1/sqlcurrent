@@ -1,4 +1,11 @@
-## About
+# SQL Current
+
+## Summary
+
+This is a database migrations system.  To perform a migration (a change to the database schema) you do the following:
+* Describe 
+
+## Motivation
 
 I've never found a good, easy-to-use database migrations tool that is made for a hardcore database administrator.  It's difficult and time-consuming to write and structure schema change scripts.  But it doesn't have to be that way.  What if we could update our QA databases just by writing this:
 
@@ -30,7 +37,7 @@ If you want to compile the grammar, you will need Java.
 
 ### Server Definition
 
-A server is a first-class construct in SQLCurrent.  A server identifies a host on your network.  The server itself may host any number of database services in your topology, which is turn may host any number of physical databases.  Define a server as follows:
+A server is a first-class construct in SQL Current.  A server identifies a host on your network.  The server itself may host any number of database services in your topology, which is turn may host any number of physical databases.  Define a server as follows:
 
 	server nexus
 	{
