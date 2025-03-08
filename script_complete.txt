@@ -14,13 +14,29 @@ version 1.0.0.0
 	precheck: 'check1.sql';
 	precheck: 'check2.sql';
 	apply: 'apply.sql';
+	revert: 'revert.sql';
 	check: 'check3.sql';
 	check: 'check4.sql';
 }
 
-upgrade database proxima_postgres to version 1.0.0.0;
+update database proxima_embedded to version 1.0.0.0;
+update proxima_embedded to version 1.0.0.0;
+
+update databases to version 1.0.0.0 where name = proxima_embedded;
+update databases to version 1.0.0.0 where server = nexus;
+update databases to version 1.0.0.0 where environment = 'qa';
+update databases to version 1.0.0.0 where tag in 'location_newcastle';
+update databases to version 1.0.0.0 where tag matches regex '_newcastle$';
+update databases to version 1.0.0.0 where tag like 'location%';
+
 check database proxima_postgres;
-check database proxima_postgres where version 1.0.0.0;
+check proxima_postgres;
+check databases where name = proxima_embedded;
+check databases where name matches 'proxima_embedded';
+check databases where name in 'proxima_embedded';
+
+
+ where version 1.0.0.0;
 precheck database proxima_postgres where version 1.0.0.0;
 
 

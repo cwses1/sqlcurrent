@@ -1,19 +1,26 @@
 # SQL Current
 
-## Summary
-
-This is a database migrations system.  To perform a migration (a change to the database schema) you do the following:
-* Describe 
-
 ## Motivation
 
-I've never found a good, easy-to-use database migrations tool that is made for a hardcore database administrator.  It's difficult and time-consuming to write and structure schema change scripts.  But it doesn't have to be that way.  What if we could update our QA databases just by writing this:
+I've never found a good, easy-to-use database migrations tool that is made for a hardcore database administrator.  Everything seems to be code-driven, expensive, or confusing to use.
+
+It's difficult and time-consuming to write and structure schema change scripts.
+
+But it doesn't have to be that way.  What if we could update our QA databases just by writing this:
 
 	update databases
 	to version 1.0.0.0
 	where environment = 'qa';
 
 If you want something like this, then this is the tool for you.  This is a database migrations scripting engine that lets you manage the changes in multiple databases across several servers using a SQL-like language.
+
+## Summary
+
+This is a database migrations system.  To perform a migration (a change to the database schema) you do the following:
+* Describe your database topology by defining servers and databases.
+* Define your versions by binding them to your SQL change scripts.  You write the check, apply and revert scripts.
+* 
+
 
 ## Setup
 
