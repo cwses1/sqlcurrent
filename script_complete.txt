@@ -1,31 +1,16 @@
-server nexus
-{
-	host: 'nexus.atomlab.com';
-}
-
-server proxima
-{
-	host: 'proxima.atomlab.com';
-}
-
-database nexus_postgres
-{
-	server: nexus;
-	connectionString: 'Server=${nexus.host};database=atomlab';
-	tag: 'desk';
-} 
-
 database proxima_postgres
 {
 	server: nexus;
 	connectionString: 'Server=${proxima.host};database=atomlab';
-	tag: 'dev_environment';
+	tag: 'dev_env';
 }
-
-database[] desk_postgreses
+database nexus_postgres
 {
-	database: proxima_postgres;
-	database: nexus_postgres;
+	type: 'postgres';
+	connString: 'Server=${nexus};database=atomlab';
+	environment: 'dev';
+	tag: 'env_dev';
+	tag: 'nexus';
 } 
 
 version 1.0.0.0

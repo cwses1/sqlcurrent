@@ -1,0 +1,15 @@
+server nexus
+{
+	host: 'nexus.sqlcurrent.com';
+	environment: 'dev';
+	tag: 'location_newcastle';
+	tag: 'owner_cory';
+}
+
+server proxima
+{
+	host: 'proxima.sqlcurrent.com';
+	environment: 'qa';
+	tag: 'location_newcastle';
+	tag: 'location_lab';
+}
