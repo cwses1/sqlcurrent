@@ -1,11 +1,15 @@
 class DatabaseReference ():
 	propNames = {}
-	propNames['type'] = 1
-	propNames['connString'] = 1
-	propNames['environment'] = 1
-	propNames['environment'] = 1
+	propNames['type'] = 0
+	propNames['server'] = 0
+	propNames['connString'] = 0
+	propNames['environment'] = 0
 	propNames['tag'] = 1
 
 	@staticmethod
 	def propNameSupported (name:str) -> bool:
-		return name in propNames
+		return name in DatabaseReference.propNames
+
+	@staticmethod
+	def propCanHaveMultipleValues (name:str) -> bool:
+		return DatabaseReference.propNames[name]

@@ -7,7 +7,6 @@ class SymbolTypeFormatter ():
     formatMap[SymbolType.String] = 'String'
     formatMap[SymbolType.Server] = 'Server'
     formatMap[SymbolType.Database] = 'Database'
-    formatMap[SymbolType.DatabaseList] = 'DatabaseList'
     formatMap[SymbolType.DatabaseServerType] = 'DatabaseServerType'
 
     @staticmethod

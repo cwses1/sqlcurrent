@@ -1,26 +1,24 @@
 # SQL Current
 
+SQL Current is a database migrations tool with the following properties:
+* Everything is driven by DDL or DML scripts (SQL or otherwise) that you write.
+* It's open-source and totally free to use for any purpose.
+
 ## Motivation
 
-I've never found a good, easy-to-use database migrations tool that is made for a hardcore database administrator.  Everything seems to be code-driven, expensive, or confusing to use.
+I've never found a perfect migrations tool made for database administrators.  Everything seems to be code-driven, script-generating, tied to an ORM, expensive, or confusing to use.  So DBAs just don't use anything.  But that doesn't solve any problem because it's still difficult and time-consuming to write and structure schema change scripts.
 
-It's difficult and time-consuming to write and structure schema change scripts.
+It doesn't have to be that way.  Let's say we wanted to update our QA environment databases.  What if we could just write this:
 
-But it doesn't have to be that way.  What if we could update our QA databases just by writing this:
+	update databases to version 1.0.13.1 where environment = 'qa';
 
-	update databases
-	to version 1.0.0.0
-	where environment = 'qa';
-
-If you want something like this, then this is the tool for you.  This is a database migrations scripting engine that lets you manage the changes in multiple databases across several servers using a SQL-like language.
+If you want something like this, then this is the tool for you.  SQL Current is a database migrations scripting engine that lets you manage the changes in multiple databases across several servers using a SQL-like language.
 
 ## Summary
 
-This is a database migrations system.  To perform a migration (a change to the database schema) you do the following:
+SQL Current is a database migrations tool.  To perform a migration (a change to the database schema) you do the following:
 * Describe your database topology by defining servers and databases.
 * Define your versions by binding them to your SQL change scripts.  You write the check, apply and revert scripts.
-* 
-
 
 ## Setup
 

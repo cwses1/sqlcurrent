@@ -14,12 +14,26 @@ server proxima
 	tag: 'location_lab';
 }
 
+database nexus_embedded
+{
+	type: 'postgres';
+	server: nexus;
+	connString: 'Server=${nexus.host};database=embedded';
+	environment: 'dev';
+	tag: 'location_us';
+	tag: 'location_de';
+	tag: 'location_newcastle';
+	tag: 'location_engineering_cory_desk';
+}
+
 database proxima_embedded
 {
 	type: 'postgres';
 	server: proxima;
-	connString: 'Server=${proxima};database=embedded';
+	connString: 'Server=${proxima.host};database=embedded';
 	environment: 'dev';
+	tag: 'location_us';
+	tag: 'location_de';
 	tag: 'location_newcastle';
-	tag: 'location_lab';
+	tag: 'location_engineering_lab';
 }

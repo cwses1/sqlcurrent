@@ -1,12 +1,3 @@
-database nexus_postgres
-{
-	type: 'postgres';
-	connString: 'Server=${nexus};database=atomlab';
-	environment: 'dev';
-	tag: 'env_dev';
-	tag: 'nexus';
-} 
-
 version 1.0.0.0
 {
 	name: 'brilliant_sagan';

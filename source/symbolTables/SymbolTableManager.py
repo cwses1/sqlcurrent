@@ -16,7 +16,7 @@ class SymbolTableManager ():
     def getCurrentSymbolTable (self) -> SymbolTable:
         return self.symbolTableStack[len(self.symbolTableStack) - 1]
 
-    def hasSymbol (self, symbolName:str) -> bool:
+    def hasSymbolByName (self, symbolName:str) -> bool:
         tempSymbolTableStack:List[SymbolTable] = []
         result:bool = False
 
@@ -32,13 +32,12 @@ class SymbolTableManager ():
             self.symbolTableStack.append(tempSymbolTableStack.pop())
 
         return result
-
     
-    def getSymbol (self, symbolName) -> Symbol:
+    def getSymbolByName (self, symbolName) -> Symbol:
         tempSymbolTableStack:List[SymbolTable] = []
         result:SymbolTable = None
 
-        while self.symbolTableStack.len() > 0:
+        while len(self.symbolTableStack) > 0:
             currentSymbolTable:SymbolTable = self.symbolTableStack.pop()
             tempSymbolTableStack.append(currentSymbolTable)
 
@@ -46,7 +45,7 @@ class SymbolTableManager ():
                 result = currentSymbolTable.getSymbolByName(symbolName)
                 break
         
-        while tempSymbolTableStack.len() > 0:
+        while len(tempSymbolTableStack) > 0:
             self.symbolTableStack.append(tempSymbolTableStack.pop())
 
         return result

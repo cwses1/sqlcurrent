@@ -1,4 +1,4 @@
-class MatchUnderscoreError (Exception):
+class VisitorMethodRuleFalloffError (Exception):
 
 	def __init__ (self, message:str):
 		self.message = message
