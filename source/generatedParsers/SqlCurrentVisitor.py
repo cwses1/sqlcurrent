@@ -54,5 +54,20 @@ class SqlCurrentVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SqlCurrentParser#versionStatement.
+    def visitVersionStatement(self, ctx:SqlCurrentParser.VersionStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#versionPropList.
+    def visitVersionPropList(self, ctx:SqlCurrentParser.VersionPropListContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#versionProp.
+    def visitVersionProp(self, ctx:SqlCurrentParser.VersionPropContext):
+        return self.visitChildren(ctx)
+
+
 
 del SqlCurrentParser

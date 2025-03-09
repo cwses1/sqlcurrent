@@ -1,39 +1,128 @@
+solution project1
+{
+	name: '';
+	desc: '';
+}
+
+branch operational
+{
+	name: '';
+	desc: '';
+	solution: project1;
+}
+
+branch analytical
+{
+	name: '';
+	desc: '';
+	solution: project1;
+}
+
 server nexus
 {
-	host: 'nexus.sqlcurrent.com';
-	environment: 'dev';
+	solution: project1; // DEFAULT DATABASE SOLUTION
+	environment: dev; // DEFAULT DATABASE ENVIRONMENT
+	host: 'nexus.sqlcurrent.com'; // SHARED SERVER ADDRESS FOR DATABASES.  USED BY THE CONNECTION STRING.
+	tag: 'location_us'; // DEFAULT TAG FOR DATABASES
+	tag: 'location_de';
 	tag: 'location_newcastle';
-	tag: 'owner_cory';
+	tag: 'location_engineering';
+	tag: 'location_my_desk';
 }
 
 server proxima
 {
-	host: 'proxima.sqlcurrent.com';
+	solution: 'project1';
 	environment: 'qa';
+	host: 'proxima.sqlcurrent.com';
+	tag: 'location_us';
+	tag: 'location_de';
 	tag: 'location_newcastle';
-	tag: 'location_lab';
+	tag: 'location_engineering';
+	tag: 'location_rdlab';
 }
 
-database nexus_embedded
+database nexus_opdb
 {
+	solution: 'project1';
+	branch: 'operational';
 	type: 'postgres';
-	server: nexus;
+	server: 'nexus';
 	connString: 'Server=${nexus.host};database=embedded';
+	create: 'create.sql';
 	environment: 'dev';
 	tag: 'location_us';
 	tag: 'location_de';
 	tag: 'location_newcastle';
-	tag: 'location_engineering_cory_desk';
+	tag: 'location_engineering';
+	tag: 'location_my_desk';
 }
 
-database proxima_embedded
+database nexus_analyticaldb
 {
+	solution: 'project1';
+	type: 'influx';
+	server: nexus;
+	connString: 'Server=${nexus.host};database=embedded';
+	environment: 'dev';
+	branch: 'analytical';
+	tag: 'location_us';
+	tag: 'location_de';
+	tag: 'location_newcastle';
+	tag: 'location_engineering';
+	tag: 'location_my_desk';
+}
+
+database proxima_opdb
+{
+	solution: 'project1';
 	type: 'postgres';
 	server: proxima;
 	connString: 'Server=${proxima.host};database=embedded';
 	environment: 'dev';
+	branch: 'operational';
 	tag: 'location_us';
 	tag: 'location_de';
 	tag: 'location_newcastle';
-	tag: 'location_engineering_lab';
+	tag: 'location_engineering';
+	tag: 'location_rdlab';
+}
+
+database proxima_analyticaldb
+{
+	solution: 'project1';
+	type: 'influx';
+	server: proxima;
+	connString: 'Server=${proxima.host};database=embedded';
+	environment: 'dev';
+	branch: 'analytical';
+	tag: 'location_us';
+	tag: 'location_de';
+	tag: 'location_newcastle';
+	tag: 'location_engineering';
+	tag: 'location_rdlab';
+}
+
+version 1.0.0.0 for branch operational
+{
+	name: 'brilliant_dog';
+	dir: '/operational/version_1.0.0.0';
+	precheck: 'check1.sql';
+	precheck: 'check2.sql';
+	apply: 'apply.sql';
+	revert: 'revert.sql';
+	check: 'check3.sql';
+	check: 'check4.sql';
+}
+
+version 1.0.0.0 for branch analytical
+{
+	name: 'brilliant_dog';
+	dir: '/analytical/version_1.0.0.0';
+	precheck: 'check1.txt';
+	precheck: 'check2.txt';
+	apply: 'apply.txt';
+	revert: 'revert.txt';
+	check: 'check3.txt';
+	check: 'check4.txt';
 }

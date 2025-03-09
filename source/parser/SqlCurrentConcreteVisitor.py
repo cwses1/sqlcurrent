@@ -208,3 +208,46 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			return self._symbolTableManager.getCurrentSymbolTable().getSymbolByName(ctx.SYMBOL_ID().getText())
 		else:
 			raise VisitorMethodRuleFalloffError('visitExpr')
+
+	def visitVersionStatement(self, ctx:SqlCurrentParser.VersionStatementContext):
+		#
+		# versionStatement: 'version' VERSION_ID '{' versionPropList '}';
+		#
+		print('visitVersionStatement')
+
+		#
+		# GET THE SYMBOL NAME.
+		#
+		symbolName = ctx.getChild(1)
+
+		#
+		# CREATE THE SYMBOL.
+		#
+		createdSymbol = Symbol(symbolName, SymbolType.Database)
+
+		#
+		# ADD THE SYMBOL TO THE TABLE.
+		#
+		currentSymbolTable = self._symbolTableManager.getCurrentSymbolTable()
+		currentSymbolTable.insertSymbol(createdSymbol)
+
+		#
+		# PUSH SYMBOL CONTEXT.
+		#
+		currentSymbolTable.contextSymbol = createdSymbol
+
+		#
+		# POPULATE SYMBOL PROPERTIES.
+		#
+		self.visitDatabasePropList(ctx)
+
+		#
+		# POP SYMBOL CONTEXT.
+		#
+		currentSymbolTable.contextSymbol = None
+
+	def visitVersionProp(self, ctx:SqlCurrentParser.VersionPropContext):
+		#
+		# versionProp: SYMBOL_ID ':' STRING_LITERAL;
+		#
+		return self.visitChildren(ctx)

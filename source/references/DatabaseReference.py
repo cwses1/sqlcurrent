@@ -5,6 +5,7 @@ class DatabaseReference ():
 	propNames['connString'] = 0
 	propNames['environment'] = 0
 	propNames['tag'] = 1
+	propNames['create'] = 0
 
 	@staticmethod
 	def propNameSupported (name:str) -> bool:

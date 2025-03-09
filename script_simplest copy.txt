@@ -1,0 +1,13 @@
+database nexus
+{
+	type: 'postgres';
+	connString: 'Server=127.0.0.1;database=embedded';
+	create: 'create.sql';
+}
+
+version 1.0.0.0
+{
+	apply: 'version_1.sql';
+}
+
+update nexus;

@@ -1,0 +1,8 @@
+database nexus
+{
+	type: 'postgres';
+	connString: 'Server=127.0.0.1;database=embedded';
+	create: 'create.sql';
+}
+
+create nexus;

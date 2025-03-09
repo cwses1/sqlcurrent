@@ -89,5 +89,32 @@ class SqlCurrentListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SqlCurrentParser#versionStatement.
+    def enterVersionStatement(self, ctx:SqlCurrentParser.VersionStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#versionStatement.
+    def exitVersionStatement(self, ctx:SqlCurrentParser.VersionStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#versionPropList.
+    def enterVersionPropList(self, ctx:SqlCurrentParser.VersionPropListContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#versionPropList.
+    def exitVersionPropList(self, ctx:SqlCurrentParser.VersionPropListContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#versionProp.
+    def enterVersionProp(self, ctx:SqlCurrentParser.VersionPropContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#versionProp.
+    def exitVersionProp(self, ctx:SqlCurrentParser.VersionPropContext):
+        pass
+
+
 
 del SqlCurrentParser

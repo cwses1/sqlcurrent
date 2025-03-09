@@ -1,17 +1,10 @@
-version 1.0.0.0
-{
-	name: 'brilliant_sagan';
-	dir: 'version_1.0.0.0';
-	precheck: 'check1.sql';
-	precheck: 'check2.sql';
-	apply: 'apply.sql';
-	revert: 'revert.sql';
-	check: 'check3.sql';
-	check: 'check4.sql';
-}
+
+create nexus;
 
 update database proxima_embedded to version 1.0.0.0;
 update proxima_embedded to version 1.0.0.0;
+update proxima_embedded;
+
 
 update databases to version 1.0.0.0 where name = proxima_embedded;
 update databases to version 1.0.0.0 where server = nexus;
