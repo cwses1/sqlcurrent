@@ -7,8 +7,7 @@ class SymbolTableFormatter ():
 
 	@staticmethod
 	def formatText (symbolTable:SymbolTable) -> str:
-		text = 'SymbolTable (name: {})\n'.format(symbolTable.name)
-		text += '-----\n'
+		text = 'SymbolTable: {}\n'.format(symbolTable.name)
 
 		for symbol in symbolTable.getAllSymbols():
 			text += SymbolFormatter.formatText(symbol)

@@ -116,5 +116,95 @@ class SqlCurrentListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SqlCurrentParser#createDatabaseStatement.
+    def enterCreateDatabaseStatement(self, ctx:SqlCurrentParser.CreateDatabaseStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#createDatabaseStatement.
+    def exitCreateDatabaseStatement(self, ctx:SqlCurrentParser.CreateDatabaseStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#solutionStatement.
+    def enterSolutionStatement(self, ctx:SqlCurrentParser.SolutionStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#solutionStatement.
+    def exitSolutionStatement(self, ctx:SqlCurrentParser.SolutionStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#solutionPropList.
+    def enterSolutionPropList(self, ctx:SqlCurrentParser.SolutionPropListContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#solutionPropList.
+    def exitSolutionPropList(self, ctx:SqlCurrentParser.SolutionPropListContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#solutionProp.
+    def enterSolutionProp(self, ctx:SqlCurrentParser.SolutionPropContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#solutionProp.
+    def exitSolutionProp(self, ctx:SqlCurrentParser.SolutionPropContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#branchStatement.
+    def enterBranchStatement(self, ctx:SqlCurrentParser.BranchStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#branchStatement.
+    def exitBranchStatement(self, ctx:SqlCurrentParser.BranchStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#branchPropList.
+    def enterBranchPropList(self, ctx:SqlCurrentParser.BranchPropListContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#branchPropList.
+    def exitBranchPropList(self, ctx:SqlCurrentParser.BranchPropListContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#branchProp.
+    def enterBranchProp(self, ctx:SqlCurrentParser.BranchPropContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#branchProp.
+    def exitBranchProp(self, ctx:SqlCurrentParser.BranchPropContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#environmentStatement.
+    def enterEnvironmentStatement(self, ctx:SqlCurrentParser.EnvironmentStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#environmentStatement.
+    def exitEnvironmentStatement(self, ctx:SqlCurrentParser.EnvironmentStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#environmentPropList.
+    def enterEnvironmentPropList(self, ctx:SqlCurrentParser.EnvironmentPropListContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#environmentPropList.
+    def exitEnvironmentPropList(self, ctx:SqlCurrentParser.EnvironmentPropListContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#environmentProp.
+    def enterEnvironmentProp(self, ctx:SqlCurrentParser.EnvironmentPropContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#environmentProp.
+    def exitEnvironmentProp(self, ctx:SqlCurrentParser.EnvironmentPropContext):
+        pass
+
+
 
 del SqlCurrentParser

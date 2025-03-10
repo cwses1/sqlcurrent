@@ -3,6 +3,8 @@ class ServerReference ():
 	propNames['host'] = False
 	propNames['environment'] = False
 	propNames['tag'] = True
+	propNames['solution'] = False
+	propNames['branch'] = False
 
 	@staticmethod
 	def propNameSupported (name:str) -> bool:

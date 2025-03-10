@@ -20,7 +20,7 @@ class SymbolTableManager ():
         tempSymbolTableStack:List[SymbolTable] = []
         result:bool = False
 
-        while self.symbolTableStack.len() > 0:
+        while len(self.symbolTableStack) > 0:
             currentSymbolTable:SymbolTable = self.symbolTableStack.pop()
             tempSymbolTableStack.append(currentSymbolTable)
 
@@ -28,7 +28,7 @@ class SymbolTableManager ():
                 result = True
                 break
         
-        while tempSymbolTableStack.len() > 0:
+        while len(tempSymbolTableStack) > 0:
             self.symbolTableStack.append(tempSymbolTableStack.pop())
 
         return result

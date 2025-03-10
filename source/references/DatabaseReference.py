@@ -1,11 +1,13 @@
 class DatabaseReference ():
 	propNames = {}
-	propNames['type'] = 0
-	propNames['server'] = 0
-	propNames['connString'] = 0
-	propNames['environment'] = 0
-	propNames['tag'] = 1
-	propNames['create'] = 0
+	propNames['type'] = False
+	propNames['server'] = False
+	propNames['connString'] = False
+	propNames['environment'] = False
+	propNames['tag'] = True
+	propNames['create'] = False
+	propNames['solution'] = False
+	propNames['branch'] = False
 
 	@staticmethod
 	def propNameSupported (name:str) -> bool:

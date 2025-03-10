@@ -1,27 +1,58 @@
 solution project1
 {
+	name: 'Project 1';
+	desc: 'Description of Project 1';
+	tag: 'tag1';
+}
+
+/*
+branch topology
+{
+	solution: project1;
 	name: '';
 	desc: '';
 }
 
 branch operational
 {
+	solution: project1;
 	name: '';
 	desc: '';
-	solution: project1;
 }
 
 branch analytical
 {
+	solution: project1;
 	name: '';
 	desc: '';
+}
+
+environment dev
+{
 	solution: project1;
+	name: '';
+	desc: '';
+}
+
+environment qa
+{
+	solution: project1;
+	name: '';
+	desc: '';
+}
+
+environment prod
+{
+	solution: project1;
+	name: '';
+	desc: '';
 }
 
 server nexus
 {
 	solution: project1; // DEFAULT DATABASE SOLUTION
 	environment: dev; // DEFAULT DATABASE ENVIRONMENT
+	branch: operational; // DEFAULT BRANCH FOR ALL DATABASES HOSTED BY THIS SERVER.
 	host: 'nexus.sqlcurrent.com'; // SHARED SERVER ADDRESS FOR DATABASES.  USED BY THE CONNECTION STRING.
 	tag: 'location_us'; // DEFAULT TAG FOR DATABASES
 	tag: 'location_de';
@@ -32,8 +63,8 @@ server nexus
 
 server proxima
 {
-	solution: 'project1';
-	environment: 'qa';
+	solution: project1;
+	environment: qa;
 	host: 'proxima.sqlcurrent.com';
 	tag: 'location_us';
 	tag: 'location_de';
@@ -44,13 +75,13 @@ server proxima
 
 database nexus_opdb
 {
-	solution: 'project1';
-	branch: 'operational';
-	type: 'postgres';
-	server: 'nexus';
+	solution: project1;
+	branch: operational;
+	type: postgres;
+	server: nexus;
 	connString: 'Server=${nexus.host};database=embedded';
 	create: 'create.sql';
-	environment: 'dev';
+	environment: dev;
 	tag: 'location_us';
 	tag: 'location_de';
 	tag: 'location_newcastle';
@@ -60,12 +91,12 @@ database nexus_opdb
 
 database nexus_analyticaldb
 {
-	solution: 'project1';
+	solution: project1;
 	type: 'influx';
 	server: nexus;
 	connString: 'Server=${nexus.host};database=embedded';
-	environment: 'dev';
-	branch: 'analytical';
+	environment: dev;
+	branch: analytical;
 	tag: 'location_us';
 	tag: 'location_de';
 	tag: 'location_newcastle';
@@ -75,12 +106,12 @@ database nexus_analyticaldb
 
 database proxima_opdb
 {
-	solution: 'project1';
+	solution: project1;
 	type: 'postgres';
 	server: proxima;
 	connString: 'Server=${proxima.host};database=embedded';
-	environment: 'dev';
-	branch: 'operational';
+	environment: dev;
+	branch: operational;
 	tag: 'location_us';
 	tag: 'location_de';
 	tag: 'location_newcastle';
@@ -90,12 +121,12 @@ database proxima_opdb
 
 database proxima_analyticaldb
 {
-	solution: 'project1';
+	solution: project1;
 	type: 'influx';
 	server: proxima;
 	connString: 'Server=${proxima.host};database=embedded';
-	environment: 'dev';
-	branch: 'analytical';
+	environment: dev;
+	branch: analytical;
 	tag: 'location_us';
 	tag: 'location_de';
 	tag: 'location_newcastle';
@@ -105,6 +136,7 @@ database proxima_analyticaldb
 
 version 1.0.0.0 for branch operational
 {
+	branch: operational;
 	name: 'brilliant_dog';
 	dir: '/operational/version_1.0.0.0';
 	precheck: 'check1.sql';
@@ -117,6 +149,7 @@ version 1.0.0.0 for branch operational
 
 version 1.0.0.0 for branch analytical
 {
+	branch: analytical;
 	name: 'brilliant_dog';
 	dir: '/analytical/version_1.0.0.0';
 	precheck: 'check1.txt';
@@ -126,3 +159,4 @@ version 1.0.0.0 for branch analytical
 	check: 'check3.txt';
 	check: 'check4.txt';
 }
+*/

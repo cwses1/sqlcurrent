@@ -69,5 +69,55 @@ class SqlCurrentVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SqlCurrentParser#createDatabaseStatement.
+    def visitCreateDatabaseStatement(self, ctx:SqlCurrentParser.CreateDatabaseStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#solutionStatement.
+    def visitSolutionStatement(self, ctx:SqlCurrentParser.SolutionStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#solutionPropList.
+    def visitSolutionPropList(self, ctx:SqlCurrentParser.SolutionPropListContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#solutionProp.
+    def visitSolutionProp(self, ctx:SqlCurrentParser.SolutionPropContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#branchStatement.
+    def visitBranchStatement(self, ctx:SqlCurrentParser.BranchStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#branchPropList.
+    def visitBranchPropList(self, ctx:SqlCurrentParser.BranchPropListContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#branchProp.
+    def visitBranchProp(self, ctx:SqlCurrentParser.BranchPropContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#environmentStatement.
+    def visitEnvironmentStatement(self, ctx:SqlCurrentParser.EnvironmentStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#environmentPropList.
+    def visitEnvironmentPropList(self, ctx:SqlCurrentParser.EnvironmentPropListContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#environmentProp.
+    def visitEnvironmentProp(self, ctx:SqlCurrentParser.EnvironmentPropContext):
+        return self.visitChildren(ctx)
+
+
 
 del SqlCurrentParser
