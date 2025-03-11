@@ -12,6 +12,7 @@ class SymbolTypeFormatter ():
 	formatMap[SymbolType.Branch] = 'Branch'
 	formatMap[SymbolType.Environment] = 'Environment'
 	formatMap[SymbolType.ReferenceToSymbol] = 'ReferenceToSymbol'
+	formatMap[SymbolType.List] = 'List'
 
 	@staticmethod
 	def format (param: int) -> str:

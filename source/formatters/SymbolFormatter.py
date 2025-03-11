@@ -3,16 +3,20 @@ from symbolTables.Symbol import *
 from .SymbolTypeFormatter import *
 from common.SymbolType import *
 from .ExprFormatter import *
+from .SymbolFormatter import *
 
 class SymbolFormatter ():
 
 	@staticmethod
 	def formatText (symbol:Symbol) -> str:
-		text:str = 'Symbol: {} | {}'.format(symbol.name, SymbolTypeFormatter.format(symbol.type))
-		print(text)
+		text:str = '{} : {}\n'.format(symbol.name, SymbolTypeFormatter.format(symbol.type))
+		text += '{\n'
 
 		for currentKey in symbol.props.keys():
-			text += ' | {}: {}'.format(currentKey, ExprFormatter.formatText(symbol.props[currentKey]))
+			propExpr = symbol.props[currentKey]
+			propExprType = propExpr.type
+			propExprTypeString = SymbolTypeFormatter.format(propExpr.type)
+			text += '\t{}:{} = {}\n'.format(currentKey, propExprTypeString, ExprFormatter.formatText(propExpr))
 
-		text += '\n'
+		text += '}\n'
 		return text

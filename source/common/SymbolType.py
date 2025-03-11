@@ -8,3 +8,4 @@ class SymbolType ():
 	Branch = 6
 	Environment = 7
 	ReferenceToSymbol = 8
+	List = 9

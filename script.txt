@@ -5,13 +5,15 @@ solution project1
 	tag: 'tag1';
 }
 
-/*
 branch topology
 {
 	solution: project1;
 	name: '';
 	desc: '';
+	tag: 'tag2';
+	tag: 'tag3';
 }
+
 
 branch operational
 {
@@ -34,6 +36,7 @@ environment dev
 	desc: '';
 }
 
+/*
 environment qa
 {
 	solution: project1;

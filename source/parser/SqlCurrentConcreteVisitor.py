@@ -1,6 +1,5 @@
 import sys
 from typing import Dict
-
 from generatedParsers.SqlCurrentVisitor import *
 from generatedParsers.SqlCurrentParser import *
 from symbolTables.SymbolTableManager import *
@@ -26,6 +25,8 @@ from exceptions.SymbolNotFoundError import *
 from references.SolutionReference import *
 from validators.SolutionPropNameValidator import *
 from validators.SolutionValueValidator import *
+from validators.BranchPropNameValidator import *
+from validators.BranchValueValidator import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -40,11 +41,8 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 	def visitSqlCurrentScript(self, ctx:SqlCurrentParser.SqlCurrentScriptContext):
 		print('visitSqlCurrentScript')
-
 		self.visitChildren(ctx)
-
-		currentSymbolTable = self._symbolTableManager.getCurrentSymbolTable()
-		print(SymbolTableFormatter.formatText(currentSymbolTable))
+		print(SymbolTableFormatter.formatText(self._symbolTableManager.getCurrentSymbolTable()))
 
 	def visitServerStatement(self, ctx:SqlCurrentParser.ServerStatementContext):
 		#
@@ -55,7 +53,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# GET THE SYMBOL NAME.
 		#
-		symbolName = ctx.getChild(1)
+		symbolName = ctx.getChild(1).getText()
 
 		#
 		# CREATE THE SYMBOL.
@@ -130,7 +128,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# GET THE SYMBOL NAME.
 		#
-		symbolName = ctx.getChild(1)
+		symbolName = ctx.getChild(1).getText()
 
 		#
 		# CREATE THE SYMBOL.
@@ -213,20 +211,15 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			expr.value = StringLiteralFormatter.format(ctx.STRING_LITERAL().getText())
 		elif (ctx.SYMBOL_ID() != None):
 			symbolName = ctx.SYMBOL_ID().getText()
-			print('symbolName: {}'.format(symbolName))
-
 			if self._symbolTableManager.hasSymbolByName(symbolName):
 				symbol = self._symbolTableManager.getSymbolByName(symbolName)
-				print('symbol: {}'.format(symbol))
-
-				expr.type = symbol.type
-				expr.value = symbol.value
+				expr.name = symbol.name
+				expr.value = symbol
+				expr.type = SymbolType.ReferenceToSymbol
 			else:
 				raise SymbolNotFoundError(symbolName)
 		else:
 			raise VisitorMethodRuleFalloffError('visitExpr')
-
-		print(ExprFormatter.formatText(expr))
 
 		return expr
 
@@ -239,7 +232,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# GET THE SYMBOL NAME.
 		#
-		symbolName = ctx.getChild(1)
+		symbolName = ctx.getChild(1).getText()
 
 		#
 		# CREATE THE SYMBOL.
@@ -273,7 +266,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		return self.visitChildren(ctx)
 
-	# Visit a parse tree produced by SqlCurrentParser#createDatabaseStatement.
 	def visitCreateDatabaseStatement(self, ctx:SqlCurrentParser.CreateDatabaseStatementContext):
 		return self.visitChildren(ctx)
 
@@ -286,7 +278,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# GET THE SYMBOL NAME.
 		#
-		symbolName = ctx.getChild(1)
+		symbolName = ctx.getChild(1).getText()
 
 		#
 		# CREATE THE SYMBOL.
@@ -352,32 +344,84 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		else:
 			contextSymbol.appendProp(propName, propExpr)
 
-
-	# Visit a parse tree produced by SqlCurrentParser#branchStatement.
 	def visitBranchStatement(self, ctx:SqlCurrentParser.BranchStatementContext):
-		return self.visitChildren(ctx)
+		#
+		# branchStatement: 'branch' SYMBOL_ID '{' branchPropList '}';
+		#
+		print('visitBranchStatement')
 
+		#
+		# GET THE SYMBOL NAME.
+		#
+		symbolName = ctx.getChild(1).getText()
 
-	# Visit a parse tree produced by SqlCurrentParser#branchPropList.
-	def visitBranchPropList(self, ctx:SqlCurrentParser.BranchPropListContext):
-		return self.visitChildren(ctx)
+		#
+		# CREATE THE SYMBOL.
+		#
+		createdSymbol = Symbol(symbolName, SymbolType.Branch)
 
+		#
+		# ADD THE SYMBOL TO THE TABLE.
+		#
+		currentSymbolTable = self._symbolTableManager.getCurrentSymbolTable()
+		currentSymbolTable.insertSymbol(createdSymbol)
 
-	# Visit a parse tree produced by SqlCurrentParser#branchProp.
+		#
+		# PUSH SYMBOL CONTEXT.
+		#
+		currentSymbolTable.contextSymbol = createdSymbol
+
+		#
+		# POPULATE SYMBOL PROPERTIES.
+		#
+		self.visitChildren(ctx)
+
+		#
+		# POP SYMBOL CONTEXT.
+		#
+		currentSymbolTable.contextSymbol = None
+
 	def visitBranchProp(self, ctx:SqlCurrentParser.BranchPropContext):
-		return self.visitChildren(ctx)
+		#
+		# branchProp: (SYMBOL_ID | 'solution') ':' expr;
+		#
+		print('visitBranchProp')
+		self._symbolTableManager.getCurrentSymbolTable()
 
+		#
+		# GET THE PROPERTY NAME.
+		#
+		propName = ctx.getChild(0).getText()
 
-	# Visit a parse tree produced by SqlCurrentParser#environmentStatement.
+		#
+		# VALIDATE THE PROPERTY NAME.
+		#
+		if BranchPropNameValidator.isNotValid(propName):
+			raise PropNameNotValidError(SymbolTypeFormatter.format(SymbolType.Branch), propName)
+
+		#
+		# GET THE PROPERTY EXPRESSION VALUE.
+		#
+		propExpr = self.visitChildren(ctx)
+
+		#
+		# VALIDATE THE PROPERTY EXPRESSION VALUE.
+		#
+		if BranchValueValidator.isNotValid(propName, propExpr):
+			raise PropValueNotValidError(SymbolTypeFormatter.format(SymbolType.Branch), propName, propExpr)
+
+		#
+		# SET THE PROPERTY ON THE SYMBOL.
+		#
+		contextSymbol = self._symbolTableManager.getCurrentSymbolTable().contextSymbol
+
+		if not BranchReference.propCanHaveMultipleValues(propName):
+			contextSymbol.setProp(propName, propExpr)
+		else:
+			contextSymbol.appendProp(propName, propExpr)
+
 	def visitEnvironmentStatement(self, ctx:SqlCurrentParser.EnvironmentStatementContext):
 		return self.visitChildren(ctx)
 
-
-	# Visit a parse tree produced by SqlCurrentParser#environmentPropList.
-	def visitEnvironmentPropList(self, ctx:SqlCurrentParser.EnvironmentPropListContext):
-		return self.visitChildren(ctx)
-
-
-	# Visit a parse tree produced by SqlCurrentParser#environmentProp.
 	def visitEnvironmentProp(self, ctx:SqlCurrentParser.EnvironmentPropContext):
 		return self.visitChildren(ctx)

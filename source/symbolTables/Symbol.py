@@ -14,8 +14,12 @@ class Symbol ():
 
 	def appendProp (self, name:str, expr:Expr) -> None:
 		if not self.hasProp(name):
-			self.props[name] = []
-		self.props[name].append(expr)
+			createdExpr = Expr()
+			createdExpr.name = name
+			createdExpr.type = SymbolType.List
+			createdExpr.value = []
+			self.props[name] = createdExpr
+		self.props[name].value.append(expr)
 
 	def hasProp (self, name:str) -> None:
 		return name in self.props
