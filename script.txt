@@ -14,7 +14,6 @@ branch topology
 	tag: 'tag3';
 }
 
-
 branch operational
 {
 	solution: project1;
@@ -32,11 +31,12 @@ branch analytical
 environment dev
 {
 	solution: project1;
-	name: '';
+	name: 'DEV Environment';
 	desc: '';
+	tag: 'env_tag5';
+	tag: 'env_tag10';
 }
 
-/*
 environment qa
 {
 	solution: project1;
@@ -80,7 +80,7 @@ database nexus_opdb
 {
 	solution: project1;
 	branch: operational;
-	type: postgres;
+	//type: postgres;
 	server: nexus;
 	connString: 'Server=${nexus.host};database=embedded';
 	create: 'create.sql';
@@ -95,7 +95,7 @@ database nexus_opdb
 database nexus_analyticaldb
 {
 	solution: project1;
-	type: 'influx';
+	//type: 'influx';
 	server: nexus;
 	connString: 'Server=${nexus.host};database=embedded';
 	environment: dev;
@@ -110,7 +110,7 @@ database nexus_analyticaldb
 database proxima_opdb
 {
 	solution: project1;
-	type: 'postgres';
+	//type: 'postgres';
 	server: proxima;
 	connString: 'Server=${proxima.host};database=embedded';
 	environment: dev;
@@ -125,7 +125,7 @@ database proxima_opdb
 database proxima_analyticaldb
 {
 	solution: project1;
-	type: 'influx';
+	//type: 'influx';
 	server: proxima;
 	connString: 'Server=${proxima.host};database=embedded';
 	environment: dev;
@@ -137,6 +137,7 @@ database proxima_analyticaldb
 	tag: 'location_rdlab';
 }
 
+/*
 version 1.0.0.0 for branch operational
 {
 	branch: operational;

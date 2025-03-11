@@ -9,7 +9,7 @@ class SymbolFormatter ():
 
 	@staticmethod
 	def formatText (symbol:Symbol) -> str:
-		text:str = '{} : {}\n'.format(symbol.name, SymbolTypeFormatter.format(symbol.type))
+		text:str = '{}:{}\n'.format(symbol.name, SymbolTypeFormatter.format(symbol.type))
 		text += '{\n'
 
 		for currentKey in symbol.props.keys():

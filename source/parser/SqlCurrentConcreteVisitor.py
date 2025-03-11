@@ -27,6 +27,9 @@ from validators.SolutionPropNameValidator import *
 from validators.SolutionValueValidator import *
 from validators.BranchPropNameValidator import *
 from validators.BranchValueValidator import *
+from validators.EnvironmentPropNameValidator import *
+from validators.EnvironmentValueValidator import *
+from references.EnvironmentReference import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -421,7 +424,77 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			contextSymbol.appendProp(propName, propExpr)
 
 	def visitEnvironmentStatement(self, ctx:SqlCurrentParser.EnvironmentStatementContext):
-		return self.visitChildren(ctx)
+		#
+		# environmentStatement: 'environment' SYMBOL_ID '{' environmentPropList '}';
+		#
+		print('visitEnvironmentStatement')
+
+		#
+		# GET THE SYMBOL NAME.
+		#
+		symbolName = ctx.getChild(1).getText()
+
+		#
+		# CREATE THE SYMBOL.
+		#
+		createdSymbol = Symbol(symbolName, SymbolType.Environment)
+
+		#
+		# ADD THE SYMBOL TO THE TABLE.
+		#
+		currentSymbolTable = self._symbolTableManager.getCurrentSymbolTable()
+		currentSymbolTable.insertSymbol(createdSymbol)
+
+		#
+		# PUSH SYMBOL CONTEXT.
+		#
+		currentSymbolTable.contextSymbol = createdSymbol
+
+		#
+		# POPULATE SYMBOL PROPERTIES.
+		#
+		self.visitChildren(ctx)
+
+		#
+		# POP SYMBOL CONTEXT.
+		#
+		currentSymbolTable.contextSymbol = None
 
 	def visitEnvironmentProp(self, ctx:SqlCurrentParser.EnvironmentPropContext):
-		return self.visitChildren(ctx)
+		#
+		# environmentProp: (SYMBOL_ID | 'solution') ':' expr;
+		#
+		print('visitEnvironmentProp')
+		self._symbolTableManager.getCurrentSymbolTable()
+
+		#
+		# GET THE PROPERTY NAME.
+		#
+		propName = ctx.getChild(0).getText()
+
+		#
+		# VALIDATE THE PROPERTY NAME.
+		#
+		if EnvironmentPropNameValidator.isNotValid(propName):
+			raise PropNameNotValidError(SymbolTypeFormatter.format(SymbolType.Environment), propName)
+
+		#
+		# GET THE PROPERTY EXPRESSION VALUE.
+		#
+		propExpr = self.visitChildren(ctx)
+
+		#
+		# VALIDATE THE PROPERTY EXPRESSION VALUE.
+		#
+		if EnvironmentValueValidator.isNotValid(propName, propExpr):
+			raise PropValueNotValidError(SymbolTypeFormatter.format(SymbolType.Environment), propName, propExpr)
+
+		#
+		# SET THE PROPERTY ON THE SYMBOL.
+		#
+		contextSymbol = self._symbolTableManager.getCurrentSymbolTable().contextSymbol
+
+		if not EnvironmentReference.propCanHaveMultipleValues(propName):
+			contextSymbol.setProp(propName, propExpr)
+		else:
+			contextSymbol.appendProp(propName, propExpr)
