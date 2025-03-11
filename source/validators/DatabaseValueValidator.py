@@ -13,7 +13,7 @@ class DatabaseValueValidator ():
 	@staticmethod
 	def isNotValid (name:str, value:str) -> bool:
 		match name:
-			case 'type':
+			case 'driver':
 				return DatabaseTypeValueValidator.isNotValid(value)
 			case 'server':
 				return DatabaseServerValueValidator.isNotValid(value)

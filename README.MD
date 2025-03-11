@@ -66,5 +66,11 @@ A database is a single physical container of your data.  You must tell SQLCurren
 		tag: 'env_dev';
 	} 
 
-
 ### Database Group Definition
+
+## Other Tools
+* Goose https://github.com/pressly/goose
+* DbUp https://dbup.readthedocs.io/en/latest/
+* Liquibase https://www.liquibase.com - Fake open source tool hidden behind a bunch of pricing pages.  Requires getting Java and sued by Oracle.
+* https://github.com/sqlalchemy/alembic
+* https://github.com/golang-migrate/migrate

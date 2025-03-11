@@ -20,6 +20,8 @@ class ExprFormatter ():
 			text += ']:{}'.format(SymbolTypeFormatter.format(expr.type))
 		elif expr.type == SymbolType.ReferenceToSymbol:
 			text += '{}:{}'.format(expr.name, SymbolTypeFormatter.format(expr.value.type))
+		elif expr.type == SymbolType.Int32:
+			text += '{}:{}'.format(expr.value, SymbolTypeFormatter.format(expr.type))
 		else:
 			text += '\'{}\':{}'.format(expr.value, SymbolTypeFormatter.format(expr.type))
 

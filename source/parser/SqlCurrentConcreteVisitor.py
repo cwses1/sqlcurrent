@@ -30,6 +30,9 @@ from validators.BranchValueValidator import *
 from validators.EnvironmentPropNameValidator import *
 from validators.EnvironmentValueValidator import *
 from references.EnvironmentReference import *
+from references.VersionReference import *
+from validators.VersionPropNameValidator import *
+from validators.VersionValueValidator import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -45,7 +48,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 	def visitSqlCurrentScript(self, ctx:SqlCurrentParser.SqlCurrentScriptContext):
 		print('visitSqlCurrentScript')
 		self.visitChildren(ctx)
-		print(SymbolTableFormatter.formatText(self._symbolTableManager.getCurrentSymbolTable()))
 
 	def visitServerStatement(self, ctx:SqlCurrentParser.ServerStatementContext):
 		#
@@ -228,19 +230,58 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 	def visitVersionStatement(self, ctx:SqlCurrentParser.VersionStatementContext):
 		#
-		# versionStatement: 'version' VERSION_ID '{' versionPropList '}';
+		# versionStatement: 'version' VERSION_ID ('for' 'branch' expr)? '{' versionPropList '}';
 		#
 		print('visitVersionStatement')
 
 		#
-		# GET THE SYMBOL NAME.
+		# DETERMINE THE BRANCH NAME.  IF NO NAME IS GIVEN THEN WE USE 'default'.
 		#
-		symbolName = ctx.getChild(1).getText()
+		branchName = 'default'
+
+		if ctx.expr() != None:
+			branchExpr = self.visitExpr(ctx.expr())
+
+			if branchExpr.type == SymbolType.String:
+				branchName = branchExpr.value
+			elif branchExpr.type == SymbolType.ReferenceToSymbol:
+				branchName = branchExpr.name
+			else:
+				raise VisitorMethodRuleFalloffError('Could not determine branch name.')
+
+		#
+		# CONSTRUCT THE SYMBOL NAME.
+		#
+		versionStr = ctx.VERSION_ID().getText()
+		symbolName = branchName + '_' + versionStr
 
 		#
 		# CREATE THE SYMBOL.
 		#
-		createdSymbol = Symbol(symbolName, SymbolType.Database)
+		createdSymbol = Symbol(symbolName, SymbolType.Version)
+
+		#
+		# ADD THE MAJOR, MINOR, AND PATCH PROPERTIES.
+		#
+		majorStr, minorStr, patchStr = versionStr.split('.')
+
+		majorExpr = Expr()
+		majorExpr.name = 'major'
+		majorExpr.type = SymbolType.Int32
+		majorExpr.value = int(majorStr)
+		createdSymbol.setProp('major', majorExpr)
+
+		minorExpr = Expr()
+		minorExpr.name = 'minor'
+		minorExpr.type = SymbolType.Int32
+		minorExpr.value = int(minorStr)
+		createdSymbol.setProp('minor', minorExpr)
+
+		patchExpr = Expr()
+		patchExpr.name = 'patch'
+		patchExpr.type = SymbolType.Int32
+		patchExpr.value = int(patchStr)
+		createdSymbol.setProp('patch', patchExpr)
 
 		#
 		# ADD THE SYMBOL TO THE TABLE.
@@ -256,7 +297,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# POPULATE SYMBOL PROPERTIES.
 		#
-		self.visitDatabasePropList(ctx)
+		self.visitChildren(ctx)
 
 		#
 		# POP SYMBOL CONTEXT.
@@ -265,12 +306,56 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 	def visitVersionProp(self, ctx:SqlCurrentParser.VersionPropContext):
 		#
-		# versionProp: SYMBOL_ID ':' STRING_LITERAL;
+		# versionProp: (SYMBOL_ID | 'branch') ':' expr;
 		#
-		return self.visitChildren(ctx)
+		print('visitVersionProp')
+		self._symbolTableManager.getCurrentSymbolTable()
+
+		#
+		# GET THE PROPERTY NAME.
+		#
+		propName = ctx.getChild(0).getText()
+
+		#
+		# VALIDATE THE PROPERTY NAME.
+		#
+		if VersionPropNameValidator.isNotValid(propName):
+			raise PropNameNotValidError(SymbolTypeFormatter.format(SymbolType.Version), propName)
+
+		#
+		# GET THE PROPERTY EXPRESSION VALUE.
+		#
+		propExpr = self.visitChildren(ctx)
+
+		#
+		# VALIDATE THE PROPERTY EXPRESSION VALUE.
+		#
+		if VersionValueValidator.isNotValid(propName, propExpr):
+			raise PropValueNotValidError(SymbolTypeFormatter.format(SymbolType.Version), propName, propExpr)
+
+		#
+		# SET THE PROPERTY ON THE SYMBOL.
+		#
+		contextSymbol = self._symbolTableManager.getCurrentSymbolTable().contextSymbol
+
+		if not VersionReference.propCanHaveMultipleValues(propName):
+			contextSymbol.setProp(propName, propExpr)
+		else:
+			contextSymbol.appendProp(propName, propExpr)
 
 	def visitCreateDatabaseStatement(self, ctx:SqlCurrentParser.CreateDatabaseStatementContext):
-		return self.visitChildren(ctx)
+		#
+		# createDatabaseStatement: 'create' 'database'? SYMBOL_ID;
+		#
+		print('visitCreateDatabaseStatement')
+		symbolName = ctx.SYMBOL_ID().getText()
+		symbol = self._symbolTableManager.getSymbolByName(symbolName)
+
+		if symbol.hasProp('create'):
+			createScriptPropExpr = symbol.getProp('create')
+			print('The create property has value {}'.format(createScriptPropExpr.value))
+		else:
+			print('No create property found in database definition.')
 
 	def visitSolutionStatement(self, ctx:SqlCurrentParser.SolutionStatementContext):
 		#

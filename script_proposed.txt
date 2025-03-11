@@ -1,10 +1,68 @@
+create database nexus_opdb;
+create databases where id = nexus_opdb;
+create databases where id != nexus_opdb;
+create databases where id in (nexus_opdb);
+create databases where id not in (nexus_opdb) order by name desc;
 
-create nexus;
+create databases where name = 'Nexus Operational Database';
+create databases where name != 'Nexus Operational Database';
+create databases where name like 'Nexus%';
+create databases where name not like 'Nexus%';
+create databases where name matches regex '^Nexus';
+create databases where name not matches regex '^Nexus';
+create databases where name in ('Nexus Operational Database');
+
+create databases
+where name not in ('Nexus Operational Database')
+order by name asc;
+
+create databases where solution = project1;
+create databases where solution != project1;
+create databases where solution in (project1);
+create databases where solution not in (project1);
+
+create databases where branch = operational;
+create databases where branch != operational;
+create databases where branch in (operational);
+create databases where branch not in (operational);
+
+create databases where environment = dev;
+create databases where environment != dev;
+create databases where environment in (operational);
+create databases where environment not in (operational);
+
+create databases where server = nexus;
+create databases where server != nexus;
+create databases where server in (nexus);
+create databases where server not in (nexus);
+
+
+
+
+
+
+
+database nexus_opdb
+{
+	name: 'Nexus Operational Database';
+	solution: project1;
+	branch: operational;
+	driver: 'psycopg2';
+	server: nexus;
+	connString: 'Server=${nexus.host};database=embedded';
+	create: 'create.sql';
+	environment: dev;
+	tag: 'location_us';
+	tag: 'location_de';
+	tag: 'location_newcastle';
+	tag: 'location_engineering';
+	tag: 'location_my_desk';
+}
+
 
 update database proxima_embedded to version 1.0.0.0;
 update proxima_embedded to version 1.0.0.0;
 update proxima_embedded;
-
 
 update databases to version 1.0.0.0 where name = proxima_embedded;
 update databases to version 1.0.0.0 where server = nexus;

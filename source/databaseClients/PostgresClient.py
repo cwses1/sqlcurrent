@@ -1,0 +1,2 @@
+class PostgresClient ():
+	pass

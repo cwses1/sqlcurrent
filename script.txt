@@ -80,7 +80,7 @@ database nexus_opdb
 {
 	solution: project1;
 	branch: operational;
-	//type: postgres;
+	driver: 'psycopg2';
 	server: nexus;
 	connString: 'Server=${nexus.host};database=embedded';
 	create: 'create.sql';
@@ -95,7 +95,7 @@ database nexus_opdb
 database nexus_analyticaldb
 {
 	solution: project1;
-	//type: 'influx';
+	driver: 'influx';
 	server: nexus;
 	connString: 'Server=${nexus.host};database=embedded';
 	environment: dev;
@@ -110,7 +110,7 @@ database nexus_analyticaldb
 database proxima_opdb
 {
 	solution: project1;
-	//type: 'postgres';
+	driver: 'postgres';
 	server: proxima;
 	connString: 'Server=${proxima.host};database=embedded';
 	environment: dev;
@@ -125,7 +125,7 @@ database proxima_opdb
 database proxima_analyticaldb
 {
 	solution: project1;
-	//type: 'influx';
+	driver: 'influx';
 	server: proxima;
 	connString: 'Server=${proxima.host};database=embedded';
 	environment: dev;
@@ -137,12 +137,10 @@ database proxima_analyticaldb
 	tag: 'location_rdlab';
 }
 
-/*
-version 1.0.0.0 for branch operational
+version 1.0.0 for branch operational
 {
-	branch: operational;
 	name: 'brilliant_dog';
-	dir: '/operational/version_1.0.0.0';
+	dir: '/operational/version_1.0.0';
 	precheck: 'check1.sql';
 	precheck: 'check2.sql';
 	apply: 'apply.sql';
@@ -151,11 +149,10 @@ version 1.0.0.0 for branch operational
 	check: 'check4.sql';
 }
 
-version 1.0.0.0 for branch analytical
+version 1.0.0 for branch analytical
 {
-	branch: analytical;
 	name: 'brilliant_dog';
-	dir: '/analytical/version_1.0.0.0';
+	dir: '/analytical/version_1.0.0';
 	precheck: 'check1.txt';
 	precheck: 'check2.txt';
 	apply: 'apply.txt';
@@ -163,4 +160,5 @@ version 1.0.0.0 for branch analytical
 	check: 'check3.txt';
 	check: 'check4.txt';
 }
-*/
+
+create nexus_opdb;

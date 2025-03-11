@@ -1,6 +1,6 @@
 class DatabaseReference ():
 	propNames = {}
-	propNames['type'] = False
+	propNames['driver'] = False
 	propNames['server'] = False
 	propNames['connString'] = False
 	propNames['environment'] = False

@@ -23,3 +23,6 @@ class Symbol ():
 
 	def hasProp (self, name:str) -> None:
 		return name in self.props
+
+	def getProp (self, name:str) -> None:
+		return self.props[name]
