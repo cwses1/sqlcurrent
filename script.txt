@@ -82,7 +82,24 @@ database nexus_opdb
 	branch: operational;
 	driver: 'psycopg2';
 	server: nexus;
-	connString: 'Server=${nexus.host};database=embedded';
+	connString: 'dbname=binningtool user=postgres password=postgres';
+	create: 'create1.sql';
+	create: 'create2.sql';
+	environment: dev;
+	tag: 'location_us';
+	tag: 'location_de';
+	tag: 'location_newcastle';
+	tag: 'location_engineering';
+	tag: 'location_my_desk';
+}
+
+database nexus_opdb2
+{
+	solution: project1;
+	branch: operational;
+	driver: 'psycopg2';
+	server: nexus;
+	connString: 'dbname=binningtool user=postgres password=postgres';
 	create: 'create.sql';
 	environment: dev;
 	tag: 'location_us';
@@ -161,4 +178,13 @@ version 1.0.0 for branch analytical
 	check: 'check4.txt';
 }
 
+/*
+WORKS
+create database nexus_opdb;
 create nexus_opdb;
+*/
+
+//
+// NEXT UP:
+//
+create databases where id = nexus_opdb;

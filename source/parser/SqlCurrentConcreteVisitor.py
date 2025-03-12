@@ -33,6 +33,8 @@ from references.EnvironmentReference import *
 from references.VersionReference import *
 from validators.VersionPropNameValidator import *
 from validators.VersionValueValidator import *
+from fileReaders.StringFileReader import *
+from databaseClients.DatabaseClientProvider import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -46,14 +48,12 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		self._symbolTableManager.pushSymbolTable(globalSymbolTable)
 
 	def visitSqlCurrentScript(self, ctx:SqlCurrentParser.SqlCurrentScriptContext):
-		print('visitSqlCurrentScript')
 		self.visitChildren(ctx)
 
 	def visitServerStatement(self, ctx:SqlCurrentParser.ServerStatementContext):
 		#
 		# serverStatement: 'server' SYMBOL_ID '{' serverPropList '}';
 		#
-		print('visitServerStatement')
 
 		#
 		# GET THE SYMBOL NAME.
@@ -90,7 +90,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# serverProp: (SYMBOL_ID | 'solution' | 'environment' | 'branch') ':' expr;
 		#
-		print('visitServerProp')
 
 		#
 		# GET THE PROPERTY NAME.
@@ -128,7 +127,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# databaseStatement: 'database' SYMBOL_ID '{' databasePropList '}';
 		#
-		print('visitDatabaseStatement')
 
 		#
 		# GET THE SYMBOL NAME.
@@ -165,7 +163,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# databaseProp: (SYMBOL_ID | 'solution' | 'branch' | 'server' | 'create' | 'environment') ':' expr;
 		#
-		print('visitDatabaseProp')
 
 		#
 		# GET THE PROPERTY NAME.
@@ -207,7 +204,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# expr: STRING_LITERAL | SYMBOL_ID;
 		#
-		print('visitExpr')
 
 		expr = Expr()
 
@@ -232,7 +228,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# versionStatement: 'version' VERSION_ID ('for' 'branch' expr)? '{' versionPropList '}';
 		#
-		print('visitVersionStatement')
 
 		#
 		# DETERMINE THE BRANCH NAME.  IF NO NAME IS GIVEN THEN WE USE 'default'.
@@ -308,7 +303,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# versionProp: (SYMBOL_ID | 'branch') ':' expr;
 		#
-		print('visitVersionProp')
 		self._symbolTableManager.getCurrentSymbolTable()
 
 		#
@@ -347,21 +341,44 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# createDatabaseStatement: 'create' 'database'? SYMBOL_ID;
 		#
-		print('visitCreateDatabaseStatement')
 		symbolName = ctx.SYMBOL_ID().getText()
 		symbol = self._symbolTableManager.getSymbolByName(symbolName)
 
-		if symbol.hasProp('create'):
-			createScriptPropExpr = symbol.getProp('create')
-			print('The create property has value {}'.format(createScriptPropExpr.value))
-		else:
+		if not symbol.hasProp('create'):
 			print('No create property found in database definition.')
+			return
+
+		#
+		# GET THE DATABASE CLIENT.
+		#
+		driverValue = symbol.getProp('driver').value
+		connStringValue = symbol.getProp('connString').value
+		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
+		databaseClient.connString = connStringValue
+
+		#
+		# LOAD THE CREATE SCRIPT TEXT.
+		#
+		createScriptPropExpr = symbol.getProp('create')
+
+		for i in range(len(createScriptPropExpr.value)):
+			createScriptPath = createScriptPropExpr.value[i].value
+			createScriptText = StringFileReader.readFile(createScriptPath)
+
+			#
+			# TELL THE USER WHAT WE'RE DOING.
+			#
+			print('{}: \'{}\'.'.format(symbolName, createScriptPath))
+
+			#
+			# RUN THE SCRIPT.
+			#
+			databaseClient.runCreateScript(createScriptText)
 
 	def visitSolutionStatement(self, ctx:SqlCurrentParser.SolutionStatementContext):
 		#
 		# solutionStatement: 'solution' SYMBOL_ID '{' solutionPropList '}';
 		#
-		print('visitSolutionStatement')
 
 		#
 		# GET THE SYMBOL NAME.
@@ -398,7 +415,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# solutionProp: SYMBOL_ID ':' expr;
 		#
-		print('visitSolutionProp')
 
 		#
 		# GET THE PROPERTY NAME.
@@ -436,7 +452,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# branchStatement: 'branch' SYMBOL_ID '{' branchPropList '}';
 		#
-		print('visitBranchStatement')
 
 		#
 		# GET THE SYMBOL NAME.
@@ -473,7 +488,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# branchProp: (SYMBOL_ID | 'solution') ':' expr;
 		#
-		print('visitBranchProp')
 		self._symbolTableManager.getCurrentSymbolTable()
 
 		#
@@ -512,7 +526,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# environmentStatement: 'environment' SYMBOL_ID '{' environmentPropList '}';
 		#
-		print('visitEnvironmentStatement')
 
 		#
 		# GET THE SYMBOL NAME.
@@ -549,7 +562,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# environmentProp: (SYMBOL_ID | 'solution') ':' expr;
 		#
-		print('visitEnvironmentProp')
 		self._symbolTableManager.getCurrentSymbolTable()
 
 		#
@@ -583,3 +595,32 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			contextSymbol.setProp(propName, propExpr)
 		else:
 			contextSymbol.appendProp(propName, propExpr)
+
+	def visitCreateDatabaseListStatement(self, ctx:SqlCurrentParser.CreateDatabaseListStatementContext):
+		print('visitCreateDatabaseListStatement')
+		return self.visitChildren(ctx)
+
+
+	# Visit a parse tree produced by SqlCurrentParser#whereClause.
+	def visitWhereClause(self, ctx:SqlCurrentParser.WhereClauseContext):
+		return self.visitChildren(ctx)
+
+
+	# Visit a parse tree produced by SqlCurrentParser#whereExpr.
+	def visitWhereExpr(self, ctx:SqlCurrentParser.WhereExprContext):
+		return self.visitChildren(ctx)
+
+
+	# Visit a parse tree produced by SqlCurrentParser#simpleWhereExpr.
+	def visitSimpleWhereExpr(self, ctx:SqlCurrentParser.SimpleWhereExprContext):
+		return self.visitChildren(ctx)
+
+
+	# Visit a parse tree produced by SqlCurrentParser#orderByClause.
+	def visitOrderByClause(self, ctx:SqlCurrentParser.OrderByClauseContext):
+		return self.visitChildren(ctx)
+
+
+	# Visit a parse tree produced by SqlCurrentParser#orderBySegment.
+	def visitOrderBySegment(self, ctx:SqlCurrentParser.OrderBySegmentContext):
+		return self.visitChildren(ctx)

@@ -1,4 +1,4 @@
 class DatabaseClientBase ():
 
-	def __init__ (self, connString:str):
-		self.connString:str = connString
+	def __init__ (self):
+		self.connString = None

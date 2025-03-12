@@ -4,6 +4,8 @@ from .SqlServerClient import *
 from .InfluxClient import *
 from .OracleClient import *
 
+from typing import Any
+
 class DatabaseClientProvider ():
 
 	@staticmethod

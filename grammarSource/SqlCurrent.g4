@@ -16,7 +16,9 @@ statement: serverStatement
 	| createDatabaseStatement
 	| solutionStatement
 	| branchStatement
-	| environmentStatement;
+	| environmentStatement
+	| createDatabaseListStatement
+	;
 
 serverStatement: 'server' SYMBOL_ID '{' serverPropList '}';
 serverPropList: (serverProp ';')+;
@@ -32,7 +34,7 @@ versionStatement: 'version' VERSION_ID ('for' 'branch' expr)? '{' versionPropLis
 versionPropList: (versionProp ';')+;
 versionProp: (SYMBOL_ID | 'branch') ':' expr;
 
-createDatabaseStatement: 'create' 'database'? SYMBOL_ID;
+createDatabaseStatement: 'create' 'database'? SYMBOL_ID ';';
 
 solutionStatement: 'solution' SYMBOL_ID '{' solutionPropList '}';
 solutionPropList: (solutionProp ';')+;
@@ -45,3 +47,15 @@ branchProp: (SYMBOL_ID | 'solution') ':' expr;
 environmentStatement: 'environment' SYMBOL_ID '{' environmentPropList '}';
 environmentPropList: (environmentProp ';')+;
 environmentProp: (SYMBOL_ID | 'solution') ':' expr;
+
+createDatabaseListStatement: 'create' 'databases' whereClause? orderByClause? ';';
+
+whereClause: 'where' whereExpr;
+whereExpr: SYMBOL_ID ('=' | '!=' | 'in' | 'like' | 'matches') (simpleWhereExpr | whereExpr) (('and' | 'or') whereExpr)?
+	| '(' whereExpr ')' (('and' | 'or') whereExpr)?;
+
+simpleWhereExpr: SYMBOL_ID | STRING_LITERAL;
+
+
+orderByClause: 'order' 'by' orderBySegment (',' orderBySegment)?;
+orderBySegment: SYMBOL_ID ('asc' | 'descending')?;

@@ -206,5 +206,59 @@ class SqlCurrentListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SqlCurrentParser#createDatabaseListStatement.
+    def enterCreateDatabaseListStatement(self, ctx:SqlCurrentParser.CreateDatabaseListStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#createDatabaseListStatement.
+    def exitCreateDatabaseListStatement(self, ctx:SqlCurrentParser.CreateDatabaseListStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#whereClause.
+    def enterWhereClause(self, ctx:SqlCurrentParser.WhereClauseContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#whereClause.
+    def exitWhereClause(self, ctx:SqlCurrentParser.WhereClauseContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#whereExpr.
+    def enterWhereExpr(self, ctx:SqlCurrentParser.WhereExprContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#whereExpr.
+    def exitWhereExpr(self, ctx:SqlCurrentParser.WhereExprContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#simpleWhereExpr.
+    def enterSimpleWhereExpr(self, ctx:SqlCurrentParser.SimpleWhereExprContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#simpleWhereExpr.
+    def exitSimpleWhereExpr(self, ctx:SqlCurrentParser.SimpleWhereExprContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#orderByClause.
+    def enterOrderByClause(self, ctx:SqlCurrentParser.OrderByClauseContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#orderByClause.
+    def exitOrderByClause(self, ctx:SqlCurrentParser.OrderByClauseContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#orderBySegment.
+    def enterOrderBySegment(self, ctx:SqlCurrentParser.OrderBySegmentContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#orderBySegment.
+    def exitOrderBySegment(self, ctx:SqlCurrentParser.OrderBySegmentContext):
+        pass
+
+
 
 del SqlCurrentParser

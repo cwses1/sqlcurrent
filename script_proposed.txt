@@ -1,4 +1,3 @@
-create database nexus_opdb;
 create databases where id = nexus_opdb;
 create databases where id != nexus_opdb;
 create databases where id in (nexus_opdb);

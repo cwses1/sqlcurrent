@@ -5,7 +5,7 @@ class DatabaseReference ():
 	propNames['connString'] = False
 	propNames['environment'] = False
 	propNames['tag'] = True
-	propNames['create'] = False
+	propNames['create'] = True
 	propNames['solution'] = False
 	propNames['branch'] = False
 

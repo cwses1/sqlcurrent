@@ -119,5 +119,35 @@ class SqlCurrentVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SqlCurrentParser#createDatabaseListStatement.
+    def visitCreateDatabaseListStatement(self, ctx:SqlCurrentParser.CreateDatabaseListStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#whereClause.
+    def visitWhereClause(self, ctx:SqlCurrentParser.WhereClauseContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#whereExpr.
+    def visitWhereExpr(self, ctx:SqlCurrentParser.WhereExprContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#simpleWhereExpr.
+    def visitSimpleWhereExpr(self, ctx:SqlCurrentParser.SimpleWhereExprContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#orderByClause.
+    def visitOrderByClause(self, ctx:SqlCurrentParser.OrderByClauseContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#orderBySegment.
+    def visitOrderBySegment(self, ctx:SqlCurrentParser.OrderBySegmentContext):
+        return self.visitChildren(ctx)
+
+
 
 del SqlCurrentParser
