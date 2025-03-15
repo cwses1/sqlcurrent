@@ -49,3 +49,19 @@ class SymbolTableManager ():
 			self.symbolTableStack.append(tempSymbolTableStack.pop())
 
 		return result
+
+	def getAllDatabaseSymbols (self) -> List[Symbol]:
+		symbolList:List[Symbol] = []
+		tempSymbolTableStack:List[SymbolTable] = []
+
+		while len(self.symbolTableStack) > 0:
+			currentSymbolTable:SymbolTable = self.symbolTableStack.pop()
+			tempSymbolTableStack.append(currentSymbolTable)
+
+			for symbol in currentSymbolTable.getAllDatabaseSymbols():
+				symbolList.append(symbol)
+
+		while len(tempSymbolTableStack) > 0:
+			self.symbolTableStack.append(tempSymbolTableStack.pop())
+
+		return symbolList

@@ -1,5 +1,6 @@
 class DatabaseReference ():
 	propNames = {}
+	propNames['id'] = False
 	propNames['driver'] = False
 	propNames['server'] = False
 	propNames['connString'] = False
@@ -8,6 +9,8 @@ class DatabaseReference ():
 	propNames['create'] = True
 	propNames['solution'] = False
 	propNames['branch'] = False
+	propNames['name'] = False
+	propNames['desc'] = False
 
 	@staticmethod
 	def propNameSupported (name:str) -> bool:

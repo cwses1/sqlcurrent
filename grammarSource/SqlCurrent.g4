@@ -5,7 +5,7 @@ BLOCK_COMMENT: '/*' .*? '*/' -> skip;
 WS: [ \t\n\r]+ -> skip;
 INT_LITERAL: [0-9]+;
 SYMBOL_ID: [_a-zA-Z][_a-zA-Z0-9]+;
-STRING_LITERAL: '\'' ([ _a-zA-Z0-9] | '.' | ':' | '=' | '$' | '{' | '}' | ';' | '/')* '\'';
+STRING_LITERAL: '\'' ([ _a-zA-Z0-9] | '.' | ':' | '=' | '$' | '{' | '}' | ';' | '/' | '%' | '?' | '^' | '*')* '\'';
 VERSION_ID: [0-9]+ '.' [0-9]+ '.' [0-9]+;
 
 sqlCurrentScript: statement+;
@@ -51,11 +51,14 @@ environmentProp: (SYMBOL_ID | 'solution') ':' expr;
 createDatabaseListStatement: 'create' 'databases' whereClause? orderByClause? ';';
 
 whereClause: 'where' whereExpr;
-whereExpr: SYMBOL_ID ('=' | '!=' | 'in' | 'like' | 'matches') (simpleWhereExpr | whereExpr) (('and' | 'or') whereExpr)?
+
+whereExpr: ('any' | 'every')? (SYMBOL_ID | 'solution' | 'branch' | 'environment' | 'server') ('=' | '!=' | 'not'? 'in' | 'not'? 'like' | 'not'? 'matches') (simpleWhereExprList | simpleWhereExpr | whereExpr) (('and' | 'or') whereExpr)?
 	| '(' whereExpr ')' (('and' | 'or') whereExpr)?;
 
 simpleWhereExpr: SYMBOL_ID | STRING_LITERAL;
 
+simpleWhereExprList: '(' ')'
+	| '(' simpleWhereExpr (',' simpleWhereExpr)* ')';
 
 orderByClause: 'order' 'by' orderBySegment (',' orderBySegment)?;
 orderBySegment: SYMBOL_ID ('asc' | 'descending')?;

@@ -10,4 +10,6 @@ class SymbolType ():
 	ReferenceToSymbol = 8
 	List = 9,
 	Version = 10,
-	Int32 = 11
+	Int32 = 11,
+	PropertyName = 12
+

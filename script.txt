@@ -5,6 +5,13 @@ solution project1
 	tag: 'tag1';
 }
 
+solution project222
+{
+	name: 'Project 222';
+	desc: 'Description of Project 222';
+	tag: 'tag222';
+}
+
 branch topology
 {
 	solution: project1;
@@ -78,6 +85,7 @@ server proxima
 
 database nexus_opdb
 {
+	name: 'Nexus Operational Database';
 	solution: project1;
 	branch: operational;
 	driver: 'psycopg2';
@@ -93,25 +101,10 @@ database nexus_opdb
 	tag: 'location_my_desk';
 }
 
-database nexus_opdb2
-{
-	solution: project1;
-	branch: operational;
-	driver: 'psycopg2';
-	server: nexus;
-	connString: 'dbname=binningtool user=postgres password=postgres';
-	create: 'create.sql';
-	environment: dev;
-	tag: 'location_us';
-	tag: 'location_de';
-	tag: 'location_newcastle';
-	tag: 'location_engineering';
-	tag: 'location_my_desk';
-}
-
 database nexus_analyticaldb
 {
-	solution: project1;
+	name: 'Nexus Analytical Database';
+	solution: project222;
 	driver: 'influx';
 	server: nexus;
 	connString: 'Server=${nexus.host};database=embedded';
@@ -126,6 +119,7 @@ database nexus_analyticaldb
 
 database proxima_opdb
 {
+	name: 'b';
 	solution: project1;
 	driver: 'postgres';
 	server: proxima;
@@ -141,6 +135,7 @@ database proxima_opdb
 
 database proxima_analyticaldb
 {
+	name: 'a';
 	solution: project1;
 	driver: 'influx';
 	server: proxima;
@@ -179,12 +174,96 @@ version 1.0.0 for branch analytical
 }
 
 /*
-WORKS
+create databases;
 create database nexus_opdb;
 create nexus_opdb;
+create databases where id = nexus_opdb;
+create databases order by id asc;
+create databases where id = nexus_opdb order by id asc;
+create databases order by id asc;
+create databases order by name asc;
+create databases where id != nexus_opdb;
+create databases where id in (nexus_analyticaldb, proxima_analyticaldb);
+create databases where name in ('a', 'c');
+create databases where id in (nexus_analyticaldb, proxima_analyticaldb) order by id asc;
+create databases where id not in (nexus_opdb, nexus_analyticaldb);
+create databases where id not in (nexus_opdb, nexus_analyticaldb) order by name descending;
+create databases where id not in (nexus_opdb, nexus_analyticaldb) order by name asc;
+create databases where name = 'e';
+create databases where name != 'e';
+create databases where name like 'Nexus%';
+create databases where name like 'Nexus%' order by id;
+create databases where name like 'Nexus%' order by id descending;
+create databases where name like 'Nexus%' order by id asc;
+create databases where name not like 'Nexus%';
+create databases where name matches '^Nexus.*$';
+create databases where name not matches '^Nexus.*$';
+create databases where name in ('Nexus Operational Database');
+create databases where name not in ('Nexus Operational Database');
+create databases where solution = project1;
+create databases where solution = project222;
+create databases where solution != project1;
+create databases where solution != project222;
+create databases where solution in (project1);
+create databases where solution in (project1, project222);
+create databases where solution in (project222);
+create databases where solution not in (project1);
+create databases where solution not in (project222);
+create databases where solution not in (project1, project222);
+create databases where branch = operational;
+create databases where branch != operational;
+create databases where branch in (operational);
+create databases where branch in (operational, analytical);
+create databases where branch not in (operational);
+create databases where branch not in (operational, analytical);
+create databases where environment = dev;
+create databases where environment = qa;
+create databases where environment != dev;
+create databases where environment != qa;
+create databases where environment in (dev, qa);
+create databases where environment not in (dev);
+create databases where environment not in (qa);
+create databases where environment not in (dev, qa);
+create databases where server = nexus;
+create databases where server != nexus;
+create databases where server in (nexus);
+create databases where server in (nexus, proxima);
+create databases where server not in (nexus);
+create databases where server not in (nexus, proxima);
+create databases where name not in ('Nexus Operational Database') order by name asc;
+create databases order by id asc;
+create databases order by id descending;
+create databases order by name asc;
+create databases order by name descending;
+create databases where any tag = 'location_us';
+create databases where any tag = 'location_my_desk';
+create databases where every tag = 'location_us';
+create databases where any tag != 'location_us';
+create databases where every tag != 'location_us';
+create databases where every tag != 'idiot_village';
+create databases where any tag like 'location_my_%';
+create databases where any tag like 'location_rdlab%';
+create databases where every tag like 'location%';
 */
 
 //
-// NEXT UP:
+// NEXT THING TO IMPLEMENT AND TEST:
 //
-create databases where id = nexus_opdb;
+
+/*
+create databases where any tag not like 'location_us';
+create databases where every tag not like 'location_us';
+
+create databases where any tag matches 'location_us';
+create databases where every tag matches 'location_us';
+
+create databases where tag not matches 'location_us';
+create databases where any tag in ('location_us');
+create databases where any tag in ('location_my_desk');
+create databases where every tag in ('location_us');
+create databases where every tag in ('location_my_desk');
+create databases where any tag not in ('location_us');
+create databases where any tag not in ('location_my_desk');
+create databases where every tag not in ('location_us');
+create databases where every tag not in ('location_my_desk');
+*/

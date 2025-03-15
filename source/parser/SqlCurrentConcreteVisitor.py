@@ -35,6 +35,11 @@ from validators.VersionPropNameValidator import *
 from validators.VersionValueValidator import *
 from fileReaders.StringFileReader import *
 from databaseClients.DatabaseClientProvider import *
+from constraints.Constraint import *
+from exceptions.NotImplementedError import *
+from constraintUtils.OrderConstraintUtil import *
+from formatters.SymbolListFormatter import *
+from formatters.ExprListFormatter import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -138,6 +143,13 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		createdSymbol = Symbol(symbolName, SymbolType.Database)
 
+		idExpr = Expr()
+		idExpr.name = 'id'
+		idExpr.type = SymbolType.String
+		idExpr.value = symbolName
+
+		createdSymbol.setProp('id', idExpr)
+
 		#
 		# ADD THE SYMBOL TO THE TABLE.
 		#
@@ -204,7 +216,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# expr: STRING_LITERAL | SYMBOL_ID;
 		#
-
 		expr = Expr()
 
 		if (ctx.STRING_LITERAL() != None):
@@ -597,30 +608,211 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			contextSymbol.appendProp(propName, propExpr)
 
 	def visitCreateDatabaseListStatement(self, ctx:SqlCurrentParser.CreateDatabaseListStatementContext):
-		print('visitCreateDatabaseListStatement')
-		return self.visitChildren(ctx)
+		#
+		# createDatabaseListStatement: 'create' 'databases' whereClause? orderByClause? ';';
+		#
 
+		#
+		# GET THE ENTIRE LIST OF DATABASES.
+		#
+		symbolList = self._symbolTableManager.getAllDatabaseSymbols()
 
-	# Visit a parse tree produced by SqlCurrentParser#whereClause.
+		#
+		# APPLY THE CONSTRAINT TO THE LIST OF DATABASES.
+		#
+		if ctx.whereClause() != None:
+			whereConstraint = self.visitWhereClause(ctx.whereClause())
+			symbolList = whereConstraint.applyConstraint(symbolList)
+
+		#
+		# ORDER THE LIST OF DATABASES.
+		#
+		if ctx.orderByClause() != None:
+			orderByConstraint = self.visitOrderByClause(ctx.orderByClause())
+			symbolList = orderByConstraint.applyConstraint(symbolList)
+
+		#
+		# CREATE THE DATABASES.
+		#
+		for symbol in symbolList:
+			if not symbol.hasProp('create'):
+				print('{}: No create property found in database definition.'.format(symbol.name))
+				continue
+
+			#
+			# GET THE DATABASE CLIENT.
+			#
+			driverValue = symbol.getProp('driver').value
+			connStringValue = symbol.getProp('connString').value
+			databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
+			databaseClient.connString = connStringValue
+
+			#
+			# LOAD THE CREATE SCRIPT TEXT.
+			#
+			createScriptPropExpr = symbol.getProp('create')
+
+			for i in range(len(createScriptPropExpr.value)):
+				createScriptPath = createScriptPropExpr.value[i].value
+				#createScriptText = StringFileReader.readFile(createScriptPath)
+
+				#
+				# TELL THE USER WHAT WE'RE DOING.
+				#
+				print('{}: \'{}\'.'.format(symbol.name, createScriptPath))
+
+				#
+				# RUN THE SCRIPT.
+				#
+				#databaseClient.runCreateScript(createScriptText)
+
 	def visitWhereClause(self, ctx:SqlCurrentParser.WhereClauseContext):
-		return self.visitChildren(ctx)
+		#
+		# whereClause: 'where' whereExpr;
+		#
+		constraint = Constraint()
+		constraint.functionNameOrCode = '()'
+		constraint.onlyChildConstraint = self.visitWhereExpr(ctx.whereExpr())
+		return constraint
 
-
-	# Visit a parse tree produced by SqlCurrentParser#whereExpr.
 	def visitWhereExpr(self, ctx:SqlCurrentParser.WhereExprContext):
-		return self.visitChildren(ctx)
+		#
+		# whereExpr: ('any' | 'every')? (SYMBOL_ID | 'solution' | 'branch' | 'environment' | 'server') ('=' | '!=' | 'not'? 'in' | 'not'? 'like' | 'not'? 'matches') (simpleWhereExprList | simpleWhereExpr | whereExpr) (('and' | 'or') whereExpr)?
+		#	| '(' whereExpr ')' (('and' | 'or') whereExpr)?;
+		#
+		constraint = Constraint()
 
+		if ctx.SYMBOL_ID() != None or (ctx.getChild(0) != None and ctx.getChild(0).getText() != '('):
+			#
+			# GET THE LIST PROPERTY OPERATOR (any, every)
+			#
+			listQualifier = ctx.getChild(0).getText()
+			haveListQualifier = False
 
-	# Visit a parse tree produced by SqlCurrentParser#simpleWhereExpr.
+			if listQualifier == 'any' or listQualifier == 'every':
+				haveListQualifier = True
+				propNameIndex = 1
+			else:
+				propNameIndex = 0
+
+			#
+			# GET THE PROPERTY NAME (THE LEFT OPERAND FOR A CONSTRAINT)
+			#
+			if ctx.SYMBOL_ID() != None:
+				propName = ctx.SYMBOL_ID().getText()
+			else:
+				propName = ctx.getChild(propNameIndex).getText()
+
+			constraint.leftOperand = propName
+
+			#
+			# DETERMINE THE CONSTRAINT OPERATOR CODE.
+			#
+			operatorStartSymbol = ctx.getChild(propNameIndex + 1).getText()
+			operatorEndSymbol = None
+
+			if operatorStartSymbol == 'not':
+				operatorEndSymbol = ctx.getChild(propNameIndex + 2).getText()
+
+			if haveListQualifier:
+				if operatorEndSymbol != None:
+					constraint.functionNameOrCode = listQualifier + '_' + operatorStartSymbol + '_' + operatorEndSymbol
+				else:
+					constraint.functionNameOrCode = listQualifier + '_' + operatorStartSymbol
+			elif operatorEndSymbol != None:
+				constraint.functionNameOrCode = operatorStartSymbol + '_' + operatorEndSymbol
+			else:
+				constraint.functionNameOrCode = operatorStartSymbol
+	
+			#
+			# GET THE RIGHT OPERAND.
+			#
+			if ctx.simpleWhereExprList() != None:
+				constraint.rightOperand = self.visitSimpleWhereExprList(ctx.simpleWhereExprList())
+			elif ctx.simpleWhereExpr() != None:
+				constraint.rightOperand = self.visitSimpleWhereExpr(ctx.simpleWhereExpr())
+			elif ctx.whereExpr(1) == None:
+				constraint.rightOperand = self.visitWhereExpr(ctx.whereExpr(0))
+			else:
+				constraint.rightOperand = self.visitWhereExpr(ctx.whereExpr())
+
+			if ctx.whereExpr(1) != None:
+				raise NotImplementedError()
+		else:
+			raise NotImplementedError()
+
+		return constraint
+
+	def visitSimpleWhereExprList(self, ctx:SqlCurrentParser.SimpleWhereExprListContext):
+		#
+		# simpleWhereExprList: '(' ')'
+		#	| '(' simpleWhereExpr (',' simpleWhereExpr)* ')';
+		#
+		exprList:List[Expr] = []
+
+		if ctx.simpleWhereExpr() == None:
+			return exprList
+
+		i = 0
+		while ctx.simpleWhereExpr(i) != None:
+			exprList.append(self.visitSimpleWhereExpr(ctx.simpleWhereExpr(i)))
+			i += 1
+
+		return exprList
+
 	def visitSimpleWhereExpr(self, ctx:SqlCurrentParser.SimpleWhereExprContext):
-		return self.visitChildren(ctx)
+		#
+		# simpleWhereExpr: SYMBOL_ID | STRING_LITERAL;
+		#
+		expr = Expr()
 
+		if (ctx.STRING_LITERAL() != None):
+			expr.type = SymbolType.String
+			expr.value = StringLiteralFormatter.format(ctx.STRING_LITERAL().getText())
+		elif (ctx.SYMBOL_ID() != None):
+			symbolName = ctx.SYMBOL_ID().getText()
+			if self._symbolTableManager.hasSymbolByName(symbolName):
+				symbol = self._symbolTableManager.getSymbolByName(symbolName)
+				expr.name = symbol.name
+				expr.value = symbol
+				expr.type = SymbolType.ReferenceToSymbol
+			else:
+				raise SymbolNotFoundError(symbolName)
+		else:
+			raise VisitorMethodRuleFalloffError('visitSimpleWhereExpr')
 
-	# Visit a parse tree produced by SqlCurrentParser#orderByClause.
+		return expr
+
 	def visitOrderByClause(self, ctx:SqlCurrentParser.OrderByClauseContext):
-		return self.visitChildren(ctx)
+		#
+		# orderByClause: 'order' 'by' orderBySegment (',' orderBySegment)?;
+		#
+		constraint = Constraint()
+		constraint.functionNameOrCode = '()'
 
+		childConstraintList:List[Constraint] = []
+		i = 0
+		while ctx.orderBySegment(i) != None:
+			childConstraintList.append(self.visitOrderBySegment(ctx.orderBySegment(i)))
+			i += 1
 
-	# Visit a parse tree produced by SqlCurrentParser#orderBySegment.
+		for currentChildConstraint in childConstraintList:
+			constraint.onlyChildConstraint = OrderConstraintUtil.createOrderConstraintTreeFromList(childConstraintList)
+
+		return constraint
+
 	def visitOrderBySegment(self, ctx:SqlCurrentParser.OrderBySegmentContext):
-		return self.visitChildren(ctx)
+		#
+		# orderBySegment: SYMBOL_ID ('asc' | 'descending')?;
+		#
+		constraint = Constraint()
+
+		sortOrderCode = 'asc'
+
+		if ctx.getChild(1) != None and ctx.getChild(1).getText() == 'descending':
+			sortOrderCode = 'desc'
+
+		constraint.functionNameOrCode = 'orderby_' + sortOrderCode
+
+		constraint.onlyOperand = ctx.SYMBOL_ID().getText()
+		return constraint

@@ -1,5 +1,6 @@
 from typing import List
 from .Symbol import *
+from common.SymbolType import *
 
 class SymbolTable ():
 
@@ -18,3 +19,12 @@ class SymbolTable ():
 
 	def getAllSymbols (self) -> List[Symbol]:
 		return self.table.values()
+
+	def getAllDatabaseSymbols (self) -> List[Symbol]:
+		symbolList:List[Symbol] = []
+
+		for symbol in self.table.values():
+			if symbol.type == SymbolType.Database:
+				symbolList.append(symbol)
+
+		return symbolList

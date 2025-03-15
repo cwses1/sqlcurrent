@@ -242,6 +242,15 @@ class SqlCurrentListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SqlCurrentParser#simpleWhereExprList.
+    def enterSimpleWhereExprList(self, ctx:SqlCurrentParser.SimpleWhereExprListContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#simpleWhereExprList.
+    def exitSimpleWhereExprList(self, ctx:SqlCurrentParser.SimpleWhereExprListContext):
+        pass
+
+
     # Enter a parse tree produced by SqlCurrentParser#orderByClause.
     def enterOrderByClause(self, ctx:SqlCurrentParser.OrderByClauseContext):
         pass

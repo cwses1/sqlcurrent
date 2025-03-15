@@ -139,6 +139,11 @@ class SqlCurrentVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SqlCurrentParser#simpleWhereExprList.
+    def visitSimpleWhereExprList(self, ctx:SqlCurrentParser.SimpleWhereExprListContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by SqlCurrentParser#orderByClause.
     def visitOrderByClause(self, ctx:SqlCurrentParser.OrderByClauseContext):
         return self.visitChildren(ctx)
