@@ -1,4 +1,6 @@
 import sys
+import os
+import csv
 from typing import Dict
 from generatedParsers.SqlCurrentVisitor import *
 from generatedParsers.SqlCurrentParser import *
@@ -40,6 +42,10 @@ from exceptions.NotImplementedError import *
 from constraintUtils.OrderConstraintUtil import *
 from formatters.SymbolListFormatter import *
 from formatters.ExprListFormatter import *
+from listUtils.RemoveDuplicatesListUtil import *
+from symbolTables.VersionSymbolLoader import *
+from versionUtils.VersionSymbolSortUtil import *
+from parsers.VersionNumberParser import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -171,9 +177,66 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		currentSymbolTable.contextSymbol = None
 
+		#
+		# ENSURE THE DATABASE HAS A BRANCH.  IF THIS DOES NOT EXIST, THEN USE STRING 'default'.
+		#
+		branchName = 'default'
+
+		if createdSymbol.hasProp('branch'):
+			branchPropExpr = createdSymbol.getProp('branch')
+
+			if branchPropExpr.type == SymbolType.ReferenceToSymbol:
+				branchName = branchPropExpr.value.name
+			elif branchPropExpr.type == SymbolType.String:
+				branchName = branchPropExpr.value
+			else:
+				raise NotImplementedError('Cannot get branchName.')
+		else:
+			branchExpr = Expr()
+			branchExpr.name = 'branch'
+			branchExpr.type = SymbolType.String
+			branchExpr.value = branchName
+			createdSymbol.setProp('branch', branchExpr)
+
+		#
+		# ENSURE THE DATABASE HAS A STARTER VERSION.  IF THIS DOES NOT EXIST, THEN USE STRING '1.0.0'.
+		#
+		versionNumber = '1.0.0'
+
+		if createdSymbol.hasProp('version'):
+			versionPropExpr = createdSymbol.getProp('version')
+
+			if versionPropExpr.type == SymbolType.ReferenceToSymbol:
+				starterVersionSymbol = versionPropExpr.value
+				versionNumber = str(starterVersionSymbol.getProp('major').value) + '.' + str(starterVersionSymbol.getProp('minor').value) + '.' + str(starterVersionSymbol.getProp('patch').value)
+			elif versionPropExpr.type == SymbolType.VersionNumber:
+				versionNumber = versionPropExpr.value
+			elif versionPropExpr.type == SymbolType.String:
+				versionNumber = versionPropExpr.value
+			else:
+				raise NotImplementedError('Cannot get version number.')
+		else:
+			versionExpr = Expr()
+			versionExpr.name = 'version'
+			versionExpr.type = SymbolType.VersionNumber
+			versionExpr.value = versionNumber
+			createdSymbol.setProp('version', versionExpr)
+
+		#
+		# CREATE AN 'ARTIFICIAL' VERSION SYMBOL FOR THE DATABASE STARTER VERSION.
+		# THIS IS USED FOR BUILDING OUT THE VERSION LINEAGE.
+		#
+		createdVersionSymbolName = VersionSymbolNamer.createName(branchName, versionNumber)
+		createdVersionSymbol = Symbol(createdVersionSymbolName, SymbolType.Version)
+		createdVersionSymbol.setProp('branch', createdSymbol.getProp('branch'))
+		createdVersionSymbol.setProp('major', VersionNumberParser.parseMajorAsExpr(versionNumber))
+		createdVersionSymbol.setProp('minor', VersionNumberParser.parseMinorAsExpr(versionNumber))
+		createdVersionSymbol.setProp('patch', VersionNumberParser.parsePatchAsExpr(versionNumber))
+		currentSymbolTable.insertSymbol(createdVersionSymbol)
+
 	def visitDatabaseProp(self, ctx:SqlCurrentParser.DatabasePropContext):
 		#
-		# databaseProp: (SYMBOL_ID | 'solution' | 'branch' | 'server' | 'create' | 'environment') ':' expr;
+		# databaseProp: (SYMBOL_ID | 'solution' | 'branch' | 'server' | 'create' | 'environment' | 'version') ':' expr;
 		#
 
 		#
@@ -194,7 +257,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 		if propExpr.type == SymbolType.String:
 
-			propValue = None
+			propValue = propExpr.value
 
 			#
 			# VALIDATE THE PROPERTY VALUE.
@@ -214,14 +277,14 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 	def visitExpr(self, ctx:SqlCurrentParser.ExprContext):
 		#
-		# expr: STRING_LITERAL | SYMBOL_ID;
+		# expr: STRING_LITERAL | SYMBOL_ID | VERSION_ID;
 		#
 		expr = Expr()
 
-		if (ctx.STRING_LITERAL() != None):
+		if ctx.STRING_LITERAL() != None:
 			expr.type = SymbolType.String
 			expr.value = StringLiteralFormatter.format(ctx.STRING_LITERAL().getText())
-		elif (ctx.SYMBOL_ID() != None):
+		elif ctx.SYMBOL_ID() != None:
 			symbolName = ctx.SYMBOL_ID().getText()
 			if self._symbolTableManager.hasSymbolByName(symbolName):
 				symbol = self._symbolTableManager.getSymbolByName(symbolName)
@@ -230,8 +293,12 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 				expr.type = SymbolType.ReferenceToSymbol
 			else:
 				raise SymbolNotFoundError(symbolName)
+		elif ctx.VERSION_ID() != None:
+			versionNumber = ctx.VERSION_ID().getText()
+			expr.type = SymbolType.VersionNumber
+			expr.value = ctx.VERSION_ID().getText()
 		else:
-			raise VisitorMethodRuleFalloffError('visitExpr')
+			raise NotImplementedError('visitExpr could not figure out how to process the expression.')
 
 		return expr
 
@@ -359,6 +426,9 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			print('No create property found in database definition.')
 			return
 
+		branchPropExpr = symbol.getProp('branch')
+		branchName = branchPropExpr.name
+
 		#
 		# GET THE DATABASE CLIENT.
 		#
@@ -385,6 +455,39 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			# RUN THE SCRIPT.
 			#
 			databaseClient.runCreateScript(createScriptText)
+
+			#
+			# RECORD THE EVENT.
+			#
+
+			#
+			# ENSURE THE DIRECTORY EXISTS THAT CONTAINS THE EVENT FILE.
+			#
+			eventFileDir = './databases/{}'.format(branchName) 
+			print('eventFileDir: {}'.format(eventFileDir))
+			os.makedirs(eventFileDir, exist_ok=True)
+
+			#
+			# GET THE EVENT FILE PATH.
+			#
+			eventFilePath = '{}/{}.txt'.format(eventFileDir, symbolName)
+			print('eventFilePath: {}'.format(eventFilePath))
+
+			#
+			# IF THE EVENT FILE ALREADY EXISTS, THIS IS AN ERROR.
+			#
+			if os.path.exists(eventFilePath):
+				raise NotImplementedError('Event file already exists.  Cannot create.')
+
+			#
+			# CREATE THE EVENT FILE.
+			#
+			with open(eventFilePath, 'w', encoding='utf-8') as eventFileHandle:
+				eventFileWriter = csv.writer(eventFileHandle)
+				eventFileWriter.writerow(['name','branch','datetime','batchId','operation','version','scriptFilePath','result'])
+				#eventFileWriter.writerow(['name','branch','datetime','batchId','operation','version','scriptFilePath','result'])
+
+
 
 	def visitSolutionStatement(self, ctx:SqlCurrentParser.SolutionStatementContext):
 		#
@@ -816,3 +919,112 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 		constraint.onlyOperand = ctx.SYMBOL_ID().getText()
 		return constraint
+
+	def visitUpdateDatabaseStatement(self, ctx:SqlCurrentParser.UpdateDatabaseStatementContext):
+		#
+		# updateDatabaseStatement: 'update' 'database'? SYMBOL_ID ';';
+		#
+		symbolName = ctx.SYMBOL_ID().getText()
+		symbol = self._symbolTableManager.getSymbolByName(symbolName)
+
+		#
+		# GET THE DATABASE CLIENT.
+		#
+		driverValue = symbol.getProp('driver').value
+		connStringValue = symbol.getProp('connString').value
+		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
+		databaseClient.connString = connStringValue
+
+		#
+		# GET THE DATABASE BRANCH.  WHEN THE DATABASE IS CREATED THEN WE STORE THE BRANCH NAME WITH IT.
+		#
+		print(SymbolFormatter.formatText(symbol))
+		branchSymbol = symbol.getProp('branch').value
+		branchName = branchSymbol.name
+		print(SymbolFormatter.formatText(branchSymbol))
+
+		#
+		# GET THE CURRENT DATABASE VERSION.
+		#
+		eventFileDir = './databases/{}'.format(branchName) 
+		eventFilePath = '{}/{}.txt'.format(eventFileDir, symbolName)
+		print('eventFilePath: {}'.format(eventFilePath))
+
+		#
+		# IF THE EVENT FILE ALREADY EXISTS, THIS IS AN ERROR.
+		#
+		if not os.path.exists(eventFilePath):
+			raise NotImplementedError('Error.  Cannot update.  Event file not found:{}'.format(eventFilePath))
+
+		#
+		# READ THE EVENT FILE.
+		#
+		versionListInEventFile:List[str] = []
+
+		with open(eventFilePath, 'r', encoding='utf-8') as eventFileHandle:
+			eventFileReader = csv.DictReader(eventFileHandle)
+			for row in eventFileReader:
+				versionListInEventFile.append(row['version'])
+
+		#
+		# REMOVE VERSION DUPLICATES
+		# LOAD THE VERSION SYMBOLS.
+		# SORT
+		# GET THE LATEST VERSION.
+		#
+		versionListInEventFile = RemoveDuplicatesListUtil.removeVersionStrDuplicates(versionListInEventFile)
+		print(versionListInEventFile)
+
+		#
+		# LOAD THE VERSION SYMBOLS FOUND IN THE EVENT FILE.
+		#
+		versionSymbolsFromEventFile = VersionSymbolLoader.getVersionSymbolsInListInBranch(versionListInEventFile, branchName, self._symbolTableManager)
+		print('versionSymbolsFromEventFile:')
+		print(SymbolListFormatter.formatText(versionSymbolsFromEventFile))
+
+		#
+		# SORT THE VERSION SYMBOLS.
+		#
+		VersionSymbolSortUtil.sortVersionSymbolList(versionSymbolsFromEventFile)
+
+		#
+		# GET THE STATUS () OF EACH THE VERSION SYMBOLS.
+		#
+
+		#
+		# GET THE MOST RECENT VERSION SYMBOL THAT HAS A SUCCESS CODE.
+		#
+
+
+
+		#
+		# GET THE LIST OF VERSIONS THAT WE NEED FOR THE UPDATE.
+		# THESE ARE ALL OF THE VERSIONS AFTER THE LATEST VERSION IN THE DATABASE'S BRANCH.
+		# SORT THE VERSIONS SO WE CAN RUN THEM IN THE CORRECT ORDER.
+		# RUN EACH VERSION FOR THIS DATABASE.
+		#
+
+
+
+
+
+
+		return
+		#
+		# LOAD THE CREATE SCRIPT TEXT.
+		#
+		createScriptPropExpr = symbol.getProp('create')
+
+		for i in range(len(createScriptPropExpr.value)):
+			createScriptPath = createScriptPropExpr.value[i].value
+			createScriptText = StringFileReader.readFile(createScriptPath)
+
+			#
+			# TELL THE USER WHAT WE'RE DOING.
+			#
+			print('{}: \'{}\'.'.format(symbolName, createScriptPath))
+
+			#
+			# RUN THE SCRIPT.
+			#
+			databaseClient.runCreateScript(createScriptText)

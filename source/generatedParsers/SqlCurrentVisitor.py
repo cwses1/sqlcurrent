@@ -154,5 +154,10 @@ class SqlCurrentVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SqlCurrentParser#updateDatabaseStatement.
+    def visitUpdateDatabaseStatement(self, ctx:SqlCurrentParser.UpdateDatabaseStatementContext):
+        return self.visitChildren(ctx)
+
+
 
 del SqlCurrentParser

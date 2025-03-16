@@ -1,4 +1,11 @@
 
+update databases to version 1.0.0 where name = proxima_embedded;
+update databases to version 1.0.0 where server = nexus;
+update databases to version 1.0.0 where environment = qa;
+update databases to version 1.0.0 where tag in 'location_newcastle';
+update databases to version 1.0.0 where tag matches regex '_newcastle$';
+update databases to version 1.0.0 where tag like 'location%';
+
 check proxima_postgres;
 check database proxima_postgres;
 check databases
@@ -12,17 +19,3 @@ precheck proxima_postgres;
 precheck databases where name = proxima_embedded;
 precheck databases where name matches 'proxima_embedded';
 precheck databases where name in 'proxima_embedded';
-
-//
-// TEST SEVERAL DIFFERENT ORDER BY CLAUSES FOR TYPES STRING, SYMBOL, INT32.
-//
-update database proxima_embedded to version 1.0.0.0;
-update proxima_embedded to version 1.0.0.0;
-update proxima_embedded;
-
-update databases to version 1.0.0.0 where name = proxima_embedded;
-update databases to version 1.0.0.0 where server = nexus;
-update databases to version 1.0.0.0 where environment = qa;
-update databases to version 1.0.0.0 where tag in 'location_newcastle';
-update databases to version 1.0.0.0 where tag matches regex '_newcastle$';
-update databases to version 1.0.0.0 where tag like 'location%';

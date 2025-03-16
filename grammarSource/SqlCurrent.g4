@@ -18,6 +18,7 @@ statement: serverStatement
 	| branchStatement
 	| environmentStatement
 	| createDatabaseListStatement
+	| updateDatabaseStatement
 	;
 
 serverStatement: 'server' SYMBOL_ID '{' serverPropList '}';
@@ -26,9 +27,9 @@ serverProp: (SYMBOL_ID | 'solution' | 'environment' | 'branch') ':' expr;
 
 databaseStatement: 'database' SYMBOL_ID '{' databasePropList '}';
 databasePropList: (databaseProp ';')+;
-databaseProp: (SYMBOL_ID | 'solution' | 'branch' | 'server' | 'create' | 'environment') ':' expr;
+databaseProp: (SYMBOL_ID | 'solution' | 'branch' | 'server' | 'create' | 'environment' | 'version') ':' expr;
 
-expr: STRING_LITERAL | SYMBOL_ID;
+expr: STRING_LITERAL | SYMBOL_ID | VERSION_ID;
 
 versionStatement: 'version' VERSION_ID ('for' 'branch' expr)? '{' versionPropList '}';
 versionPropList: (versionProp ';')+;
@@ -62,3 +63,5 @@ simpleWhereExprList: '(' ')'
 
 orderByClause: 'order' 'by' orderBySegment (',' orderBySegment)?;
 orderBySegment: SYMBOL_ID ('asc' | 'descending')?;
+
+updateDatabaseStatement: 'update' 'database'? SYMBOL_ID ';';

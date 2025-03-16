@@ -269,5 +269,14 @@ class SqlCurrentListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SqlCurrentParser#updateDatabaseStatement.
+    def enterUpdateDatabaseStatement(self, ctx:SqlCurrentParser.UpdateDatabaseStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#updateDatabaseStatement.
+    def exitUpdateDatabaseStatement(self, ctx:SqlCurrentParser.UpdateDatabaseStatementContext):
+        pass
+
+
 
 del SqlCurrentParser

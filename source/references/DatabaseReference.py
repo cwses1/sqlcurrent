@@ -11,6 +11,7 @@ class DatabaseReference ():
 	propNames['branch'] = False
 	propNames['name'] = False
 	propNames['desc'] = False
+	propNames['version'] = False
 
 	@staticmethod
 	def propNameSupported (name:str) -> bool:

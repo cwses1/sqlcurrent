@@ -12,13 +12,11 @@ solution project222
 	tag: 'tag222';
 }
 
-branch topology
+branch analytical
 {
 	solution: project1;
 	name: '';
 	desc: '';
-	tag: 'tag2';
-	tag: 'tag3';
 }
 
 branch operational
@@ -28,11 +26,13 @@ branch operational
 	desc: '';
 }
 
-branch analytical
+branch topology
 {
 	solution: project1;
 	name: '';
 	desc: '';
+	tag: 'tag2';
+	tag: 'tag3';
 }
 
 environment dev
@@ -91,14 +91,14 @@ database nexus_opdb
 	driver: 'psycopg2';
 	server: nexus;
 	connString: 'dbname=binningtool user=postgres password=postgres';
-	create: 'create1.sql';
-	create: 'create2.sql';
 	environment: dev;
 	tag: 'location_us';
 	tag: 'location_de';
 	tag: 'location_newcastle';
 	tag: 'location_engineering';
 	tag: 'location_my_desk';
+	create: 'create.sql';
+	version: 1.0.0;
 }
 
 database nexus_analyticaldb
@@ -149,10 +149,10 @@ database proxima_analyticaldb
 	tag: 'location_rdlab';
 }
 
-version 1.0.0 for branch operational
+version 1.0.1 for branch operational
 {
 	name: 'brilliant_dog';
-	dir: '/operational/version_1.0.0';
+	dir: './branches/operational/version_1.0.1';
 	precheck: 'check1.sql';
 	precheck: 'check2.sql';
 	apply: 'apply.sql';
@@ -161,10 +161,10 @@ version 1.0.0 for branch operational
 	check: 'check4.sql';
 }
 
-version 1.0.0 for branch analytical
+version 1.0.1 for branch analytical
 {
 	name: 'brilliant_dog';
-	dir: '/analytical/version_1.0.0';
+	dir: './branches/analytical/version_1.0.1';
 	precheck: 'check1.txt';
 	precheck: 'check2.txt';
 	apply: 'apply.txt';
@@ -249,21 +249,30 @@ create databases where every tag like 'location%';
 //
 // NEXT THING TO IMPLEMENT AND TEST:
 //
+update nexus_opdb;
+//create nexus_opdb;
 
 /*
+update database proxima_embedded to version 1.0.0;
+update proxima_embedded to version 1.0.0;
+
 create databases where any tag not like 'location_us';
 create databases where every tag not like 'location_us';
 
 create databases where any tag matches 'location_us';
 create databases where every tag matches 'location_us';
 
-create databases where tag not matches 'location_us';
+create databases where any tag not matches 'location_us';
+create databases where every tag not matches 'location_us';
+
 create databases where any tag in ('location_us');
-create databases where any tag in ('location_my_desk');
 create databases where every tag in ('location_us');
-create databases where every tag in ('location_my_desk');
+
 create databases where any tag not in ('location_us');
-create databases where any tag not in ('location_my_desk');
-create databases where every tag not in ('location_us');
-create databases where every tag not in ('location_my_desk');
+create databases where every tag not in ('location_us', 'location_my_desk');
 */
+// ADD HOME DIRECTORY FOR ALL DATA, MAKE THIS A GLOBAL VARIABLE IN THE SCRIPT.
+// ADD CONCURRENCY OPTION FOR PERFORMING UPDATES, CREATES, CHECKS, ETC.
+// ADD ALGORITHM FOR CUT-ACROSS AND DEEP UPDATING.
+// ADD OPTIONS FOR ERROR HANDLING.
+// ADD OPTIONS FOR WHERE UPDATES CAN BE STORED.

@@ -15,6 +15,7 @@ class SymbolTypeFormatter ():
 	formatMap[SymbolType.List] = 'List'
 	formatMap[SymbolType.Version] = 'Version'
 	formatMap[SymbolType.Int32] = 'Int32'
+	formatMap[SymbolType.VersionNumber] = 'VersionNumber'
 
 	@staticmethod
 	def format (param: int) -> str:
