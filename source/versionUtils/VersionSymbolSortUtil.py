@@ -16,7 +16,4 @@ class VersionSymbolSortUtil ():
 		# patch: 15533
 		# 000755_000350_015533
 		#
-		sortKey = '%06d_%06d_%06d' % (versionSymbol.getProp('major').value, versionSymbol.getProp('minor').value, versionSymbol.getProp('patch').value)
-		print('sortKey:')
-		print(sortKey)
-		return sortKey
+		return '%06d_%06d_%06d' % (versionSymbol.getProp('major').value, versionSymbol.getProp('minor').value, versionSymbol.getProp('patch').value)

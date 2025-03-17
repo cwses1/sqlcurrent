@@ -43,9 +43,12 @@ from constraintUtils.OrderConstraintUtil import *
 from formatters.SymbolListFormatter import *
 from formatters.ExprListFormatter import *
 from listUtils.RemoveDuplicatesListUtil import *
-from symbolTables.VersionSymbolLoader import *
+from symbolLoaders.VersionSymbolLoader import *
 from versionUtils.VersionSymbolSortUtil import *
 from parsers.VersionNumberParser import *
+from entities.UpdateTrackingLine import *
+from namers.VersionSymbolNamer import *
+from formatters.VersionSymbolFormatter import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -310,6 +313,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# DETERMINE THE BRANCH NAME.  IF NO NAME IS GIVEN THEN WE USE 'default'.
 		#
+		branchExpr = None
 		branchName = 'default'
 
 		if ctx.expr() != None:
@@ -332,6 +336,18 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# CREATE THE SYMBOL.
 		#
 		createdSymbol = Symbol(symbolName, SymbolType.Version)
+
+		#
+		# ADD THE BRANCH PROPERTY.
+		#
+		if branchExpr != None:
+			createdSymbol.setProp('branch', branchExpr)
+		else:
+			createdBranchExpr = Expr()
+			createdBranchExpr.name = 'branch'
+			createdBranchExpr.type = SymbolType.String
+			createdBranchExpr.value = branchName
+			createdSymbol.setProp('branch', createdBranchExpr)
 
 		#
 		# ADD THE MAJOR, MINOR, AND PATCH PROPERTIES.
@@ -486,7 +502,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 				eventFileWriter = csv.writer(eventFileHandle)
 				eventFileWriter.writerow(['name','branch','datetime','batchId','operation','version','scriptFilePath','result'])
 				#eventFileWriter.writerow(['name','branch','datetime','batchId','operation','version','scriptFilePath','result'])
-
 
 
 	def visitSolutionStatement(self, ctx:SqlCurrentParser.SolutionStatementContext):
@@ -946,25 +961,35 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# GET THE CURRENT DATABASE VERSION.
 		#
-		eventFileDir = './databases/{}'.format(branchName) 
-		eventFilePath = '{}/{}.txt'.format(eventFileDir, symbolName)
-		print('eventFilePath: {}'.format(eventFilePath))
+		updateTrackingFileDir = './databases/{}'.format(branchName) 
+		updateTrackingFilePath = '{}/{}.txt'.format(updateTrackingFileDir, symbolName)
+		print('updateTrackingFilePath: {}'.format(updateTrackingFilePath))
 
 		#
-		# IF THE EVENT FILE ALREADY EXISTS, THIS IS AN ERROR.
+		# IF THE UPDATE TRACKING FILE DOES NOT EXIST THEN WE HAVE A PROBLEM.
 		#
-		if not os.path.exists(eventFilePath):
-			raise NotImplementedError('Error.  Cannot update.  Event file not found:{}'.format(eventFilePath))
+		if not os.path.exists(updateTrackingFilePath):
+			raise NotImplementedError('Error: Update tracking file not found:{}. Stopping.'.format(updateTrackingFilePath))
 
 		#
 		# READ THE EVENT FILE.
 		#
-		versionListInEventFile:List[str] = []
+		#versionListInUpdateTrackingFile:List[str] = []
+		updateTrackingLineList:List[UpdateTrackingLine] = []
 
-		with open(eventFilePath, 'r', encoding='utf-8') as eventFileHandle:
-			eventFileReader = csv.DictReader(eventFileHandle)
-			for row in eventFileReader:
-				versionListInEventFile.append(row['version'])
+		with open(updateTrackingFilePath, 'r', encoding='utf-8') as updateTrackingFileHandle:
+			updateTrackingFileReader = csv.DictReader(updateTrackingFileHandle)
+			for row in updateTrackingFileReader:
+				updateTrackingLine = UpdateTrackingLine()
+				updateTrackingLine.databaseName = row['databaseName']
+				updateTrackingLine.branch = row['branch']
+				updateTrackingLine.datetime = row['datetime']
+				updateTrackingLine.batchId = row['batchId']
+				updateTrackingLine.operation = row['operation']
+				updateTrackingLine.version = row['version']
+				updateTrackingLine.result = row['result']
+				updateTrackingLineList.append(updateTrackingLine)
+				#versionListInUpdateTrackingFile.append(row['version'])
 
 		#
 		# REMOVE VERSION DUPLICATES
@@ -972,59 +997,105 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# SORT
 		# GET THE LATEST VERSION.
 		#
-		versionListInEventFile = RemoveDuplicatesListUtil.removeVersionStrDuplicates(versionListInEventFile)
-		print(versionListInEventFile)
+		#versionListInUpdateTrackingFile = RemoveDuplicatesListUtil.removeVersionStrDuplicates(versionListInUpdateTrackingFile)
+		#print(versionListInUpdateTrackingFile)
 
 		#
-		# LOAD THE VERSION SYMBOLS FOUND IN THE EVENT FILE.
+		# LOAD THE VERSION SYMBOLS FOUND IN THE UPDATE TRACKING FILE.
 		#
-		versionSymbolsFromEventFile = VersionSymbolLoader.getVersionSymbolsInListInBranch(versionListInEventFile, branchName, self._symbolTableManager)
-		print('versionSymbolsFromEventFile:')
-		print(SymbolListFormatter.formatText(versionSymbolsFromEventFile))
+		#versionSymbolsFromUpdateTrackingFile = VersionSymbolLoader.getVersionSymbolsInListInBranch(versionListInUpdateTrackingFile, branchName, self._symbolTableManager)
 
 		#
 		# SORT THE VERSION SYMBOLS.
 		#
-		VersionSymbolSortUtil.sortVersionSymbolList(versionSymbolsFromEventFile)
+		#versionSymbolsFromUpdateTrackingFile = VersionSymbolSortUtil.sortVersionSymbolList(versionSymbolsFromUpdateTrackingFile)
+		#print('versionSymbolsFromUpdateTrackingFile:')
+		#print(SymbolListFormatter.formatText(versionSymbolsFromUpdateTrackingFile))
 
 		#
-		# GET THE STATUS () OF EACH THE VERSION SYMBOLS.
+		# GET THE RESULT (success, failure) FOR EACH THE VERSIONS.
 		#
+		#versionTrackingDict = {}
+
+		#for updateTrackingLine in updateTrackingLineList:
+		#	versionTrackingDict[updateTrackingLine.version] = updateTrackingLine
 
 		#
 		# GET THE MOST RECENT VERSION SYMBOL THAT HAS A SUCCESS CODE.
 		#
+		#for versionSymbol in versionSymbolsFromUpdateTrackingFile:
+		lastSuccessfulVersionNumber = None
+
+		updateTrackingLineList.reverse()
 
 
+		for updateTrackingLine in updateTrackingLineList:
+			print(updateTrackingLine.version)
+			print(updateTrackingLine.result)
+			if updateTrackingLine.result == 'success':
+				lastSuccessfulVersionNumber = updateTrackingLine.version
+				break
+		
+		if lastSuccessfulVersionNumber == None:
+			print('Error: Could not find the last successful version number in the update tracking file.')
+			return
+
+		print('lastSuccessfulVersionNumber:')
+		print(lastSuccessfulVersionNumber)
 
 		#
-		# GET THE LIST OF VERSIONS THAT WE NEED FOR THE UPDATE.
-		# THESE ARE ALL OF THE VERSIONS AFTER THE LATEST VERSION IN THE DATABASE'S BRANCH.
+		# GET THE LIST OF VERSION SYMBOLS THAT WE NEED FOR THE UPDATE.
+		# THESE ARE ALL OF THE VERSIONS AFTER THE LAST SUCCESSFUL VERSION IN THE DATABASE'S BRANCH.
 		# SORT THE VERSIONS SO WE CAN RUN THEM IN THE CORRECT ORDER.
 		# RUN EACH VERSION FOR THIS DATABASE.
 		#
+		#lastSuccessfulVersionSymbol = self._symbolTableManager.getSymbolByName(VersionSymbolNamer.createName(branchName, lastSuccessfulVersionNumber))
+		#print('lastSuccessfulVersionSymbol:')
+		#print(SymbolFormatter.formatText(lastSuccessfulVersionSymbol))
+		nextVersionSymbols = VersionSymbolLoader.getNextVersionSymbolsAfterVersionNumber(lastSuccessfulVersionNumber, branchName, self._symbolTableManager)
 
+		print('nextVersionSymbols:')
+		print(SymbolListFormatter.formatText(nextVersionSymbols))
 
-
-
-
-
-		return
 		#
-		# LOAD THE CREATE SCRIPT TEXT.
+		# SORT THE NEXT VERSION SYMBOLS SO WE CAN APPLY THEM IN THE CORRECT ORDER.
 		#
-		createScriptPropExpr = symbol.getProp('create')
+		nextVersionSymbols = VersionSymbolSortUtil.sortVersionSymbolList(nextVersionSymbols)
 
-		for i in range(len(createScriptPropExpr.value)):
-			createScriptPath = createScriptPropExpr.value[i].value
-			createScriptText = StringFileReader.readFile(createScriptPath)
+		#
+		# UPDATE THE DATABASE TO THE NEXT VERSION.
+		#
+		for nextVersionSymbol in nextVersionSymbols:
+			#
+			#
+			#
 
 			#
-			# TELL THE USER WHAT WE'RE DOING.
+			# RUN APPLY SCRIPTS.
 			#
-			print('{}: \'{}\'.'.format(symbolName, createScriptPath))
+			applyPropExpr = nextVersionSymbol.getProp('apply')
 
-			#
-			# RUN THE SCRIPT.
-			#
-			databaseClient.runCreateScript(createScriptText)
+			for applyExpr in applyPropExpr.value:
+				applyScriptFilePath = applyExpr.value
+				print('{}: \'{}\'.'.format(symbolName, applyScriptFilePath))
+				applyScriptText = StringFileReader.readFile(applyScriptFilePath)
+				databaseClient.runApplyScript(applyScriptText)
+
+				#
+				# GET THE UPDATE TRACKING FILE PATH.
+				#
+				updateTrackingFilePath = './databases/{}/{}.txt'.format(branchName, symbolName)
+				print('updateTrackingFilePath: {}'.format(updateTrackingFilePath))
+
+				#
+				# IF THE EVENT FILE ALREADY EXISTS, THIS IS AN ERROR.
+				#
+				if not os.path.exists(updateTrackingFilePath):
+					raise NotImplementedError('Update tracking file does not exist.')
+
+				#
+				# ADD AN ENTRY TO THE UPDATE TRACKING FILE.
+				#
+				with open(updateTrackingFilePath, 'a', encoding='utf-8') as updateTrackingFileHandle:
+					updateTrackingFileWriter = csv.writer(updateTrackingFileHandle)
+					updateTrackingFileWriter.writerow([symbolName,branchName,'now','myFavoritebatchId','update',VersionSymbolFormatter.formatVersionString(nextVersionSymbol),applyScriptFilePath,'success'])

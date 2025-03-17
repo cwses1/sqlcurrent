@@ -21,10 +21,16 @@ class SymbolTable ():
 		return self.table.values()
 
 	def getAllDatabaseSymbols (self) -> List[Symbol]:
+		return self.getAllSymbolsByType(SymbolType.Database)
+
+	def getAllVersionSymbols (self) -> List[Symbol]:
+		return self.getAllSymbolsByType(SymbolType.Version)
+
+	def getAllSymbolsByType (self, symboltype:int) -> List[Symbol]:
 		symbolList:List[Symbol] = []
 
 		for symbol in self.table.values():
-			if symbol.type == SymbolType.Database:
+			if symbol.type == symboltype:
 				symbolList.append(symbol)
 
 		return symbolList

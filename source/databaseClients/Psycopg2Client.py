@@ -14,3 +14,21 @@ class Psycopg2Client (DatabaseClientBase):
 				curs.execute(createScript)
 
 		conn.close()
+
+	def runUpdateScript (self, createScript:str):
+		conn = psycopg2.connect(self.connString)
+
+		with conn:
+			with conn.cursor() as curs:
+				curs.execute(createScript)
+
+		conn.close()
+
+	def runApplyScript (self, createScript:str):
+		conn = psycopg2.connect(self.connString)
+
+		with conn:
+			with conn.cursor() as curs:
+				curs.execute(createScript)
+
+		conn.close()

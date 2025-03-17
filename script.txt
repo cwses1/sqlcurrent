@@ -155,7 +155,8 @@ version 1.0.1 for branch operational
 	dir: './branches/operational/version_1.0.1';
 	precheck: 'check1.sql';
 	precheck: 'check2.sql';
-	apply: 'apply.sql';
+	apply: 'apply1.sql';
+	apply: 'apply2.sql';
 	revert: 'revert.sql';
 	check: 'check3.sql';
 	check: 'check4.sql';

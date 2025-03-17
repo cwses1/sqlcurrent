@@ -29,7 +29,7 @@ class VersionNumberParser ():
 
 	@staticmethod
 	def parseMinorAsString (versionNumber:str) -> str:
-		return versionNumber.split(sep='.')[0]
+		return versionNumber.split(sep='.')[1]
 
 	@staticmethod
 	def parseMinorAsInt (versionNumber:str) -> int:
@@ -45,7 +45,7 @@ class VersionNumberParser ():
 
 	@staticmethod
 	def parsePatchAsString (versionNumber:str) -> str:
-		return versionNumber.split(sep='.')[0]
+		return versionNumber.split(sep='.')[2]
 
 	@staticmethod
 	def parsePatchAsInt (versionNumber:str) -> int:

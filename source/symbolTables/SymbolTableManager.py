@@ -2,6 +2,8 @@ from typing import List
 from .SymbolTable import *
 from .Symbol import *
 from formatters.SymbolTableFormatter import *
+from exceptions.SymbolNotFoundError import *
+from common.SymbolType import *
 
 class SymbolTableManager ():
 	
@@ -48,9 +50,18 @@ class SymbolTableManager ():
 		while len(tempSymbolTableStack) > 0:
 			self.symbolTableStack.append(tempSymbolTableStack.pop())
 
+		if result == None:
+			raise SymbolNotFoundError(symbolName)
+
 		return result
 
 	def getAllDatabaseSymbols (self) -> List[Symbol]:
+		return self.getAllSymbolsByType(SymbolType.Database)
+
+	def getAllVersionSymbols (self) -> List[Symbol]:
+		return self.getAllSymbolsByType(SymbolType.Version)
+
+	def getAllSymbolsByType (self, symbolType:int) -> List[Symbol]:
 		symbolList:List[Symbol] = []
 		tempSymbolTableStack:List[SymbolTable] = []
 
@@ -58,7 +69,7 @@ class SymbolTableManager ():
 			currentSymbolTable:SymbolTable = self.symbolTableStack.pop()
 			tempSymbolTableStack.append(currentSymbolTable)
 
-			for symbol in currentSymbolTable.getAllDatabaseSymbols():
+			for symbol in currentSymbolTable.getAllSymbolsByType(symbolType):
 				symbolList.append(symbol)
 
 		while len(tempSymbolTableStack) > 0:
