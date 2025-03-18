@@ -1,17 +1,4 @@
-databaseName,branch,datetime,batchId,operation,version,result
-nexus_opdb,operational,2025-03-15T12:00:00,1112-dead-beef-0001,create,1.0.0,success
-nexus_opdb,operational,now,myFavoritebatchId,update,1.0.1,apply1.sql,success
-nexus_opdb,operational,now,myFavoritebatchId,update,1.0.1,apply1.sql,success
-nexus_opdb,operational,now,myFavoritebatchId,update,1.0.1,apply2.sql,success
-nexus_opdb,operational,now,myFavoritebatchId,update,1.0.1,apply1.sql,success
-nexus_opdb,operational,now,myFavoritebatchId,update,1.0.1,apply2.sql,success
-nexus_opdb,operational,now,myFavoritebatchId,update,1.0.1,apply1.sql,success
-nexus_opdb,operational,now,myFavoritebatchId,update,1.0.1,apply2.sql,success
-nexus_opdb,operational,now,myFavoritebatchId,update,1.0.1,apply1.sql,success
-nexus_opdb,operational,now,myFavoritebatchId,update,1.0.1,apply2.sql,success
-nexus_opdb,operational,now,myFavoritebatchId,update,1.0.1,apply1.sql,success
-nexus_opdb,operational,now,myFavoritebatchId,update,1.0.1,apply2.sql,success
-nexus_opdb,operational,now,myFavoritebatchId,update,1.0.1,apply1.sql,success
-nexus_opdb,operational,now,myFavoritebatchId,update,1.0.1,apply2.sql,success
-nexus_opdb,operational,now,myFavoritebatchId,update,1.0.1,apply1.sql,success
-nexus_opdb,operational,now,myFavoritebatchId,update,1.0.1,apply2.sql,success
+name,branch,datetime,batchId,script,version,result
+nexus_opdb,operational,2025-03-17 21:18:37.883443,batchId,create.sql,1.0.0,success
+nexus_opdb,operational,dateTimeNow,batchId,apply1.sql,1.0.1,success
+nexus_opdb,operational,dateTimeNow,batchId,apply2.sql,1.0.1,success

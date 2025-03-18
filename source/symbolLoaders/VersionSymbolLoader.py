@@ -29,9 +29,6 @@ class VersionSymbolLoader ():
 		#
 		startVersionSymbol = symbolTableManager.getSymbolByName(VersionSymbolNamer.createName(branchName, startVersionNumber))
 
-		print('startVersionSymbol:')
-		print(SymbolFormatter.formatText(startVersionSymbol))
-
 		#
 		# GET ALL VERSION SYMBOLS.
 		#
@@ -43,7 +40,6 @@ class VersionSymbolLoader ():
 		nextVersionSymbolList:List[Symbol] = []
 
 		for nextVersionSymbol in completeVersionSymbolList:
-			print(SymbolFormatter.formatText(nextVersionSymbol))
 			nextVersionBranchExpr = nextVersionSymbol.getProp('branch')
 			if nextVersionBranchExpr.type == SymbolType.ReferenceToSymbol:
 				nextVersionBranchName = nextVersionBranchExpr.value.name
@@ -52,12 +48,7 @@ class VersionSymbolLoader ():
 			else:
 				raise NotImplementedError('Could not determine next version branch name.')
 
-
-
 			if nextVersionBranchName == branchName and VersionSymbolComparator.compare(nextVersionSymbol, startVersionSymbol) > 0:
 				nextVersionSymbolList.append(nextVersionSymbol)
-				print('yes')
-			else:
-				print('no')
 
 		return nextVersionSymbolList

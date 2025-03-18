@@ -250,8 +250,8 @@ create databases where every tag like 'location%';
 //
 // NEXT THING TO IMPLEMENT AND TEST:
 //
-update nexus_opdb;
 //create nexus_opdb;
+update nexus_opdb;
 
 /*
 update database proxima_embedded to version 1.0.0;

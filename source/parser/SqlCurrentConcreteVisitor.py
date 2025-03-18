@@ -49,6 +49,8 @@ from parsers.VersionNumberParser import *
 from entities.UpdateTrackingLine import *
 from namers.VersionSymbolNamer import *
 from formatters.VersionSymbolFormatter import *
+from datetimeUtils.DateTimeUtil import *
+from messageBuilders.MessageBuilder import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -454,6 +456,31 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		databaseClient.connString = connStringValue
 
 		#
+		# ENSURE THE DIRECTORY EXISTS THAT CONTAINS THE UPDATE TRACKING FILE.
+		#
+		updateTrackingFileDir = './databases/{}'.format(branchName) 
+		os.makedirs(updateTrackingFileDir, exist_ok=True)
+
+		#
+		# GET THE UPDATE TRACKING FILE PATH.
+		#
+		updateTrackingFilePath = '{}/{}.txt'.format(updateTrackingFileDir, symbolName)
+
+		#
+		# IF THE EVENT FILE ALREADY EXISTS, THIS IS AN ERROR.
+		#
+		if os.path.exists(updateTrackingFilePath):
+			print(MessageBuilder.createUpdateTrackingFileAlreadyExistsMessage(symbolName, updateTrackingFilePath))
+			return
+		else:
+			#
+			# CREATE THE FILE.
+			#
+			with open(updateTrackingFilePath, 'w', encoding='utf-8') as updateTrackingFileHandle:
+				updateTrackingFileWriter = csv.writer(updateTrackingFileHandle)
+				updateTrackingFileWriter.writerow(['name','branch','datetime','batchId','script','version', 'result'])
+
+		#
 		# LOAD THE CREATE SCRIPT TEXT.
 		#
 		createScriptPropExpr = symbol.getProp('create')
@@ -473,36 +500,11 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			databaseClient.runCreateScript(createScriptText)
 
 			#
-			# RECORD THE EVENT.
+			# TRACK THE UPDATE.
 			#
-
-			#
-			# ENSURE THE DIRECTORY EXISTS THAT CONTAINS THE EVENT FILE.
-			#
-			eventFileDir = './databases/{}'.format(branchName) 
-			print('eventFileDir: {}'.format(eventFileDir))
-			os.makedirs(eventFileDir, exist_ok=True)
-
-			#
-			# GET THE EVENT FILE PATH.
-			#
-			eventFilePath = '{}/{}.txt'.format(eventFileDir, symbolName)
-			print('eventFilePath: {}'.format(eventFilePath))
-
-			#
-			# IF THE EVENT FILE ALREADY EXISTS, THIS IS AN ERROR.
-			#
-			if os.path.exists(eventFilePath):
-				raise NotImplementedError('Event file already exists.  Cannot create.')
-
-			#
-			# CREATE THE EVENT FILE.
-			#
-			with open(eventFilePath, 'w', encoding='utf-8') as eventFileHandle:
-				eventFileWriter = csv.writer(eventFileHandle)
-				eventFileWriter.writerow(['name','branch','datetime','batchId','operation','version','scriptFilePath','result'])
-				#eventFileWriter.writerow(['name','branch','datetime','batchId','operation','version','scriptFilePath','result'])
-
+			with open(updateTrackingFilePath, 'a', encoding='utf-8') as updateTrackingFileHandle:
+				updateTrackingFileWriter = csv.writer(updateTrackingFileHandle)
+				updateTrackingFileWriter.writerow([symbolName, branchName, DateTimeUtil.getCurrentLocalDateTime(),'batchId', createScriptPath, '1.0.0', 'success'])
 
 	def visitSolutionStatement(self, ctx:SqlCurrentParser.SolutionStatementContext):
 		#
@@ -953,17 +955,14 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# GET THE DATABASE BRANCH.  WHEN THE DATABASE IS CREATED THEN WE STORE THE BRANCH NAME WITH IT.
 		#
-		print(SymbolFormatter.formatText(symbol))
 		branchSymbol = symbol.getProp('branch').value
 		branchName = branchSymbol.name
-		print(SymbolFormatter.formatText(branchSymbol))
 
 		#
 		# GET THE CURRENT DATABASE VERSION.
 		#
 		updateTrackingFileDir = './databases/{}'.format(branchName) 
 		updateTrackingFilePath = '{}/{}.txt'.format(updateTrackingFileDir, symbolName)
-		print('updateTrackingFilePath: {}'.format(updateTrackingFilePath))
 
 		#
 		# IF THE UPDATE TRACKING FILE DOES NOT EXIST THEN WE HAVE A PROBLEM.
@@ -981,11 +980,11 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			updateTrackingFileReader = csv.DictReader(updateTrackingFileHandle)
 			for row in updateTrackingFileReader:
 				updateTrackingLine = UpdateTrackingLine()
-				updateTrackingLine.databaseName = row['databaseName']
+				updateTrackingLine.databaseName = row['name']
 				updateTrackingLine.branch = row['branch']
 				updateTrackingLine.datetime = row['datetime']
 				updateTrackingLine.batchId = row['batchId']
-				updateTrackingLine.operation = row['operation']
+				updateTrackingLine.version = row['script']
 				updateTrackingLine.version = row['version']
 				updateTrackingLine.result = row['result']
 				updateTrackingLineList.append(updateTrackingLine)
@@ -1028,10 +1027,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 		updateTrackingLineList.reverse()
 
-
 		for updateTrackingLine in updateTrackingLineList:
-			print(updateTrackingLine.version)
-			print(updateTrackingLine.result)
 			if updateTrackingLine.result == 'success':
 				lastSuccessfulVersionNumber = updateTrackingLine.version
 				break
@@ -1039,9 +1035,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		if lastSuccessfulVersionNumber == None:
 			print('Error: Could not find the last successful version number in the update tracking file.')
 			return
-
-		print('lastSuccessfulVersionNumber:')
-		print(lastSuccessfulVersionNumber)
 
 		#
 		# GET THE LIST OF VERSION SYMBOLS THAT WE NEED FOR THE UPDATE.
@@ -1054,20 +1047,25 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#print(SymbolFormatter.formatText(lastSuccessfulVersionSymbol))
 		nextVersionSymbols = VersionSymbolLoader.getNextVersionSymbolsAfterVersionNumber(lastSuccessfulVersionNumber, branchName, self._symbolTableManager)
 
-		print('nextVersionSymbols:')
-		print(SymbolListFormatter.formatText(nextVersionSymbols))
-
 		#
 		# SORT THE NEXT VERSION SYMBOLS SO WE CAN APPLY THEM IN THE CORRECT ORDER.
 		#
 		nextVersionSymbols = VersionSymbolSortUtil.sortVersionSymbolList(nextVersionSymbols)
 
 		#
+		# IF THERE ARE NO VERSIONS TO UPDATE TO THEN THE DATABASE IS UPDATE TO DATE.
+		#
+		if len(nextVersionSymbols) == 0:
+			print('{}: {} (has latest version)'.format(symbolName, lastSuccessfulVersionNumber))
+
+		#
 		# UPDATE THE DATABASE TO THE NEXT VERSION.
 		#
 		for nextVersionSymbol in nextVersionSymbols:
+			nextVersionStr = VersionSymbolFormatter.formatVersionString(nextVersionSymbol)
+
 			#
-			#
+			# TO DO: RUN PRECHECK SCRIPTS.
 			#
 
 			#
@@ -1077,7 +1075,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 			for applyExpr in applyPropExpr.value:
 				applyScriptFilePath = applyExpr.value
-				print('{}: \'{}\'.'.format(symbolName, applyScriptFilePath))
+				print('{}: \'{}\' -> {}'.format(symbolName, applyScriptFilePath, nextVersionStr))
 				applyScriptText = StringFileReader.readFile(applyScriptFilePath)
 				databaseClient.runApplyScript(applyScriptText)
 
@@ -1085,7 +1083,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 				# GET THE UPDATE TRACKING FILE PATH.
 				#
 				updateTrackingFilePath = './databases/{}/{}.txt'.format(branchName, symbolName)
-				print('updateTrackingFilePath: {}'.format(updateTrackingFilePath))
 
 				#
 				# IF THE EVENT FILE ALREADY EXISTS, THIS IS AN ERROR.
@@ -1098,4 +1095,8 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 				#
 				with open(updateTrackingFilePath, 'a', encoding='utf-8') as updateTrackingFileHandle:
 					updateTrackingFileWriter = csv.writer(updateTrackingFileHandle)
-					updateTrackingFileWriter.writerow([symbolName,branchName,'now','myFavoritebatchId','update',VersionSymbolFormatter.formatVersionString(nextVersionSymbol),applyScriptFilePath,'success'])
+					updateTrackingFileWriter.writerow([symbolName, branchName, 'dateTimeNow', 'batchId', applyScriptFilePath, nextVersionStr, 'success'])
+
+			#
+			# TO DO: RUN CHECK SCRIPTS.
+			#
