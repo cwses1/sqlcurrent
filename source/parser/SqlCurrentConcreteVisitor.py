@@ -51,6 +51,7 @@ from namers.VersionSymbolNamer import *
 from formatters.VersionSymbolFormatter import *
 from datetimeUtils.DateTimeUtil import *
 from messageBuilders.MessageBuilder import *
+from versionUtils.VersionSymbolFilterUtil import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -939,7 +940,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 	def visitUpdateDatabaseStatement(self, ctx:SqlCurrentParser.UpdateDatabaseStatementContext):
 		#
-		# updateDatabaseStatement: 'update' 'database'? SYMBOL_ID ';';
+		# updateDatabaseStatement: 'update' 'database'? SYMBOL_ID 'to' 'version'? VERSION_ID ';';
 		#
 		symbolName = ctx.SYMBOL_ID().getText()
 		symbol = self._symbolTableManager.getSymbolByName(symbolName)
@@ -1023,6 +1024,32 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# GET THE MOST RECENT VERSION SYMBOL THAT HAS A SUCCESS CODE.
 		#
 		#for versionSymbol in versionSymbolsFromUpdateTrackingFile:
+
+		#
+		# GET THE SPECIFIED VERSION NUMBER.
+		# A SPECIFIED VERSION NUMBER OF NONE MEANS GO ALL THE WAY TO THE LAST VERSION IN THE SCRIPT, WHATEVER THAT MAY BE - THE USER MIGHT NOT KNOW WHAT THAT IS.
+		#
+		specifiedVersionNumber = None
+		specifiedVersionSymbolName = None
+		specifiedVersionSymbol = None
+
+		if ctx.toVersionClause() != None:
+			specifiedVersionNumber = self.visitToVersionClause(ctx.toVersionClause())
+			specifiedVersionSymbolName = VersionSymbolNamer.createName(branchName, specifiedVersionNumber)
+
+			#
+			# TO DO: CHECK IF THE TARGET VERSION NUMBER EXISTS IN THE SYMBOL TABLE.
+			#
+			if self._symbolTableManager.hasSymbolByName(specifiedVersionSymbolName):
+				specifiedVersionSymbol = self._symbolTableManager.getSymbolByName(specifiedVersionSymbolName)
+			else:
+				print(MessageBuilder.createSpecifiedVersionNotFoundMessage(branchName, specifiedVersionNumber))
+				return
+
+		#
+		# GET THE CURRENT DATABASE VERSION.
+		# THIS IS DETERMINED BY SCANNING THE UPDATE TRACKING LOG IN REVERSE FOR LAST SUCCESSFUL VERSION NUMBER THAT WAS APPLIED OR REVERTED.
+		#
 		lastSuccessfulVersionNumber = None
 
 		updateTrackingLineList.reverse()
@@ -1033,8 +1060,35 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 				break
 		
 		if lastSuccessfulVersionNumber == None:
-			print('Error: Could not find the last successful version number in the update tracking file.')
+			print(MessageBuilder.createLastVersionNotFoundMessage(branchName, lastSuccessfulVersionNumber))
 			return
+
+		#
+		# GET THE LAST SUCCESSFUL VERSION SYMBOL.
+		#
+		lastSuccessfulVersionSymbolName = VersionSymbolNamer.createName(branchName, lastSuccessfulVersionNumber)
+		lastSuccessfulVersionSymbol = None
+
+		if not self._symbolTableManager.hasSymbolByName(lastSuccessfulVersionSymbolName):
+			print(MessageBuilder.createLastVersionSymbolNotFoundMessage(branchName, lastSuccessfulVersionNumber))
+			return
+
+		lastSuccessfulVersionSymbol = self._symbolTableManager.getSymbolByName(lastSuccessfulVersionSymbolName)
+
+		if specifiedVersionSymbol != None:
+			#
+			# IF THE VERSION WAS SPECIFIED CHECK IF THE SPECIFIED VERSION SYMBOL IS EQUAL TO THE CURRENT VERSION SYMBOL.
+			#
+			if VersionSymbolComparator.compare(specifiedVersionSymbol, lastSuccessfulVersionSymbol) == 0:
+				print(MessageBuilder.createCurrentVersionEqualToSpecifiedVersionMessage(branchName, lastSuccessfulVersionNumber))
+				return
+
+			#
+			# CHECK IF THE SPECIFIED VERSION SYMBOL IS LESS THAN THE CURRENT VERSION SYMBOL.
+			#
+			if VersionSymbolComparator.compare(specifiedVersionSymbol, lastSuccessfulVersionSymbol) < 0:
+				print(MessageBuilder.createSpecifiedVersionLessThanCurrentVersionMessage(branchName, specifiedVersionNumber, lastSuccessfulVersionNumber))
+				return
 
 		#
 		# GET THE LIST OF VERSION SYMBOLS THAT WE NEED FOR THE UPDATE.
@@ -1042,21 +1096,26 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# SORT THE VERSIONS SO WE CAN RUN THEM IN THE CORRECT ORDER.
 		# RUN EACH VERSION FOR THIS DATABASE.
 		#
-		#lastSuccessfulVersionSymbol = self._symbolTableManager.getSymbolByName(VersionSymbolNamer.createName(branchName, lastSuccessfulVersionNumber))
-		#print('lastSuccessfulVersionSymbol:')
-		#print(SymbolFormatter.formatText(lastSuccessfulVersionSymbol))
 		nextVersionSymbols = VersionSymbolLoader.getNextVersionSymbolsAfterVersionNumber(lastSuccessfulVersionNumber, branchName, self._symbolTableManager)
+
+		#
+		# IF THERE ARE NO VERSIONS TO UPDATE TO THEN THE DATABASE IS UPDATE TO DATE.
+		# WE WILL ONLY PRINT THIS MESSAGE IF SOMEONE HAS NOT SPECIFIED A VERSION (IF THE USER SPECIFIED A VERSION, THEN THIS WOULD BE DETECTED ABOVE).
+		#
+		if len(nextVersionSymbols) == 0:
+			print('{}: {} (has latest version)'.format(symbolName, lastSuccessfulVersionNumber))
+
+		#
+		# WE HAVE VERSIONS TO APPLY TO THIS DATABASE.
+		# IF A VERSION WAS SPECIFIED, THEN REMOVE ANY VERSIONS AFTER THE SPECIFIED VERSION.
+		#
+		if specifiedVersionSymbol != None:
+			nextVersionSymbols = VersionSymbolFilterUtil.removeVersionsAfter(specifiedVersionSymbol, nextVersionSymbols)
 
 		#
 		# SORT THE NEXT VERSION SYMBOLS SO WE CAN APPLY THEM IN THE CORRECT ORDER.
 		#
 		nextVersionSymbols = VersionSymbolSortUtil.sortVersionSymbolList(nextVersionSymbols)
-
-		#
-		# IF THERE ARE NO VERSIONS TO UPDATE TO THEN THE DATABASE IS UPDATE TO DATE.
-		#
-		if len(nextVersionSymbols) == 0:
-			print('{}: {} (has latest version)'.format(symbolName, lastSuccessfulVersionNumber))
 
 		#
 		# UPDATE THE DATABASE TO THE NEXT VERSION.
@@ -1100,3 +1159,18 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			#
 			# TO DO: RUN CHECK SCRIPTS.
 			#
+
+	def visitToVersionClause(self, ctx:SqlCurrentParser.ToVersionClauseContext):
+		#
+		# toVersionClause: 'to' 'version'? VERSION_ID;
+		#
+		return ctx.VERSION_ID().getText()
+
+		#versionExpr = Expr()
+		#versionExpr.type = SymbolType.VersionNumber
+		#versionExpr.value = ctx.VERSION_ID().getText()
+		#return versionExpr
+
+
+	def visitUpdateDatabaseListStatement(self, ctx:SqlCurrentParser.UpdateDatabaseListStatementContext):
+		return self.visitChildren(ctx)

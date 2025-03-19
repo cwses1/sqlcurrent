@@ -245,18 +245,17 @@ create databases where every tag != 'idiot_village';
 create databases where any tag like 'location_my_%';
 create databases where any tag like 'location_rdlab%';
 create databases where every tag like 'location%';
+
+create nexus_opdb;
+update nexus_opdb;
 */
 
 //
 // NEXT THING TO IMPLEMENT AND TEST:
 //
-//create nexus_opdb;
-update nexus_opdb;
+update database nexus_opdb to version 1.0.1;
 
 /*
-update database proxima_embedded to version 1.0.0;
-update proxima_embedded to version 1.0.0;
-
 create databases where any tag not like 'location_us';
 create databases where every tag not like 'location_us';
 
@@ -272,8 +271,13 @@ create databases where every tag in ('location_us');
 create databases where any tag not in ('location_us');
 create databases where every tag not in ('location_us', 'location_my_desk');
 */
-// ADD HOME DIRECTORY FOR ALL DATA, MAKE THIS A GLOBAL VARIABLE IN THE SCRIPT.
+//
+// OTHER IDEAS:
+// 
+// FOR SAFETY, ADD HOME DIRECTORY FOR ALL DATA, MAKE THIS A GLOBAL VARIABLE IN THE SCRIPT.
 // ADD CONCURRENCY OPTION FOR PERFORMING UPDATES, CREATES, CHECKS, ETC.
 // ADD ALGORITHM FOR CUT-ACROSS AND DEEP UPDATING.
 // ADD OPTIONS FOR ERROR HANDLING.
 // ADD OPTIONS FOR WHERE UPDATES CAN BE STORED.
+// INTRODUCE sqlcurrent-env.json CONFIGURATION FILE.
+//

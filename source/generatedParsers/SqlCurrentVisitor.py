@@ -159,5 +159,15 @@ class SqlCurrentVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SqlCurrentParser#toVersionClause.
+    def visitToVersionClause(self, ctx:SqlCurrentParser.ToVersionClauseContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#updateDatabaseListStatement.
+    def visitUpdateDatabaseListStatement(self, ctx:SqlCurrentParser.UpdateDatabaseListStatementContext):
+        return self.visitChildren(ctx)
+
+
 
 del SqlCurrentParser

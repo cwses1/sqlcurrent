@@ -8,17 +8,29 @@ SQL Current is a database migrations tool with the following properties:
 
 I've never found a perfect migrations tool made for database administrators.  Everything seems to be code-driven, script-generating, tied to an ORM, expensive, or confusing to use.  So DBAs just don't use anything.  But that doesn't solve any problem because it's still difficult and time-consuming to write and structure schema change scripts.
 
-It doesn't have to be that way.  Let's say we wanted to update our QA environment databases.  What if we could just write this:
+It doesn't have to be that way.  Let's say we wanted a developer to set up his or her local environment.  What if we could write this:
 
-	update databases to version 1.0.13.1 where environment = 'qa';
+	create and update database ecommercedb;
 
-If you want something like this, then this is the tool for you.  SQL Current is a database migrations scripting engine that lets you manage the changes in multiple databases across several servers using a SQL-like language.
+or if a DBA wanted to update only the QA environment databases to a specific version.  What if we could just write this:
+
+	update databases to version 1.0.13.1 where environment = qa;
+
+If you want to work with databases this way, then this is the tool for you.  SQL Current is a database migrations scripting engine that lets you manage the changes in multiple databases across several servers using a SQL-like language.
 
 ## Summary
 
 SQL Current is a database migrations tool.  To perform a migration (a change to the database schema) you do the following:
 * Describe your database topology by defining servers and databases.
 * Define your versions by binding them to your SQL change scripts.  You write the check, apply and revert scripts.
+
+## Use Cases
+
+* Developer setting up a local environment.
+* Updating specific environments.
+* Topology database and customer data scenario.
+* Operational database and analytical database scenario.
+* Some applications use multiple databases for different purposes, these are called branches.
 
 ## Setup
 

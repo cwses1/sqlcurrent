@@ -19,6 +19,7 @@ statement: serverStatement
 	| environmentStatement
 	| createDatabaseListStatement
 	| updateDatabaseStatement
+	| updateDatabaseListStatement
 	;
 
 serverStatement: 'server' SYMBOL_ID '{' serverPropList '}';
@@ -64,4 +65,7 @@ simpleWhereExprList: '(' ')'
 orderByClause: 'order' 'by' orderBySegment (',' orderBySegment)?;
 orderBySegment: SYMBOL_ID ('asc' | 'descending')?;
 
-updateDatabaseStatement: 'update' 'database'? SYMBOL_ID ';';
+updateDatabaseStatement: 'update' 'database'? SYMBOL_ID toVersionClause? ';';
+toVersionClause: 'to' 'version'? VERSION_ID;
+
+updateDatabaseListStatement: 'update' 'databases' toVersionClause? whereClause? orderByClause? ';';

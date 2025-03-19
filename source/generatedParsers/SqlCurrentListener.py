@@ -278,5 +278,23 @@ class SqlCurrentListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SqlCurrentParser#toVersionClause.
+    def enterToVersionClause(self, ctx:SqlCurrentParser.ToVersionClauseContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#toVersionClause.
+    def exitToVersionClause(self, ctx:SqlCurrentParser.ToVersionClauseContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#updateDatabaseListStatement.
+    def enterUpdateDatabaseListStatement(self, ctx:SqlCurrentParser.UpdateDatabaseListStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#updateDatabaseListStatement.
+    def exitUpdateDatabaseListStatement(self, ctx:SqlCurrentParser.UpdateDatabaseListStatementContext):
+        pass
+
+
 
 del SqlCurrentParser
