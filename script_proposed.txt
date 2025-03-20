@@ -1,5 +1,4 @@
 
-update databases to version 1.0.0 where name = proxima_embedded;
 update databases to version 1.0.0 where server = nexus;
 update databases to version 1.0.0 where environment = qa;
 update databases to version 1.0.0 where tag in 'location_newcastle';

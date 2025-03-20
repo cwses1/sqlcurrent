@@ -248,12 +248,13 @@ create databases where every tag like 'location%';
 
 create nexus_opdb;
 update nexus_opdb;
+update database nexus_opdb to version 1.0.0;
 */
 
 //
 // NEXT THING TO IMPLEMENT AND TEST:
 //
-update database nexus_opdb to version 1.0.1;
+update databases to version 1.0.0 where name = proxima_embedded;
 
 /*
 create databases where any tag not like 'location_us';
@@ -280,4 +281,5 @@ create databases where every tag not in ('location_us', 'location_my_desk');
 // ADD OPTIONS FOR ERROR HANDLING.
 // ADD OPTIONS FOR WHERE UPDATES CAN BE STORED.
 // INTRODUCE sqlcurrent-env.json CONFIGURATION FILE.
+// IMPLEMENT CHECKS DURING THE UPDATES, ALSO PERMIT CONFIGURATION TO SKIP OR FORCE PRECHECKS & CHECKS.
 //

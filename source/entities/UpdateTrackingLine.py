@@ -4,6 +4,6 @@ class UpdateTrackingLine ():
 		self.branch:str = None
 		self.datetime:str = None
 		self.batchId:str = None
-		self.operation:str = None
+		self.script:str = None
 		self.version:str = None
 		self.result:str = None

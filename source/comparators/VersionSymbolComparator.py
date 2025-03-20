@@ -10,6 +10,6 @@ class VersionSymbolComparator ():
 
 		if leftVersion > rightVersion:
 			return 1
-		elif rightVersion < leftVersion:
+		elif rightVersion > leftVersion:
 			return -1
 		return 0
