@@ -1185,18 +1185,9 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# A SPECIFIED VERSION NUMBER OF NONE MEANS GO ALL THE WAY TO THE LAST VERSION IN THE SCRIPT, WHATEVER THAT MAY BE - THE USER MIGHT NOT KNOW WHAT THAT IS.
 		#
 		specifiedVersionNumber = None
-		specifiedVersionSymbolName = None
-		specifiedVersionSymbol = None
 
 		if ctx.toVersionClause() != None:
 			specifiedVersionNumber = self.visitToVersionClause(ctx.toVersionClause())
-			specifiedVersionSymbolName = VersionSymbolNamer.createName(branchName, specifiedVersionNumber)
-
-			if self._symbolTableManager.hasSymbolByName(specifiedVersionSymbolName):
-				specifiedVersionSymbol = self._symbolTableManager.getSymbolByName(specifiedVersionSymbolName)
-			else:
-				print(MessageBuilder.createSpecifiedVersionNotFoundMessage(branchName, specifiedVersionNumber))
-				return
 
 		#
 		# GET THE ENTIRE LIST OF DATABASES.
@@ -1241,6 +1232,8 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# UPDATE EACH DATABASE.
 		#
 		for databaseSymbol in databaseSymbolList:
+			databaseSymbolName = databaseSymbol.name
+
 			#
 			# GET THE DATABASE CLIENT FOR THIS DATABASE VIA THE driver PROPERTY.
 			#
@@ -1254,6 +1247,21 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			#
 			branchSymbol = databaseSymbol.getProp('branch').value
 			branchName = branchSymbol.name
+
+			#
+			# THE DATABASE DETERMINES THE BRANCH. GET THE VERSION SYMBOL FOR THE BRANCH.
+			#
+			specifiedVersionSymbolName = None
+			specifiedVersionSymbol = None
+
+			if specifiedVersionNumber != None:
+				specifiedVersionSymbolName = VersionSymbolNamer.createName(branchName, specifiedVersionNumber)
+
+				if self._symbolTableManager.hasSymbolByName(specifiedVersionSymbolName):
+					specifiedVersionSymbol = self._symbolTableManager.getSymbolByName(specifiedVersionSymbolName)
+				else:
+					print(MessageBuilder.createSpecifiedVersionNotFoundMessage(branchName, specifiedVersionNumber))
+					return
 
 			#
 			# GET THE DATABASE'S CURRENT VERSION.

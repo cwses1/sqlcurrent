@@ -123,7 +123,9 @@ database proxima_opdb
 	solution: project1;
 	driver: 'postgres';
 	server: proxima;
-	connString: 'Server=${proxima.host};database=embedded';
+	//connString: 'Server=${proxima.host};database=embedded';
+	connString: 'dbname=binningtool user=postgres password=postgres';
+	create: 'create.sql';
 	environment: dev;
 	branch: operational;
 	tag: 'location_us';
@@ -254,7 +256,9 @@ update database nexus_opdb to version 1.0.0;
 //
 // NEXT THING TO IMPLEMENT AND TEST:
 //
-update databases to version 1.0.0 where name = proxima_embedded;
+create databases where id = proxima_opdb;
+
+//update databases to version 1.0.0 where id = proxima_opdb;
 
 /*
 create databases where any tag not like 'location_us';
