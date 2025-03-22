@@ -1,6 +1,7 @@
 import sys
 import os
 import csv
+import uuid
 from typing import Dict
 from generatedParsers.SqlCurrentVisitor import *
 from generatedParsers.SqlCurrentParser import *
@@ -54,6 +55,8 @@ from messageBuilders.MessageBuilder import *
 from versionUtils.VersionSymbolFilterUtil import *
 from fileReaders.UpdateTrackingFileReader import *
 from fileWriters.UpdateTrackingFileWriter import *
+from formatters.DateTimeFormatter import *
+from datetimeUtils.DateTimeUtil import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -755,15 +758,27 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			symbolList = orderByConstraint.applyConstraint(symbolList)
 
 		#
+		# CREATE OBJECTS WE CAN REUSE ACROSS DATABASES.
+		#
+		updateTrackingFileReader = UpdateTrackingFileReader()
+		updateTrackingFileReader.trackingDir = './databases'
+
+		updateTrackingFileWriter = UpdateTrackingFileWriter()
+		updateTrackingFileWriter.trackingDir = './databases'
+
+		#
 		# CREATE THE DATABASES.
 		#
 		for symbol in symbolList:
+
+			databaseSymbolName = symbol.name
+
 			if not symbol.hasProp('create'):
-				print('{}: No create property found in database definition.'.format(symbol.name))
+				print('{}: No \'create\' property found in database definition.'.format(symbol.name))
 				continue
 
 			#
-			# GET THE DATABASE CLIENT.
+			# GET THE DATABASE CLIENT FOR THIS DATABASE.
 			#
 			driverValue = symbol.getProp('driver').value
 			connStringValue = symbol.getProp('connString').value
@@ -771,13 +786,45 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			databaseClient.connString = connStringValue
 
 			#
+			# GET THE BRANCH NAME FOR THIS DATABASE.
+			#
+			branchPropExpr = symbol.getProp('branch')
+			branchName = branchPropExpr.name
+
+			#
+			# ENSURE THE DIRECTORY EXISTS THAT CONTAINS THE UPDATE TRACKING FILE.
+			#
+			updateTrackingFileWriter.ensureDirExists(branchName)
+
+			#
+			# IF THE UPDATE TRACKING FILE ALREADY EXISTS, THIS IS AN ERROR.  WE DO NOT CREATE A DATABASE TWICE.
+			#
+			if updateTrackingFileWriter.fileExists(branchName, databaseSymbolName):
+				print(MessageBuilder.createUpdateTrackingFileAlreadyExistsMessage(databaseSymbolName, updateTrackingFileWriter.getFilePath(branchName, databaseSymbolName)))
+				return
+
+			#
+			# CREATE THE FILE.
+			#
+			updateTrackingFileWriter.createFile(branchName, databaseSymbolName)
+
+			#
 			# LOAD THE CREATE SCRIPT TEXT.
 			#
 			createScriptPropExpr = symbol.getProp('create')
 
+			#
+			# CREATE A BATCH ID.
+			#
+			batchId = str(uuid.uuid4())
+
+			#
+			# TO DO: GET THE TIME WE STARTED ALL OF THESE.
+			#
+
 			for i in range(len(createScriptPropExpr.value)):
 				createScriptPath = createScriptPropExpr.value[i].value
-				#createScriptText = StringFileReader.readFile(createScriptPath)
+				createScriptText = StringFileReader.readFile(createScriptPath)
 
 				#
 				# TELL THE USER WHAT WE'RE DOING.
@@ -787,7 +834,20 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 				#
 				# RUN THE SCRIPT.
 				#
-				#databaseClient.runCreateScript(createScriptText)
+				databaseClient.runCreateScript(createScriptText)
+
+				#
+				# TRACK THE UPDATE.
+				#
+				updateTrackingLine = UpdateTrackingLine()
+				updateTrackingLine.branch = branchName
+				updateTrackingLine.databaseName = databaseSymbolName
+				updateTrackingLine.datetime = DateTimeFormatter.formatForUpdateTrackingFile(DateTimeUtil.getCurrentLocalDateTime())
+				updateTrackingLine.batchId = batchId
+				updateTrackingLine.script = applyScriptFilePath
+				updateTrackingLine.version = nextVersionStr
+				updateTrackingLine.version = 'success'
+				updateTrackingFileWriter.writeUpdateTrackingLine(branchName, databaseSymbolName, updateTrackingLine)
 
 	def visitWhereClause(self, ctx:SqlCurrentParser.WhereClauseContext):
 		#

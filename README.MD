@@ -1,8 +1,39 @@
 # SQL Current
 
-SQL Current is a database migrations tool with the following properties:
-* Everything is driven by DDL or DML scripts (SQL or otherwise) that you write.
-* It's open-source and totally free to use for any purpose.
+SQL Current is a database migrations scripting engine.  It works with any database that has a Python driver.
+
+# Brief Tutorial
+
+Here is a simple SQL Current script:
+
+	database mydb
+	{
+		driver: 'postgres';
+		connString: 'host=127.0.0.1 port=5432 dbname=mydb user=postgres password=postgres';
+		create: 'create.sql';
+	}
+
+	create mydb;
+
+Run the script:
+
+	> cd /home/repos/sqlcurrent
+	> sqlcurrent script.txt
+
+What this script does:
+
+1. The database variable "mydb" is created with the following properties:
+	* driver - the type of database server we are connecting to (such as PostgreSQL, MySQL, SQL Server, MongoDB, InfluxDB).  This determines the Python driver / adapter library to use.
+	* connString - the connection string or DSN of the database
+	* create - the path to the create script.
+2. The 'create.sql' script is run.  Whatever you did in the script happens.
+3. An update tracking file is created to track the version of this database.  Since no version was specified in the script, SQL Current uses version 1.0.0.
+
+Try running the script again.  You should get this error:
+
+	mydb ERROR: This database already exists.
+
+SQL Current will not attempt to create a database that already exists.
 
 ## Motivation
 

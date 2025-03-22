@@ -2,7 +2,7 @@ class MessageBuilder ():
 
 	@staticmethod
 	def createUpdateTrackingFileAlreadyExistsMessage (symbolName:str, updateTrackingFilePath:str) -> str:
-		message = '{} ERROR:\n'.format(symbolName)
+		message = '{} ERROR: This database already exists.\n'.format(symbolName)
 		message += ' * Update tracking file \'{}\' for this database already exists.\n'.format(updateTrackingFilePath)
 		message += ' * SQL Current creates the update tracking file when you first create the database.\n'
 		message += ' * Since this file already exists, SQL Current believes you\'ve already created this database, so it makes no sense to try to create it again, which could result in catastrophic data loss.\n'

@@ -119,13 +119,12 @@ database nexus_analyticaldb
 
 database proxima_opdb
 {
-	name: 'b';
-	solution: project1;
-	driver: 'postgres';
-	server: proxima;
-	//connString: 'Server=${proxima.host};database=embedded';
+	driver: 'psycopg2';
 	connString: 'dbname=binningtool user=postgres password=postgres';
 	create: 'create.sql';
+	name: 'b';
+	solution: project1;
+	server: proxima;
 	environment: dev;
 	branch: operational;
 	tag: 'location_us';
@@ -248,9 +247,10 @@ create databases where any tag like 'location_my_%';
 create databases where any tag like 'location_rdlab%';
 create databases where every tag like 'location%';
 
-create nexus_opdb;
 update nexus_opdb;
+create nexus_opdb;
 update database nexus_opdb to version 1.0.0;
+update database nexus_opdb to version 1.0.1;
 */
 
 //
@@ -258,7 +258,11 @@ update database nexus_opdb to version 1.0.0;
 //
 create databases where id = proxima_opdb;
 
+
+
+
 //update databases to version 1.0.0 where id = proxima_opdb;
+
 
 /*
 create databases where any tag not like 'location_us';
@@ -286,4 +290,7 @@ create databases where every tag not in ('location_us', 'location_my_desk');
 // ADD OPTIONS FOR WHERE UPDATES CAN BE STORED.
 // INTRODUCE sqlcurrent-env.json CONFIGURATION FILE.
 // IMPLEMENT CHECKS DURING THE UPDATES, ALSO PERMIT CONFIGURATION TO SKIP OR FORCE PRECHECKS & CHECKS.
+// WHEN CREATING MULTIPLE DATABASES, DO WE STOP ON ANY ERROR?
+// WHEN CREATING A DATABASE, DO WE ALLOW A RECREATE TO HAPPEN?
+// WHEN UPDATING MULTIPLE DATABASES, DO WE STOP ON ANY ERROR?
 //
