@@ -751,6 +751,18 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			symbolList = whereConstraint.applyConstraint(symbolList)
 
 		#
+		# IF THERE ARE NO DATABASES TO UPDATE AFTER THE WHERE CLAUSE IS APPLIED, THEN LET THE USER KNOW.
+		#
+		if len(symbolList) == 0:
+			print(MessageBuilder.createNoDatabasesAfterWhereClauseMessage())
+			return
+
+		#
+		# LET THE USER KNOW HOW MANY DATABASES WE'RE DEALING WITH.
+		#
+		print(MessageBuilder.createDatabaseCreateCountAfterWhereClauseMessage(symbolList))
+
+		#
 		# ORDER THE LIST OF DATABASES.
 		#
 		if ctx.orderByClause() != None:
@@ -767,11 +779,16 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		updateTrackingFileWriter.trackingDir = './databases'
 
 		#
+		# VALIDATE THE DATABASES AND STOP IF THERE IS A PROBLEM?
+		#
+
+		#
 		# CREATE THE DATABASES.
 		#
 		for symbol in symbolList:
 
-			databaseSymbolName = symbol.name
+			databaseSymbol = symbol
+			databaseSymbolName = databaseSymbol.name
 
 			if not symbol.hasProp('create'):
 				print('{}: No \'create\' property found in database definition.'.format(symbol.name))
@@ -801,7 +818,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			#
 			if updateTrackingFileWriter.fileExists(branchName, databaseSymbolName):
 				print(MessageBuilder.createUpdateTrackingFileAlreadyExistsMessage(databaseSymbolName, updateTrackingFileWriter.getFilePath(branchName, databaseSymbolName)))
-				return
+				continue
 
 			#
 			# CREATE THE FILE.
@@ -823,18 +840,27 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			#
 
 			for i in range(len(createScriptPropExpr.value)):
-				createScriptPath = createScriptPropExpr.value[i].value
-				createScriptText = StringFileReader.readFile(createScriptPath)
+				createScriptFilePath = createScriptPropExpr.value[i].value
+				createScriptText = StringFileReader.readFile(createScriptFilePath)
 
 				#
 				# TELL THE USER WHAT WE'RE DOING.
 				#
-				print('{}: \'{}\'.'.format(symbol.name, createScriptPath))
+				print('{}: \'{}\'.'.format(symbol.name, createScriptFilePath))
 
 				#
 				# RUN THE SCRIPT.
 				#
 				databaseClient.runCreateScript(createScriptText)
+
+				#
+				# GET THE DATABASE VERSION WHEN CREATED.
+				# IF NOT FOUND, THEN DEFAULT IT TO VERSION 1.0.0.
+				#
+				createVersionStr = '1.0.0'
+
+				if databaseSymbol.hasProp('version'):
+					createVersionStr = databaseSymbol.getProp('version').value
 
 				#
 				# TRACK THE UPDATE.
@@ -844,9 +870,9 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 				updateTrackingLine.databaseName = databaseSymbolName
 				updateTrackingLine.datetime = DateTimeFormatter.formatForUpdateTrackingFile(DateTimeUtil.getCurrentLocalDateTime())
 				updateTrackingLine.batchId = batchId
-				updateTrackingLine.script = applyScriptFilePath
-				updateTrackingLine.version = nextVersionStr
-				updateTrackingLine.version = 'success'
+				updateTrackingLine.script = createScriptFilePath
+				updateTrackingLine.version = createVersionStr
+				updateTrackingLine.result = 'success'
 				updateTrackingFileWriter.writeUpdateTrackingLine(branchName, databaseSymbolName, updateTrackingLine)
 
 	def visitWhereClause(self, ctx:SqlCurrentParser.WhereClauseContext):
@@ -1258,7 +1284,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# IF THERE ARE NO DATABASES DEFINED THEN WE ARE DONE.
 		#
 		if len(databaseSymbolList) == 0:
-			print(MessageBuilder.createNoDatabasesMessage())
+			print(MessageBuilder.createNoDatabasesDefinedMessage())
 			return
 
 		#
@@ -1269,6 +1295,18 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		if ctx.whereClause() != None:
 			whereConstraint = self.visitWhereClause(ctx.whereClause())
 			databaseSymbolList = whereConstraint.applyConstraint(databaseSymbolList)
+
+		#
+		# IF THERE ARE NO DATABASES TO UPDATE AFTER THE WHERE CLAUSE IS APPLIED, THEN LET THE USER KNOW.
+		#
+		if len(databaseSymbolList) == 0:
+			print(MessageBuilder.createNoDatabasesAfterWhereClauseMessage())
+			return
+
+		#
+		# LET THE USER KNOW HOW MANY DATABASES WE'RE DEALING WITH.
+		#
+		print(MessageBuilder.createDatabaseUpdateCountAfterWhereClauseMessage(len(databaseSymbolList)))
 
 		#
 		# ORDER THE DATABASES.
@@ -1289,9 +1327,15 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		updateTrackingFileWriter.trackingDir = './databases'
 
 		#
+		# CREATE A BATCH ID.
+		#
+		batchId = str(uuid.uuid4())
+
+		#
 		# UPDATE EACH DATABASE.
 		#
 		for databaseSymbol in databaseSymbolList:
+
 			databaseSymbolName = databaseSymbol.name
 
 			#
@@ -1333,7 +1377,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			#
 			if lastSuccessfulVersionNumber == None:
 				print(MessageBuilder.createLastVersionNotFoundMessage(branchName, lastSuccessfulVersionNumber))
-				return
+				continue
 
 			#
 			# GET THE LAST SUCCESSFUL VERSION SYMBOL.
@@ -1343,7 +1387,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 			if not self._symbolTableManager.hasSymbolByName(lastSuccessfulVersionSymbolName):
 				print(MessageBuilder.createLastVersionSymbolNotFoundMessage(branchName, lastSuccessfulVersionNumber))
-				return
+				continue
 
 			lastSuccessfulVersionSymbol = self._symbolTableManager.getSymbolByName(lastSuccessfulVersionSymbolName)
 
@@ -1355,14 +1399,14 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 				if versionCompareResult == 0:
 					print(MessageBuilder.createCurrentVersionEqualToSpecifiedVersionMessage(databaseSymbolName, branchName, lastSuccessfulVersionNumber))
-					return
+					continue
 
 				#
 				# CHECK IF THE SPECIFIED VERSION SYMBOL IS LESS THAN THE CURRENT VERSION SYMBOL.
 				#
 				if versionCompareResult < 0:
 					print(MessageBuilder.createSpecifiedVersionLessThanCurrentVersionMessage(databaseSymbolName, branchName, specifiedVersionNumber, lastSuccessfulVersionNumber))
-					return
+					continue
 
 			#
 			# GET THE LIST OF VERSION SYMBOLS THAT WE NEED FOR THE UPDATE.
@@ -1378,6 +1422,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			#
 			if len(nextVersionSymbols) == 0:
 				print('{}: {} (has latest version)'.format(databaseSymbolName, lastSuccessfulVersionNumber))
+				continue
 
 			#
 			# WE HAVE VERSIONS TO APPLY TO THIS DATABASE.
@@ -1392,6 +1437,13 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			nextVersionSymbols = VersionSymbolSortUtil.sortVersionSymbolList(nextVersionSymbols)
 
 			#
+			# THE UPDATE TRACKING ALREADY MUST EXIST.
+			#
+			if not updateTrackingFileWriter.fileExists(branchName, databaseSymbolName):
+				raise print('{}: ERROR. Update tracking file does not exist.'.format(databaseSymbolName))
+				continue
+
+			#
 			# UPDATE THE DATABASE TO THE NEXT VERSION.
 			#
 			for nextVersionSymbol in nextVersionSymbols:
@@ -1400,6 +1452,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 				#
 				# TO DO: RUN PRECHECK SCRIPTS.
 				#
+
 
 				#
 				# RUN APPLY SCRIPTS.
@@ -1413,24 +1466,18 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 					databaseClient.runApplyScript(applyScriptText)
 
 					#
-					# IF THE UPDATE TRACKING ALREADY EXISTS, THIS IS AN ERROR.
-					#
-					if not os.path.exists(updateTrackingFilePath):
-						raise NotImplementedError('Update tracking file does not exist.')
-
-					#
 					# ADD AN ENTRY TO THE UPDATE TRACKING FILE.
 					#
 					updateTrackingLine = UpdateTrackingLine()
 					updateTrackingLine.branch = branchName
 					updateTrackingLine.databaseName = databaseSymbolName
-					updateTrackingLine.datetime = 'dateTimeNow'
-					updateTrackingLine.batchId = 'batchId'
+					updateTrackingLine.datetime = DateTimeFormatter.formatForUpdateTrackingFile(DateTimeUtil.getCurrentLocalDateTime())
+					updateTrackingLine.batchId = batchId
 					updateTrackingLine.script = applyScriptFilePath
 					updateTrackingLine.version = nextVersionStr
 					updateTrackingLine.version = 'success'
 					updateTrackingFileWriter.writeUpdateTrackingLine(branchName, databaseSymbolName, updateTrackingLine)
 
 				#
-				# TO DO: RUN CHECK SCRIPTS.
+				# TO DO: RUN CHECK SCRIPTS.=
 				#

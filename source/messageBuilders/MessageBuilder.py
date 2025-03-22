@@ -1,3 +1,5 @@
+from typing import List
+
 class MessageBuilder ():
 
 	@staticmethod
@@ -43,6 +45,28 @@ class MessageBuilder ():
 		return message
 
 	@staticmethod
-	def createNoDatabasesMessage () -> str:
-		message = 'No databases defined in the script.'
+	def createNoDatabasesDefinedMessage () -> str:
+		message = 'No databases defined in the script.  Nothing to do.'
 		return message
+
+	@staticmethod
+	def createNoDatabasesAfterWhereClauseMessage () -> str:
+		message = 'No databases remaining after the where clause constraint. Nothing to do.'
+		return message
+
+	@staticmethod
+	def createDatabaseUpdateCountAfterWhereClauseMessage (databaseCount:int) -> str:
+		if databaseCount == 1:
+			return 'Updating {} database.'.format(databaseCount)
+
+		return 'Updating {} databases.'.format(databaseCount)
+
+
+	@staticmethod
+	def createDatabaseCreateCountAfterWhereClauseMessage (symbolList:List[int]) -> str:
+		databaseCount = len(symbolList)
+
+		if databaseCount == 1:
+			return 'Creating {} database.'.format(databaseCount)
+
+		return 'Creating {} databases.'.format(databaseCount)

@@ -251,20 +251,22 @@ update nexus_opdb;
 create nexus_opdb;
 update database nexus_opdb to version 1.0.0;
 update database nexus_opdb to version 1.0.1;
+create databases where id = proxima_opdb;
+create databases where id in (nexus_opdb, proxima_opdb);
 */
 
 //
 // NEXT THING TO IMPLEMENT AND TEST:
 //
-create databases where id = proxima_opdb;
+update databases to version 1.0.0 where id in (nexus_opdb, proxima_opdb);
 
 
 
 
-//update databases to version 1.0.0 where id = proxima_opdb;
 
 
 /*
+
 create databases where any tag not like 'location_us';
 create databases where every tag not like 'location_us';
 
@@ -293,4 +295,5 @@ create databases where every tag not in ('location_us', 'location_my_desk');
 // WHEN CREATING MULTIPLE DATABASES, DO WE STOP ON ANY ERROR?
 // WHEN CREATING A DATABASE, DO WE ALLOW A RECREATE TO HAPPEN?
 // WHEN UPDATING MULTIPLE DATABASES, DO WE STOP ON ANY ERROR?
+// VALIDATE THE DATABASES BEFORE CREATE?
 //
