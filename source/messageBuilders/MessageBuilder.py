@@ -27,9 +27,9 @@ class MessageBuilder ():
 
 	@staticmethod
 	def createLastVersionSymbolNotFoundMessage (branchName:str, versionNumber:str) -> str:
-		message = 'ERROR: The current version \'{}\' for branch \'{}\' found in the update tracking file is not defined in your script.\n'.format(versionNumber, branchName)
-		message += ' * This can happen if the version was removed your script.\n'
-		message += ' * Once you define a version in your script you must keep it there.'
+		message = 'ERROR. The current version \'{}\' for branch \'{}\' found in the update tracking file is not defined in your script.'.format(versionNumber, branchName)
+		#message += ' * This can happen if the version was removed your script.\n'
+		#message += ' * Once you define a version in your script you must keep it there.'
 		return message
 
 	@staticmethod
@@ -39,9 +39,9 @@ class MessageBuilder ():
 
 	@staticmethod
 	def createSpecifiedVersionLessThanCurrentVersionMessage (databaseSymbolName:str, branchName:str, specifiedVersionNumber:str, currentVersionNumber:str) -> str:
-		message = '{}: ERROR: The specified version \'{}\' for branch \'{}\' is lower than the current version number \'{}\'.\n'.format(databaseSymbolName, specifiedVersionNumber, branchName, currentVersionNumber)
-		message += ' * When specifying a version, you cannot use the update statement to revert to a previous version.\n'
-		message += ' * You must use the revert statement if you want to revert to a previous version.  You cannot use an update statement.'
+		message = '{}: ERROR: The specified version \'{}\' for branch \'{}\' is lower than the current version number \'{}\'.'.format(databaseSymbolName, specifiedVersionNumber, branchName, currentVersionNumber)
+		#message += ' * When specifying a version, you cannot use the update statement to revert to a previous version.\n'
+		#message += ' * You must use the revert statement if you want to revert to a previous version.  You cannot use an update statement.'
 		return message
 
 	@staticmethod
@@ -60,7 +60,6 @@ class MessageBuilder ():
 			return 'Updating {} database.'.format(databaseCount)
 
 		return 'Updating {} databases.'.format(databaseCount)
-
 
 	@staticmethod
 	def createDatabaseCreateCountAfterWhereClauseMessage (symbolList:List[int]) -> str:

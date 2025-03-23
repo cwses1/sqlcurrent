@@ -7,6 +7,7 @@ class Symbol ():
 	def __init__ (self, name:str, type:SymbolType):
 		self.name = name
 		self.type = type
+		self.value = None
 		self.props = {}
 
 	def setProp (self, name:str, expr:Expr) -> None:
@@ -26,3 +27,6 @@ class Symbol ():
 
 	def getProp (self, name:str) -> Expr:
 		return self.props[name]
+
+	def getPropValueAtIndex (self, propName:str, index:int) -> Any:
+		return self.getProp(propName).value[i].value

@@ -1,5 +1,0 @@
-databaseName,branch,datetime,batchId,script,version,result
-nexus_opdb,operational,2025-03-15T12:00:00,1112-dead-beef-0001,1.0.0,success
-nexus_opdb,operational,now,myFavoritebatchId,apply1.sql,1.0.1,success
-nexus_opdb,operational,now,myFavoritebatchId,apply1.sql,1.0.1,success
-nexus_opdb,operational,now,myFavoritebatchId,apply2.sql,1.0.1,success

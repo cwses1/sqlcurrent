@@ -1,2 +1,0 @@
-name,branch,datetime,batchId,script,version,result
-proxima_opdb,operational,2025-03-22 14:42:14.822704,7a5a712d-0e50-4b18-93e6-4b50314994c2,create.sql,1.0.0,success

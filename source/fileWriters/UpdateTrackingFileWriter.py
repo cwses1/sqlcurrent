@@ -22,7 +22,7 @@ class UpdateTrackingFileWriter ():
 			os.makedirs(self.getDirPath(branchName), exist_ok=True)
 
 	def dirExists (self, branchName:str) -> bool:
-		updateTrackingFileDir = './databases/{}'.format(branchName) 
+		return os.path.exists(self.trackingDir + '/' + branchName)
 
 	def fileExists (self, branchName:str, databaseSymbolName:str) -> bool:
 		return os.path.exists(self.getFilePath(branchName, databaseSymbolName))
@@ -31,7 +31,7 @@ class UpdateTrackingFileWriter ():
 		return self.getDirPath(branchName) + '/' + self.getFileName(databaseSymbolName)
 
 	def getDirPath (self, branchName:str) -> str:
-		return './databases' + '/' + branchName
+		return self.trackingDir + '/' + branchName
 
 	def getFileName (self, databaseSymbolName:str) -> str:
 		return databaseSymbolName + '.txt';
