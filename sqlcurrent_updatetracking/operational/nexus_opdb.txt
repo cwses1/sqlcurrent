@@ -1,1 +1,2 @@
 name,branch,datetime,batchId,script,version,result
+nexus_opdb,operational,2025-03-23 09:17:47.412348,53047b0d-f314-4892-ab54-144cbb5564e0,./sqlcurrent_sqlscripts/operational/create.sql,1.0.0,success

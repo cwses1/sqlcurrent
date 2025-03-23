@@ -21,6 +21,10 @@ class UpdateTrackingFileWriter ():
 		if not self.dirExists(branchName):
 			os.makedirs(self.getDirPath(branchName), exist_ok=True)
 
+	def ensurefileExists (self, branchName:str, databaseSymbolName:str) -> None:
+		if not self.fileExists(branchName, databaseSymbolName):
+			self.createFile(branchName, databaseSymbolName)
+
 	def dirExists (self, branchName:str) -> bool:
 		return os.path.exists(self.trackingDir + '/' + branchName)
 

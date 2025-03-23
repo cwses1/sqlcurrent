@@ -29,4 +29,4 @@ class Symbol ():
 		return self.props[name]
 
 	def getPropValueAtIndex (self, propName:str, index:int) -> Any:
-		return self.getProp(propName).value[i].value
+		return self.getProp(propName).value[index].value

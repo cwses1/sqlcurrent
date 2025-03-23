@@ -58,6 +58,7 @@ from fileWriters.UpdateTrackingFileWriter import *
 from formatters.DateTimeFormatter import *
 from datetimeUtils.DateTimeUtil import *
 from entities.Env import *
+from pathFactories.ScriptFilePathFactory import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -492,11 +493,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			return
 
 		#
-		# CREATE THE FILE.
-		#
-		updateTrackFileWriter.createFile(branchName, databaseSymbolName)
-
-		#
 		# CREATE A BATCH ID.
 		#
 		batchId = str(uuid.uuid4())
@@ -511,23 +507,47 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			createVersionStr = databaseSymbol.getProp('version').value
 
 		#
+		# GET THE SCRIPT FILE PATH FACTORY.
+		#
+		scriptFilePathFactory = ScriptFilePathFactory()
+		scriptFilePathFactory.branchName = branchName
+		scriptFilePathFactory.databaseName = databaseSymbolName
+		scriptFilePathFactory.sqlScriptsDir = self._symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir').value
+
+		#
 		# LOAD THE CREATE SCRIPT TEXT.
 		#
-		createScriptPropExpr = symbol.getProp('create')
+		createScriptExprList = symbol.getProp('create').value
 
-		for i in range(len(createScriptPropExpr.value)):
-			createScriptPath = symbol.getPropValueAtIndex('create', i)
+		for i in range(len(createScriptExprList)):
+			createScriptPath = scriptFilePathFactory.createPath(symbol.getPropValueAtIndex('create', i))
+
+			if not os.path.exists(createScriptPath):
+				print('{}, ERROR, No such file or directory: \'{}\'. Stopping.'.format(databaseSymbolName, createScriptPath))
+				return
+
 			createScriptText = StringFileReader.readFile(createScriptPath)
 
 			#
 			# TELL THE USER WHAT WE'RE DOING.
 			#
-			print('{}: \'{}\'.'.format(symbolName, createScriptPath))
+			print('{}: RUNNING: \'{}\''.format(symbolName, createScriptPath))
 
 			#
 			# RUN THE SCRIPT.
 			#
-			databaseClient.runCreateScript(createScriptText)
+			try:
+				databaseClient.runCreateScript(createScriptText)
+			except Exception as e:
+				print('{}, ERROR, {}. Stopping.'.format(databaseSymbolName, e.__traceback__))
+				return
+
+			print('{}: SUCCESS: \'{}\''.format(symbolName, createScriptPath))
+
+			#
+			# ENSURE THE UPDATE TRACKING FILE EXISTS SO WE CAN TRACK THE UPDATE.
+			#
+			updateTrackFileWriter.ensurefileExists(branchName, databaseSymbolName)
 
 			#
 			# TRACK THE UPDATE.
