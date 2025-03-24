@@ -59,6 +59,7 @@ from formatters.DateTimeFormatter import *
 from datetimeUtils.DateTimeUtil import *
 from entities.Env import *
 from pathFactories.ScriptFilePathFactory import *
+from generators.BatchGenerator import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -454,25 +455,26 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# createDatabaseStatement: 'create' 'database'? SYMBOL_ID;
 		#
-		symbolName = ctx.SYMBOL_ID().getText()
-		databaseSymbolName = symbolName
-		symbol = self._symbolTableManager.getSymbolByName(symbolName)
-		databaseSymbol = symbol
+		databaseSymbolName = ctx.SYMBOL_ID().getText()
+		databaseSymbol = self._symbolTableManager.getSymbolByName(databaseSymbolName)
 
-		if not symbol.hasProp('create'):
+		if not databaseSymbol.hasProp('create'):
 			print('No create property found in database definition.')
 			return
-
-		branchPropExpr = symbol.getProp('branch')
-		branchName = branchPropExpr.name
 
 		#
 		# GET THE DATABASE CLIENT.
 		#
-		driverValue = symbol.getProp('driver').value
-		connStringValue = symbol.getProp('connString').value
+		driverValue = databaseSymbol.getProp('driver').value
+		connStringValue = databaseSymbol.getProp('connString').value
 		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
 		databaseClient.connString = connStringValue
+
+		#
+		# GET THE BRANCH NAME FOR THIS DATABASE.
+		#
+		branchPropExpr = databaseSymbol.getProp('branch')
+		branchName = branchPropExpr.name
 
 		#
 		# GET THE UPDATE TRACKING FILE READER AND WRITE.
@@ -486,7 +488,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		updateTrackFileWriter.ensureDirExists(branchName)
 
 		#
-		# IF THE UPDATE TRACKING ALREADY EXISTS, THIS IS AN ERROR.
+		# IF THE UPDATE TRACKING ALREADY EXISTS, THIS IS AN ERROR.  WE DO NOT TRY TO CREATE A DATABASE TWICE.
 		#
 		if updateTrackFileWriter.fileExists(branchName, databaseSymbolName):
 			print(MessageBuilder.createUpdateTrackingFileAlreadyExistsMessage(databaseSymbolName, updateTrackFileWriter.getFilePath(branchName, databaseSymbolName)))
@@ -495,10 +497,10 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# CREATE A BATCH ID.
 		#
-		batchId = str(uuid.uuid4())
+		batchId = BatchGenerator.generateBatchId()
 
 		#
-		# GET THE DATABASE VERSION WHEN CREATED.
+		# GET THE DATABASE VERSION ON CREATE.
 		# IF NOT FOUND, THEN DEFAULT IT TO VERSION 1.0.0.
 		#
 		createVersionStr = '1.0.0'
@@ -515,15 +517,19 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		scriptFilePathFactory.sqlScriptsDir = self._symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir').value
 
 		#
-		# LOAD THE CREATE SCRIPT TEXT.
+		# TO DO: GET THE TIME WE STARTED ALL OF THESE.
 		#
-		createScriptExprList = symbol.getProp('create').value
+
+		#
+		# RUN THE CREATE SCRIPTS.
+		#
+		createScriptExprList = databaseSymbol.getProp('create').value
 
 		for i in range(len(createScriptExprList)):
-			createScriptPath = scriptFilePathFactory.createPath(symbol.getPropValueAtIndex('create', i))
+			createScriptPath = scriptFilePathFactory.createPath(databaseSymbol.getPropValueAtIndex('create', i))
 
 			if not os.path.exists(createScriptPath):
-				print('{}, ERROR, No such file or directory: \'{}\'. Stopping.'.format(databaseSymbolName, createScriptPath))
+				print('{}: CREATE: ERROR: No such file or directory: \'{}\'. Stopping.'.format(databaseSymbolName, createScriptPath))
 				return
 
 			createScriptText = StringFileReader.readFile(createScriptPath)
@@ -531,7 +537,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			#
 			# TELL THE USER WHAT WE'RE DOING.
 			#
-			print('{}: RUNNING: \'{}\''.format(symbolName, createScriptPath))
+			print('{}: CREATE: RUNNING: \'{}\''.format(databaseSymbolName, createScriptPath))
 
 			#
 			# RUN THE SCRIPT.
@@ -539,10 +545,10 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			try:
 				databaseClient.runCreateScript(createScriptText)
 			except Exception as e:
-				print('{}, ERROR, {}. Stopping.'.format(databaseSymbolName, e.__traceback__))
+				print('{}: CREATE: ERROR: {}. Stopping.'.format(databaseSymbolName, e.__traceback__))
 				return
 
-			print('{}: SUCCESS: \'{}\''.format(symbolName, createScriptPath))
+			print('{}: CREATE: SUCCESS: \'{}\''.format(databaseSymbolName, createScriptPath))
 
 			#
 			# ENSURE THE UPDATE TRACKING FILE EXISTS SO WE CAN TRACK THE UPDATE.
@@ -560,7 +566,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			updateTrackingLine.script = createScriptPath
 			updateTrackingLine.version = createVersionStr
 			updateTrackingLine.result = 'success'
-			updateTrackFileWriter.writeUpdateTrackingLine(branchName, symbolName, updateTrackingLine)
+			updateTrackFileWriter.writeUpdateTrackingLine(branchName, databaseSymbolName, updateTrackingLine)
 
 	def visitSolutionStatement(self, ctx:SqlCurrentParser.SolutionStatementContext):
 		#
@@ -791,33 +797,33 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# GET THE ENTIRE LIST OF DATABASES.
 		#
-		symbolList = self._symbolTableManager.getAllDatabaseSymbols()
+		databaseSymbolList = self._symbolTableManager.getAllDatabaseSymbols()
 
 		#
 		# APPLY THE CONSTRAINT TO THE LIST OF DATABASES.
 		#
 		if ctx.whereClause() != None:
 			whereConstraint = self.visitWhereClause(ctx.whereClause())
-			symbolList = whereConstraint.applyConstraint(symbolList)
+			databaseSymbolList = whereConstraint.applyConstraint(databaseSymbolList)
 
 		#
 		# IF THERE ARE NO DATABASES TO UPDATE AFTER THE WHERE CLAUSE IS APPLIED, THEN LET THE USER KNOW.
 		#
-		if len(symbolList) == 0:
+		if len(databaseSymbolList) == 0:
 			print(MessageBuilder.createNoDatabasesAfterWhereClauseMessage())
 			return
 
 		#
 		# LET THE USER KNOW HOW MANY DATABASES WE'RE DEALING WITH.
 		#
-		print(MessageBuilder.createDatabaseCreateCountAfterWhereClauseMessage(symbolList))
+		print(MessageBuilder.createDatabaseCreateCountAfterWhereClauseMessage(databaseSymbolList))
 
 		#
 		# ORDER THE LIST OF DATABASES.
 		#
 		if ctx.orderByClause() != None:
 			orderByConstraint = self.visitOrderByClause(ctx.orderByClause())
-			symbolList = orderByConstraint.applyConstraint(symbolList)
+			databaseSymbolList = orderByConstraint.applyConstraint(databaseSymbolList)
 
 		#
 		# CREATE OBJECTS WE CAN REUSE ACROSS DATABASES.
@@ -835,27 +841,25 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# CREATE THE DATABASES.
 		#
-		for symbol in symbolList:
-
-			databaseSymbol = symbol
+		for databaseSymbol in databaseSymbolList:
 			databaseSymbolName = databaseSymbol.name
 
-			if not symbol.hasProp('create'):
-				print('{}: No \'create\' property found in database definition.'.format(symbol.name))
+			if not databaseSymbol.hasProp('create'):
+				print('{}: CREATE: ERROR: No \'create\' property found in database definition.'.format(databaseSymbol.name))
 				continue
 
 			#
 			# GET THE DATABASE CLIENT FOR THIS DATABASE.
 			#
-			driverValue = symbol.getProp('driver').value
-			connStringValue = symbol.getProp('connString').value
+			driverValue = databaseSymbol.getProp('driver').value
+			connStringValue = databaseSymbol.getProp('connString').value
 			databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
 			databaseClient.connString = connStringValue
 
 			#
 			# GET THE BRANCH NAME FOR THIS DATABASE.
 			#
-			branchPropExpr = symbol.getProp('branch')
+			branchPropExpr = databaseSymbol.getProp('branch')
 			branchName = branchPropExpr.name
 
 			#
@@ -864,53 +868,76 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			updateTrackingFileWriter.ensureDirExists(branchName)
 
 			#
-			# IF THE UPDATE TRACKING FILE ALREADY EXISTS, THIS IS AN ERROR.  WE DO NOT CREATE A DATABASE TWICE.
+			# IF THE UPDATE TRACKING FILE ALREADY EXISTS, THIS IS AN ERROR.  WE DO NOT TRY TO CREATE A DATABASE TWICE.
 			#
 			if updateTrackingFileWriter.fileExists(branchName, databaseSymbolName):
 				print(MessageBuilder.createUpdateTrackingFileAlreadyExistsMessage(databaseSymbolName, updateTrackingFileWriter.getFilePath(branchName, databaseSymbolName)))
 				continue
 
 			#
-			# CREATE THE FILE.
-			#
-			updateTrackingFileWriter.createFile(branchName, databaseSymbolName)
-
-			#
-			# LOAD THE CREATE SCRIPT TEXT.
-			#
-			createScriptPropExpr = symbol.getProp('create')
-
-			#
 			# CREATE A BATCH ID.
 			#
-			batchId = str(uuid.uuid4())
+			batchId = BatchGenerator.generateBatchId()
+
+			#
+			# GET THE CREATE SCRIPT PROPERTY.
+			#
+			createScriptPropExpr = databaseSymbol.getProp('create')
+
+			#
+			# GET THE SCRIPT FILE PATH FACTORY.
+			#
+			scriptFilePathFactory = ScriptFilePathFactory()
+			scriptFilePathFactory.branchName = branchName
+			scriptFilePathFactory.databaseName = databaseSymbolName
+			scriptFilePathFactory.sqlScriptsDir = self._symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir').value
+
+			#
+			# RUN THE CREATE SCRIPTS.
+			#
+			createScriptExprList = databaseSymbol.getProp('create').value
 
 			#
 			# TO DO: GET THE TIME WE STARTED ALL OF THESE.
 			#
+			for i in range(len(createScriptExprList)):
+				createScriptFilePath = scriptFilePathFactory.createPath(databaseSymbol.getPropValueAtIndex('create', i))
 
-			for i in range(len(createScriptPropExpr.value)):
-				createScriptFilePath = createScriptPropExpr.value[i].value
+				if not os.path.exists(createScriptFilePath):
+					print('{}: CREATE: ERROR: No such file or directory: \'{}\'. Stopping.'.format(databaseSymbolName, createScriptFilePath))
+					return
+
 				createScriptText = StringFileReader.readFile(createScriptFilePath)
 
 				#
 				# TELL THE USER WHAT WE'RE DOING.
 				#
-				print('{}: \'{}\'.'.format(symbol.name, createScriptFilePath))
+				print('{}: CREATE: RUNNING: \'{}\'.'.format(databaseSymbolName, createScriptFilePath))
 
 				#
 				# RUN THE SCRIPT.
 				#
-				databaseClient.runCreateScript(createScriptText)
+				try:
+					databaseClient.runCreateScript(createScriptText)
+				except Exception as e:
+					print('{}: CREATE: ERROR: {}. Stopping.'.format(databaseSymbolName, e.__traceback__))
+					return
+
+				print('{}: CREATE: SUCCESS: \'{}\''.format(databaseSymbolName, createScriptFilePath))
 
 				#
-				# GET THE DATABASE VERSION WHEN CREATED.
-				# IF NOT FOUND, THEN DEFAULT IT TO VERSION 1.0.0.
+				# GET THE INITIAL DATABASE VERSION ON CREATE BY INSPECTING THE version PROPERTY.
+				# IF THE version PROPERTY IS NOT FOUND, THEN DEFAULT IT TO 1.0.0.
 				#
 				createVersionStr = '1.0.0'
 
 				if databaseSymbol.hasProp('version'):
 					createVersionStr = databaseSymbol.getProp('version').value
+
+				#
+				# ENSURE THE FILE EXISTS.
+				#
+				updateTrackingFileWriter.ensurefileExists(branchName, databaseSymbolName)
 
 				#
 				# TRACK THE UPDATE.
