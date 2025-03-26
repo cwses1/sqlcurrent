@@ -755,7 +755,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# environmentProp: (SYMBOL_ID | 'solution') ':' expr;
 		#
-		self._symbolTableManager.getCurrentSymbolTable()
 
 		#
 		# GET THE PROPERTY NAME.

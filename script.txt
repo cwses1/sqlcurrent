@@ -1,70 +1,75 @@
-solution project1
+solution iot_app
 {
-	name: 'Project 1';
-	desc: 'Description of Project 1';
-	tag: 'tag1';
+	name: 'IoT Application';
 }
 
-solution project222
+solution cloud_app
 {
-	name: 'Project 222';
-	desc: 'Description of Project 222';
-	tag: 'tag222';
-}
-
-branch analytical
-{
-	solution: project1;
-	name: '';
-	desc: '';
+	name: 'Cloud Application';
 }
 
 branch operational
 {
-	solution: project1;
-	name: '';
-	desc: '';
+	name: 'Operational Database';
+	solution: iot_app;
+}
+
+branch analytical
+{
+	name: 'Time Series Database';
+	solution: iot_app;
 }
 
 branch topology
 {
-	solution: project1;
-	name: '';
-	desc: '';
-	tag: 'tag2';
-	tag: 'tag3';
+	solution: cloud_app;
+}
+
+branch customer
+{
+	solution: cloud_app;
 }
 
 environment dev
 {
-	solution: project1;
-	name: 'DEV Environment';
-	desc: '';
-	tag: 'env_tag5';
-	tag: 'env_tag10';
+	name: 'Development Environment';
+	solution: cloud_app;
+	solution: iot_app;
 }
 
 environment qa
 {
-	solution: project1;
-	name: '';
-	desc: '';
+	name: 'Quality Assurance Environment';
+	solution: cloud_app;
+	solution: iot_app;
+}
+
+environment uat
+{
+	name: 'User Acceptance Testing Environment';
+	solution: cloud_app;
+}
+
+environment perf
+{
+	name: 'Performance Testing Environment';
+	solution: iot_app;
 }
 
 environment prod
 {
-	solution: project1;
-	name: '';
-	desc: '';
+	name: 'Production Environment';
+	solution: cloud_app;
+	solution: iot_app;
 }
 
 server nexus
 {
-	solution: project1; // DEFAULT DATABASE SOLUTION
-	environment: dev; // DEFAULT DATABASE ENVIRONMENT
-	branch: operational; // DEFAULT BRANCH FOR ALL DATABASES HOSTED BY THIS SERVER.
-	host: 'nexus.sqlcurrent.com'; // SHARED SERVER ADDRESS FOR DATABASES.  USED BY THE CONNECTION STRING.
-	tag: 'location_us'; // DEFAULT TAG FOR DATABASES
+	branch: operational; // FOR SERVERS DEDICATED TO A BRANCH.  A DATABASE ASSIGNED TO THIS SERVER WILL DEFAULT TO THIS BRANCH.
+	environment: dev; // FOR SERVERS DEDICATED TO AN ENVIRONMENT.  A DATABASE ASSIGNED TO THIS SERVER WILL DEFAULT TO THIS ENVIRONMENT.
+	host: 'nexus.sqlcurrent.com';
+	solution: iot_app; // FOR SERVERS DEDICATED TO A SOLUTION.  A DATABASE ASSIGNED TO THIS SERVER WILL DEFAULT TO THIS SOLUTION.
+	tag: 'location_us';
 	tag: 'location_de';
 	tag: 'location_newcastle';
 	tag: 'location_engineering';
@@ -73,9 +78,9 @@ server nexus
 
 server proxima
 {
-	solution: project1;
 	environment: qa;
 	host: 'proxima.sqlcurrent.com';
+	solution: iot_app;
 	tag: 'location_us';
 	tag: 'location_de';
 	tag: 'location_newcastle';
@@ -85,31 +90,31 @@ server proxima
 
 database nexus_opdb
 {
-	name: 'Nexus Operational Database';
-	solution: project1;
 	branch: operational;
+	connString: 'server={{nexus}} dbname=binningtool user=postgres password=postgres';
+	create: 'create.sql'; // WOULDN'T ALL DATABASE FOR THIS BRANCH HAVE THE SAME CREATE SCRIPT?
 	driver: 'psycopg2';
-	server: nexus;
-	connString: 'dbname=binningtool user=postgres password=postgres';
 	environment: dev;
+	name: 'Nexus Instrument Operational Database';
+	server: nexus;
+	solution: iot_app;
 	tag: 'location_us';
 	tag: 'location_de';
 	tag: 'location_newcastle';
 	tag: 'location_engineering';
 	tag: 'location_my_desk';
-	create: 'create.sql';
 	version: 1.0.0;
 }
 
 database nexus_analyticaldb
 {
-	name: 'Nexus Analytical Database';
-	solution: project222;
-	driver: 'influx';
-	server: nexus;
-	connString: 'Server=${nexus.host};database=embedded';
-	environment: dev;
 	branch: analytical;
+	connString: 'server={{nexus}} database=embedded';
+	driver: 'influx';
+	environment: dev;
+	name: 'Nexus Analytical Database';
+	server: nexus;
+	solution: iot_app;
 	tag: 'location_us';
 	tag: 'location_de';
 	tag: 'location_newcastle';
@@ -119,14 +124,14 @@ database nexus_analyticaldb
 
 database proxima_opdb
 {
-	driver: 'psycopg2';
-	connString: 'dbname=binningtool user=postgres password=postgres';
-	create: 'create.sql';
-	name: 'b';
-	solution: project1;
-	server: proxima;
-	environment: dev;
 	branch: operational;
+	connString: 'server={{proxima}} dbname=binningtool user=postgres password=postgres';
+	create: 'create.sql';
+	driver: 'psycopg2';
+	environment: dev;
+	name: 'b';
+	server: proxima;
+	solution: iot_app;
 	tag: 'location_us';
 	tag: 'location_de';
 	tag: 'location_newcastle';
@@ -136,13 +141,13 @@ database proxima_opdb
 
 database proxima_analyticaldb
 {
-	name: 'a';
-	solution: project1;
-	driver: 'influx';
-	server: proxima;
-	connString: 'Server=${proxima.host};database=embedded';
-	environment: dev;
 	branch: analytical;
+	connString: 'server={{proxima}} dbname=binningtool user=postgres password=postgres';
+	driver: 'influx';
+	environment: dev;
+	name: 'a';
+	server: proxima;
+	solution: iot_app;
 	tag: 'location_us';
 	tag: 'location_de';
 	tag: 'location_newcastle';
@@ -153,7 +158,7 @@ database proxima_analyticaldb
 version 1.0.1 for branch operational
 {
 	name: 'brilliant_dog'; // OPTIONAL
-	dir: 'version_1.0.1'; // INFER IF LEFT OUT.
+	dir: 'version_1.0.1'; // BASE DIRECTORY FOR THIS VERSION, INFER IF EXCLUDED, ./sqlcurrent_sqlscripts/branchName/version_1.0.1
 	precheck: 'check1.sql';
 	precheck: 'check2.sql';
 	apply: 'apply1.sql';
@@ -246,7 +251,6 @@ create databases where every tag != 'idiot_village';
 create databases where any tag like 'location_my_%';
 create databases where any tag like 'location_rdlab%';
 create databases where every tag like 'location%';
-
 update nexus_opdb;
 create nexus_opdb;
 update database nexus_opdb to version 1.0.0;
@@ -254,15 +258,17 @@ update database nexus_opdb to version 1.0.1;
 create databases where id = proxima_opdb;
 create databases where id in (nexus_opdb, proxima_opdb);
 create databases;
+create nexus_opdb;
+update nexus_opdb;
+update database nexus_opdb to version 1.0.0;
+update databases to version 1.0.0 where id in (nexus_opdb, proxima_opdb);
 */
 //
 // NEXT THING TO IMPLEMENT AND TEST:
 //
-create nexus_opdb;
 
-//update nexus_opdb;
-//update database nexus_opdb to version 1.0.0;
-//update databases to version 1.0.0 where id in (nexus_opdb, proxima_opdb);
+update databases to version 1.0.0 where solution = iot_app;
+
 
 /*
 create databases where any tag not like 'location_us';
@@ -293,5 +299,6 @@ create databases where every tag not in ('location_us', 'location_my_desk');
 // WHEN CREATING MULTIPLE DATABASES, DO WE STOP ON ANY ERROR?
 // WHEN CREATING A DATABASE, DO WE ALLOW A RECREATE TO HAPPEN?
 // WHEN UPDATING MULTIPLE DATABASES, DO WE STOP ON ANY ERROR?
-// VALIDATE THE DATABASES BEFORE CREATE?
-//
+// VALIDATE THE DATABASES BEFORE CREATE? validate databases STATEMENT?
+// ENVIRONMENT NAMES CONFLICT ACOSS SOLUTIONS (ALL APPS HAVE A DEV, QA, PROD).  PERMIT MULTIPLE SOLUTIONS FOR EACH ENVIRONMENT.
+// 
