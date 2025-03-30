@@ -169,5 +169,30 @@ class SqlCurrentVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SqlCurrentParser#selectDatabaseListStatement.
+    def visitSelectDatabaseListStatement(self, ctx:SqlCurrentParser.SelectDatabaseListStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#revertDatabaseListStatement.
+    def visitRevertDatabaseListStatement(self, ctx:SqlCurrentParser.RevertDatabaseListStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#checkDatabaseListStatement.
+    def visitCheckDatabaseListStatement(self, ctx:SqlCurrentParser.CheckDatabaseListStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#revertDatabaseStatement.
+    def visitRevertDatabaseStatement(self, ctx:SqlCurrentParser.RevertDatabaseStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#checkDatabaseStatement.
+    def visitCheckDatabaseStatement(self, ctx:SqlCurrentParser.CheckDatabaseStatementContext):
+        return self.visitChildren(ctx)
+
+
 
 del SqlCurrentParser

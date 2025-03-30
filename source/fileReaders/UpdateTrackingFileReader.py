@@ -45,3 +45,18 @@ class UpdateTrackingFileReader ():
 		for updateTrackingLine in updateTrackingLineList:
 			if updateTrackingLine.result == 'success':
 				return updateTrackingLine.version
+
+	def dirExists (self, branchName:str) -> bool:
+		return os.path.exists(self.trackingDir + '/' + branchName)
+
+	def fileExists (self, branchName:str, databaseSymbolName:str) -> bool:
+		return os.path.exists(self.getFilePath(branchName, databaseSymbolName))
+
+	def getFilePath (self, branchName:str, databaseSymbolName:str) -> str:
+		return self.getDirPath(branchName) + '/' + self.getFileName(databaseSymbolName)
+
+	def getDirPath (self, branchName:str) -> str:
+		return self.trackingDir + '/' + branchName
+
+	def getFileName (self, databaseSymbolName:str) -> str:
+		return databaseSymbolName + '.txt';

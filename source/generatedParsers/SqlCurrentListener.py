@@ -296,5 +296,50 @@ class SqlCurrentListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SqlCurrentParser#selectDatabaseListStatement.
+    def enterSelectDatabaseListStatement(self, ctx:SqlCurrentParser.SelectDatabaseListStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#selectDatabaseListStatement.
+    def exitSelectDatabaseListStatement(self, ctx:SqlCurrentParser.SelectDatabaseListStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#revertDatabaseListStatement.
+    def enterRevertDatabaseListStatement(self, ctx:SqlCurrentParser.RevertDatabaseListStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#revertDatabaseListStatement.
+    def exitRevertDatabaseListStatement(self, ctx:SqlCurrentParser.RevertDatabaseListStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#checkDatabaseListStatement.
+    def enterCheckDatabaseListStatement(self, ctx:SqlCurrentParser.CheckDatabaseListStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#checkDatabaseListStatement.
+    def exitCheckDatabaseListStatement(self, ctx:SqlCurrentParser.CheckDatabaseListStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#revertDatabaseStatement.
+    def enterRevertDatabaseStatement(self, ctx:SqlCurrentParser.RevertDatabaseStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#revertDatabaseStatement.
+    def exitRevertDatabaseStatement(self, ctx:SqlCurrentParser.RevertDatabaseStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#checkDatabaseStatement.
+    def enterCheckDatabaseStatement(self, ctx:SqlCurrentParser.CheckDatabaseStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#checkDatabaseStatement.
+    def exitCheckDatabaseStatement(self, ctx:SqlCurrentParser.CheckDatabaseStatementContext):
+        pass
+
+
 
 del SqlCurrentParser

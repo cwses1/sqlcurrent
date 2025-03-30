@@ -45,6 +45,13 @@ class MessageBuilder ():
 		return message
 
 	@staticmethod
+	def createSpecifiedVersionGreaternThanCurrentVersionMessage (databaseSymbolName:str, branchName:str, specifiedVersionNumber:str, currentVersionNumber:str) -> str:
+		message = '{}: ERROR: The specified version \'{}\' for branch \'{}\' is greater than the current version number \'{}\'.'.format(databaseSymbolName, specifiedVersionNumber, branchName, currentVersionNumber)
+		#message += ' * You cannot use the revert statement to update to a newer version.\n'
+		#message += ' * You must use the update statement if you want to update to a newer version.  You cannot use an update statement.'
+		return message
+
+	@staticmethod
 	def createNoDatabasesDefinedMessage () -> str:
 		message = 'No databases defined in the script.  Nothing to do.'
 		return message
@@ -69,3 +76,10 @@ class MessageBuilder ():
 			return 'Creating {} database.'.format(databaseCount)
 
 		return 'Creating {} databases.'.format(databaseCount)
+
+	@staticmethod
+	def createDatabaseRevertCountAfterWhereClauseMessage (databaseCount:int) -> str:
+		if databaseCount == 1:
+			return 'Reverting {} database.'.format(databaseCount)
+
+		return 'Reverting {} databases.'.format(databaseCount)

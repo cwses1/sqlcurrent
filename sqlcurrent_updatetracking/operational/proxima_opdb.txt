@@ -1,2 +1,0 @@
-name,branch,datetime,batchId,script,version,result
-proxima_opdb,operational,2025-03-24 09:18:48.687636,a246fe9f-1646-4425-a219-2e6c4480e8cb,./sqlcurrent_sqlscripts/operational/create.sql,1.0.0,success

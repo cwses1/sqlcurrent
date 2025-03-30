@@ -1,6 +1,4 @@
-drop table financial_research;
-
-create table financial_research
+create table sqlcurrent_a
 (
-	research_id int
+	sqlcurrent_a_id int
 )

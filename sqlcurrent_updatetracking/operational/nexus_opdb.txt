@@ -1,2 +1,5 @@
 name,branch,datetime,batchId,script,version,result
-nexus_opdb,operational,2025-03-24 09:18:48.668497,fe71bbdd-65fc-457a-90a8-25790508f558,./sqlcurrent_sqlscripts/operational/create.sql,1.0.0,success
+nexus_opdb,operational,2025-03-28 16:05:46.253797,7a6ce89f-5416-406c-8274-0b14ec708fa2,./sqlcurrent_sqlscripts/operational/create.sql,1.0.0,success
+nexus_opdb,operational,2025-03-29 09:36:21.737832,1337dab2-7f2b-4573-a370-f0c9816c095c,./sqlcurrent_sqlscripts/operational/version_1.1.0/schema.sql,1.1.0,success
+nexus_opdb,operational,2025-03-29 09:36:21.771351,1337dab2-7f2b-4573-a370-f0c9816c095c,./sqlcurrent_sqlscripts/operational/version_1.1.0/data.sql,1.1.0,success
+nexus_opdb,operational,2025-03-30 11:50:52.725795,b08aa8dd-83e8-4bfd-96bd-ac76c3936130,./sqlcurrent_sqlscripts/operational/version_1.1.0/revert.sql,1.0.0,success

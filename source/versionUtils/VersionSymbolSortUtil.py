@@ -9,6 +9,12 @@ class VersionSymbolSortUtil ():
 		return versionSymbolList
 
 	@staticmethod
+	def sortVersionSymbolListForRevert (versionSymbolList:List[Symbol]) -> List[Symbol]:
+		versionSymbolList.sort(key=lambda versionSymbol: VersionSymbolSortUtil.getSortKey(versionSymbol))
+		versionSymbolList.reverse()
+		return versionSymbolList
+
+	@staticmethod
 	def getSortKey (versionSymbol: Symbol) -> str:
 		#
 		# major: 755

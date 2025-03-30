@@ -15,3 +15,5 @@ class DatabaseClientProvider ():
 				return PostgresClient()
 			case 'psycopg2':
 				return Psycopg2Client()
+			case 'influx':
+				return InfluxClient()

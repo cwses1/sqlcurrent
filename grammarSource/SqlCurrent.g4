@@ -5,7 +5,7 @@ BLOCK_COMMENT: '/*' .*? '*/' -> skip;
 WS: [ \t\n\r]+ -> skip;
 INT_LITERAL: [0-9]+;
 SYMBOL_ID: [_a-zA-Z][_a-zA-Z0-9]+;
-STRING_LITERAL: '\'' ([ _a-zA-Z0-9] | '.' | ':' | '=' | '$' | '{' | '}' | ';' | '/' | '%' | '?' | '^' | '*')* '\'';
+STRING_LITERAL: '\'' ([ _a-zA-Z0-9] | '.' | ':' | '=' | '$' | '{' | '}' | ';' | '/' | '%' | '?' | '^' | '*' | '@')* '\'';
 VERSION_ID: [0-9]+ '.' [0-9]+ '.' [0-9]+;
 
 sqlCurrentScript: statement+;
@@ -20,6 +20,10 @@ statement: serverStatement
 	| createDatabaseListStatement
 	| updateDatabaseStatement
 	| updateDatabaseListStatement
+	| selectDatabaseListStatement
+	| revertDatabaseListStatement
+	| checkDatabaseListStatement
+	| revertDatabaseStatement
 	;
 
 serverStatement: 'server' SYMBOL_ID '{' serverPropList '}';
@@ -34,7 +38,7 @@ expr: STRING_LITERAL | SYMBOL_ID | VERSION_ID;
 
 versionStatement: 'version' VERSION_ID ('for' 'branch' expr)? '{' versionPropList '}';
 versionPropList: (versionProp ';')+;
-versionProp: (SYMBOL_ID | 'branch') ':' expr;
+versionProp: (SYMBOL_ID | 'branch' | 'revert' | 'check') ':' expr;
 
 createDatabaseStatement: 'create' 'database'? SYMBOL_ID ';';
 
@@ -69,3 +73,8 @@ updateDatabaseStatement: 'update' 'database'? SYMBOL_ID toVersionClause? ';';
 toVersionClause: 'to' 'version'? VERSION_ID;
 
 updateDatabaseListStatement: 'update' 'databases' toVersionClause? whereClause? orderByClause? ';';
+selectDatabaseListStatement: 'select' 'databases' whereClause? orderByClause? ';';
+revertDatabaseListStatement: 'revert' 'databases' toVersionClause whereClause? orderByClause? ';';
+checkDatabaseListStatement: 'check' 'databases' whereClause? orderByClause? ';';
+revertDatabaseStatement: 'revert' 'database'? SYMBOL_ID toVersionClause ';';
+checkDatabaseStatement: 'check' 'database'? SYMBOL_ID ('version' VERSION_ID)? ';';

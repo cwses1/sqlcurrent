@@ -6,21 +6,25 @@ class ScriptFilePathFactory ():
 		self.branchName:str = None
 		self.databaseName:str = None
 		self.sqlScriptsDir:str = None
+		self.versionDir:str = None
 
-	def createPath (self, propPath:str) -> str:
+	def createPath (self, pathParam:str) -> str:
 		#
 		# ABSOLUTE PATH: / OR C:\
 		#
-		if os.path.isabs(propPath):
-			return propPath
+		if os.path.isabs(pathParam):
+			return pathParam
 
 		#
 		# FORCED RELATIVE PATH: ./myscripts/version_1.1.1/apply_version.sql
 		#
-		if propPath.startswith('.'):
-			return os.getcwd() + os.sep + propPath.lstrip('.')
+		elif pathParam.startswith('.'):
+			return os.getcwd() + os.sep + pathParam.lstrip('.')
 
 		#
 		# RELATIVE PATH, NOT FORCED (NO STARTING DOT): myscripts/version_1.1.1/apply_version.sql
 		#
-		return self.sqlScriptsDir + os.sep + self.branchName + os.sep + propPath
+		if self.versionDir == None:
+			return self.sqlScriptsDir + os.sep + self.branchName + os.sep + pathParam
+
+		return self.sqlScriptsDir + os.sep + self.branchName + os.sep + self.versionDir + os.sep + pathParam

@@ -52,3 +52,34 @@ class VersionSymbolLoader ():
 				nextVersionSymbolList.append(nextVersionSymbol)
 
 		return nextVersionSymbolList
+
+	@staticmethod
+	def getPreviousVersionSymbolsBeforeVersionNumber (startVersionNumber:str, branchName:str, symbolTableManager:SymbolTableManager) -> List[Symbol]:
+		#
+		# GET THE START VERSION SYMBOL.
+		#
+		startVersionSymbol = symbolTableManager.getSymbolByName(VersionSymbolNamer.createName(branchName, startVersionNumber))
+
+		#
+		# GET ALL VERSION SYMBOLS.
+		#
+		completeVersionSymbolList = symbolTableManager.getAllVersionSymbols()
+
+		#
+		# REMOVE ANY VERSION SYMBOLS THAT ARE PREVIOUS OF OR EQUAL TO THE START VERSION SYMBOL AND ANY VERSIONS NOT IN THE BRANCH.
+		#
+		nextVersionSymbolList:List[Symbol] = []
+
+		for nextVersionSymbol in completeVersionSymbolList:
+			nextVersionBranchExpr = nextVersionSymbol.getProp('branch')
+			if nextVersionBranchExpr.type == SymbolType.ReferenceToSymbol:
+				nextVersionBranchName = nextVersionBranchExpr.value.name
+			elif nextVersionBranchExpr.type == SymbolType.String:
+				nextVersionBranchName = nextVersionBranchExpr.value
+			else:
+				raise NotImplementedError('Could not determine next version branch name.')
+
+			if nextVersionBranchName == branchName and VersionSymbolComparator.compare(nextVersionSymbol, startVersionSymbol) < 0:
+				nextVersionSymbolList.append(nextVersionSymbol)
+
+		return nextVersionSymbolList

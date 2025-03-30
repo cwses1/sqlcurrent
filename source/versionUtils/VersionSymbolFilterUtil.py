@@ -13,3 +13,23 @@ class VersionSymbolFilterUtil ():
 				versionSymbolList.append(versionSymbol)
 
 		return versionSymbolList
+
+	@staticmethod
+	def removeVersionsBefore (targetVersionSymbol:Symbol, versionSymbolListParam:List[Symbol]) -> List[Symbol]:
+		versionSymbolList = []
+
+		for versionSymbol in versionSymbolListParam:
+			if VersionSymbolComparator.compare(versionSymbol, targetVersionSymbol) >= 0:
+				versionSymbolList.append(versionSymbol)
+
+		return versionSymbolList
+
+	@staticmethod
+	def removeVersion (targetVersionSymbol:Symbol, versionSymbolListParam:List[Symbol]) -> List[Symbol]:
+		versionSymbolList = []
+
+		for versionSymbol in versionSymbolListParam:
+			if VersionSymbolComparator.compare(versionSymbol, targetVersionSymbol) != 0:
+				versionSymbolList.append(versionSymbol)
+
+		return versionSymbolList

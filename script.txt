@@ -69,11 +69,7 @@ server nexus
 	environment: dev; // FOR SERVERS DEDICATED TO AN ENVIRONMENT.  A DATABASE ASSIGNED TO THIS SERVER WILL DEFAULT TO THIS ENVIRONMENT.
 	host: 'nexus.sqlcurrent.com';
 	solution: iot_app; // FOR SERVERS DEDICATED TO A SOLUTION.  A DATABASE ASSIGNED TO THIS SERVER WILL DEFAULT TO THIS SOLUTION.
-	tag: 'location_us';
-	tag: 'location_de';
-	tag: 'location_newcastle';
-	tag: 'location_engineering';
-	tag: 'location_my_desk';
+	tag: 'location_us_de_newcastle_engineering_corydesk';
 }
 
 server proxima
@@ -81,28 +77,20 @@ server proxima
 	environment: qa;
 	host: 'proxima.sqlcurrent.com';
 	solution: iot_app;
-	tag: 'location_us';
-	tag: 'location_de';
-	tag: 'location_newcastle';
-	tag: 'location_engineering';
-	tag: 'location_rdlab';
+	tag: 'location_us_de_newcastle_engineering_rdlab';
 }
 
 database nexus_opdb
 {
 	branch: operational;
-	connString: 'server={{nexus}} dbname=binningtool user=postgres password=postgres';
+	connString: 'postgresql://postgres:postgres@127.0.0.1/binningtool';
 	create: 'create.sql'; // WOULDN'T ALL DATABASE FOR THIS BRANCH HAVE THE SAME CREATE SCRIPT?
 	driver: 'psycopg2';
 	environment: dev;
 	name: 'Nexus Instrument Operational Database';
 	server: nexus;
 	solution: iot_app;
-	tag: 'location_us';
-	tag: 'location_de';
-	tag: 'location_newcastle';
-	tag: 'location_engineering';
-	tag: 'location_my_desk';
+	tag: 'location_us_de_newcastle_engineering_corydesk';
 	version: 1.0.0;
 }
 
@@ -115,11 +103,7 @@ database nexus_analyticaldb
 	name: 'Nexus Analytical Database';
 	server: nexus;
 	solution: iot_app;
-	tag: 'location_us';
-	tag: 'location_de';
-	tag: 'location_newcastle';
-	tag: 'location_engineering';
-	tag: 'location_my_desk';
+	tag: 'location_us_de_newcastle_engineering_corydesk';
 }
 
 database proxima_opdb
@@ -132,11 +116,7 @@ database proxima_opdb
 	name: 'b';
 	server: proxima;
 	solution: iot_app;
-	tag: 'location_us';
-	tag: 'location_de';
-	tag: 'location_newcastle';
-	tag: 'location_engineering';
-	tag: 'location_rdlab';
+	tag: 'location_us_de_newcastle_engineering_rdlab';
 }
 
 database proxima_analyticaldb
@@ -148,21 +128,30 @@ database proxima_analyticaldb
 	name: 'a';
 	server: proxima;
 	solution: iot_app;
-	tag: 'location_us';
-	tag: 'location_de';
-	tag: 'location_newcastle';
-	tag: 'location_engineering';
-	tag: 'location_rdlab';
+	tag: 'location_us_de_newcastle_engineering_rdlab';
 }
 
-version 1.0.1 for branch operational
+version 1.1.0 for branch operational
 {
 	name: 'brilliant_dog'; // OPTIONAL
-	dir: 'version_1.0.1'; // BASE DIRECTORY FOR THIS VERSION, INFER IF EXCLUDED, ./sqlcurrent_sqlscripts/branchName/version_1.0.1
+	dir: 'version_1.1.0'; // BASE DIRECTORY FOR THIS VERSION, INFER IF EXCLUDED, ./sqlcurrent_sqlscripts/branchName/version_1.0.1
+	apply: 'schema.sql';
+	apply: 'data.sql';
+	precheck: 'precheck1.sql';
+	precheck: 'precheck2.sql';
+	check: 'check1.sql';
+	check: 'check2.sql';
+	revert: 'revert.sql';
+}
+
+version 1.2.0 for branch operational
+{
+	name: 'brilliant_dog'; // OPTIONAL
+	dir: 'version_1.2.0'; // BASE DIRECTORY FOR THIS VERSION, INFER IF EXCLUDED, ./sqlcurrent_sqlscripts/branchName/version_1.0.1
 	precheck: 'check1.sql';
 	precheck: 'check2.sql';
-	apply: 'apply1.sql';
-	apply: 'apply2.sql';
+	apply: 'schema.sql';
+	apply: 'data.sql';
 	revert: 'revert.sql';
 	check: 'check3.sql';
 	check: 'check4.sql';
@@ -262,15 +251,20 @@ create nexus_opdb;
 update nexus_opdb;
 update database nexus_opdb to version 1.0.0;
 update databases to version 1.0.0 where id in (nexus_opdb, proxima_opdb);
+update databases to version 1.0.0 where solution = iot_app;
+select databases where solution = iot_app;
 */
 //
 // NEXT THING TO IMPLEMENT AND TEST:
 //
-
-update databases to version 1.0.0 where solution = iot_app;
-
+revert nexus_opdb to version 1.0.0;
 
 /*
+update nexus_opdb to version 1.1.0;
+check nexus_opdb to version 1.0.0;
+
+create and update nexus_opdb to version 1.1.0;
+
 create databases where any tag not like 'location_us';
 create databases where every tag not like 'location_us';
 
@@ -301,4 +295,6 @@ create databases where every tag not in ('location_us', 'location_my_desk');
 // WHEN UPDATING MULTIPLE DATABASES, DO WE STOP ON ANY ERROR?
 // VALIDATE THE DATABASES BEFORE CREATE? validate databases STATEMENT?
 // ENVIRONMENT NAMES CONFLICT ACOSS SOLUTIONS (ALL APPS HAVE A DEV, QA, PROD).  PERMIT MULTIPLE SOLUTIONS FOR EACH ENVIRONMENT.
-// 
+// HOW DO WE AUTO REVERT IF AN UPDATE FAILS?
+// IF A VERSION FAILED IN THE END, BUT OTHER SCRIPTS IN THE SAME VERSION WERE SUCCESSFUL, THEN WE TREAT THE UPDATE AS SUCCESSFUL INCORRECTLY.
+//
