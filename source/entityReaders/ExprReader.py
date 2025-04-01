@@ -21,3 +21,8 @@ class ExprReader ():
 				stringList.append(str(expr.value))
 
 		return stringList
+
+	@staticmethod
+	def readSymbol (expr:Expr) -> str:
+		if expr.type == SymbolType.ReferenceToSymbol:
+			return expr.value

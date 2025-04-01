@@ -9,14 +9,10 @@ class UpdateTrackingFileReader ():
 		self.trackingDir = None
 
 	def readLastSuccessfulVersionNumber (self, branchName:str, databaseSymbolName:str) -> str:
-		updateTrackingFileDir = self.trackingDir + '/' + branchName 
-		updateTrackingFilePath = updateTrackingFileDir + '/' + databaseSymbolName + '.txt'
-
 		#
-		# IF THE UPDATE TRACKING FILE DOES NOT EXIST THEN WE HAVE A PROBLEM.
+		# GET THE FILE PATH.
 		#
-		if not os.path.exists(updateTrackingFilePath):
-			raise NotImplementedError('Error: Update tracking file not found:{}. Stopping.'.format(updateTrackingFilePath))
+		updateTrackingFilePath = self.getFilePath(branchName, databaseSymbolName)
 
 		#
 		# READ THE UPDATE TRACKING FILE.
@@ -45,6 +41,7 @@ class UpdateTrackingFileReader ():
 		for updateTrackingLine in updateTrackingLineList:
 			if updateTrackingLine.result == 'success':
 				return updateTrackingLine.version
+
 
 	def dirExists (self, branchName:str) -> bool:
 		return os.path.exists(self.trackingDir + '/' + branchName)

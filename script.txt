@@ -8,28 +8,6 @@ solution cloud_app
 	name: 'Cloud Application';
 }
 
-branch operational
-{
-	name: 'Operational Database';
-	solution: iot_app;
-}
-
-branch analytical
-{
-	name: 'Time Series Database';
-	solution: iot_app;
-}
-
-branch topology
-{
-	solution: cloud_app;
-}
-
-branch customer
-{
-	solution: cloud_app;
-}
-
 environment dev
 {
 	name: 'Development Environment';
@@ -63,6 +41,33 @@ environment prod
 	solution: iot_app;
 }
 
+branch operational
+{
+	name: 'Operational Database';
+	solution: iot_app;
+	create: 'create.sql';
+	//create: 'create2.sql';
+	//reset: 'reset1.sql';
+	//reset: 'reset2.sql';
+	version: 1.0.0;
+}
+
+branch analytical
+{
+	name: 'Time Series Database';
+	solution: iot_app;
+}
+
+branch topology
+{
+	solution: cloud_app;
+}
+
+branch customer
+{
+	solution: cloud_app;
+}
+
 server nexus
 {
 	branch: operational; // FOR SERVERS DEDICATED TO A BRANCH.  A DATABASE ASSIGNED TO THIS SERVER WILL DEFAULT TO THIS BRANCH.
@@ -84,14 +89,21 @@ database nexus_opdb
 {
 	branch: operational;
 	connString: 'postgresql://postgres:postgres@127.0.0.1/binningtool';
-	create: 'create.sql'; // WOULDN'T ALL DATABASE FOR THIS BRANCH HAVE THE SAME CREATE SCRIPT?
 	driver: 'psycopg2';
 	environment: dev;
 	name: 'Nexus Instrument Operational Database';
 	server: nexus;
 	solution: iot_app;
 	tag: 'location_us_de_newcastle_engineering_corydesk';
-	version: 1.0.0;
+
+	//
+	// GET RID OF ALL OF THIS AND MOVE IT INTO THE BRANCH.
+	//
+	//version: 1.0.0; // STARTING VERSION FOR THIS DATABASE?  GET RID OF THIS, THIS SHOULD BE IN THE BRANCH.
+	//create: 'create_nexus_opdb_01.sql'; // DATABASE SPECIFIC CREATE SCRIPTS, RUN AFTER THE BRANCH CREATE SCRIPTS.
+	//create: 'create_nexus_opdb_02.sql'; // DATABASE SPECIFIC CREATE SCRIPTS, RUN AFTER THE BRANCH CREATE SCRIPTS.
+	//reset: 'reset_nexus_opdb_01.sql'; // DATABASE SPECIFIC RESET SCRIPTS, RUN AFTER THE BRANCH RESET SCRIPTS.
+	//reset: 'reset_nexus_opdb_01.sql'; // DATABASE SPECIFIC RESET SCRIPTS, RUN AFTER THE BRANCH RESET SCRIPTS.
 }
 
 database nexus_analyticaldb
@@ -253,14 +265,22 @@ update database nexus_opdb to version 1.0.0;
 update databases to version 1.0.0 where id in (nexus_opdb, proxima_opdb);
 update databases to version 1.0.0 where solution = iot_app;
 select databases where solution = iot_app;
+update nexus_opdb to version 1.1.0;
+select databases;
+revert nexus_opdb to version 1.0.0;
+update nexus_opdb to version 1.1.0;
+update nexus_opdb to version 1.2.0;
+update nexus_opdb to version 1.2.0;
+revert nexus_opdb to version 1.0.0;
 */
 //
 // NEXT THING TO IMPLEMENT AND TEST:
 //
-revert nexus_opdb to version 1.0.0;
+create database nexus_opdb;
 
 /*
-update nexus_opdb to version 1.1.0;
+check nexus_opdb;
+
 check nexus_opdb to version 1.0.0;
 
 create and update nexus_opdb to version 1.1.0;

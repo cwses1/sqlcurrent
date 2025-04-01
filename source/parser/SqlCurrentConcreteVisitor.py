@@ -62,6 +62,8 @@ from pathFactories.ScriptFilePathFactory import *
 from generators.BatchGenerator import *
 from entityFactories.StringExprFactory import *
 from entityReaders.SymbolReader import *
+from appServices.CreateDatabaseAppService import *
+from appServices.UpdateDatabaseAppService import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -463,118 +465,10 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# createDatabaseStatement: 'create' 'database'? SYMBOL_ID;
 		#
-		databaseSymbolName = ctx.SYMBOL_ID().getText()
-		databaseSymbol = self._symbolTableManager.getSymbolByName(databaseSymbolName)
-
-		if not databaseSymbol.hasProp('create'):
-			print('No create property found in database definition.')
-			return
-
-		#
-		# GET THE DATABASE CLIENT.
-		#
-		driverValue = databaseSymbol.getProp('driver').value
-		connStringValue = databaseSymbol.getProp('connString').value
-		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
-		databaseClient.connString = connStringValue
-
-		#
-		# GET THE BRANCH NAME FOR THIS DATABASE.
-		#
-		branchPropExpr = databaseSymbol.getProp('branch')
-		branchName = branchPropExpr.name
-
-		#
-		# GET THE UPDATE TRACKING FILE READER AND WRITE.
-		#
-		updateTrackFileWriter = UpdateTrackingFileWriter()
-		updateTrackFileWriter.trackingDir = SymbolReader.readString(self._symbolTableManager.getSymbolByName('globalEnvUpdateTrackingDir'))
-
-		#
-		# ENSURE THE DIRECTORY EXISTS THAT CONTAINS THE UPDATE TRACKING FILE.
-		#
-		updateTrackFileWriter.ensureDirExists(branchName)
-
-		#
-		# IF THE UPDATE TRACKING ALREADY EXISTS, THIS IS AN ERROR.  WE DO NOT TRY TO CREATE A DATABASE TWICE.
-		#
-		if updateTrackFileWriter.fileExists(branchName, databaseSymbolName):
-			print(MessageBuilder.createUpdateTrackingFileAlreadyExistsMessage(databaseSymbolName, updateTrackFileWriter.getFilePath(branchName, databaseSymbolName)))
-			return
-
-		#
-		# CREATE A BATCH ID.
-		#
-		batchId = BatchGenerator.generateBatchId()
-
-		#
-		# GET THE DATABASE VERSION ON CREATE.
-		# IF NOT FOUND, THEN DEFAULT IT TO VERSION 1.0.0.
-		#
-		createVersionStr = '1.0.0'
-
-		if databaseSymbol.hasProp('version'):
-			createVersionStr = databaseSymbol.getProp('version').value
-
-		#
-		# GET THE SCRIPT FILE PATH FACTORY.
-		#
-		scriptFilePathFactory = ScriptFilePathFactory()
-		scriptFilePathFactory.branchName = branchName
-		scriptFilePathFactory.databaseName = databaseSymbolName
-		scriptFilePathFactory.sqlScriptsDir = SymbolReader.readString(self._symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
-
-		#
-		# TO DO: GET THE TIME WE STARTED ALL OF THESE.
-		#
-
-		#
-		# RUN THE CREATE SCRIPTS.
-		#
-		createScriptExprList = databaseSymbol.getProp('create').value
-
-		for i in range(len(createScriptExprList)):
-			createScriptPath = scriptFilePathFactory.createPath(databaseSymbol.getPropValueAtIndex('create', i))
-
-			if not os.path.exists(createScriptPath):
-				print('{}: CREATE: ERROR: No such file or directory: \'{}\'. Stopping.'.format(databaseSymbolName, createScriptPath))
-				return
-
-			createScriptText = StringFileReader.readFile(createScriptPath)
-
-			#
-			# TELL THE USER WHAT WE'RE DOING.
-			#
-			print('{}: CREATE: RUNNING: \'{}\''.format(databaseSymbolName, createScriptPath))
-
-			#
-			# RUN THE SCRIPT.
-			#
-			try:
-				databaseClient.runCreateScript(createScriptText)
-			except Exception as e:
-				print('{}: CREATE: ERROR: {}. Stopping.'.format(databaseSymbolName, str(e)))
-				return
-
-			print('{}: CREATE: SUCCESS: \'{}\''.format(databaseSymbolName, createScriptPath))
-
-			#
-			# ENSURE THE UPDATE TRACKING FILE EXISTS SO WE CAN TRACK THE UPDATE.
-			#
-			updateTrackFileWriter.ensurefileExists(branchName, databaseSymbolName)
-
-			#
-			# TRACK THE UPDATE.
-			#
-			updateTrackingLine = UpdateTrackingLine()
-			updateTrackingLine.branch = branchName
-			updateTrackingLine.databaseName = databaseSymbolName
-			updateTrackingLine.datetime = DateTimeFormatter.formatForUpdateTrackingFile(DateTimeUtil.getCurrentLocalDateTime())
-			updateTrackingLine.batchId = batchId
-			updateTrackingLine.script = createScriptPath
-			updateTrackingLine.version = createVersionStr
-			updateTrackingLine.result = 'success'
-			updateTrackFileWriter.writeUpdateTrackingLine(branchName, databaseSymbolName, updateTrackingLine)
+		appService = CreateDatabaseAppService()
+		appService.symbolTableManager = self._symbolTableManager
+		appService.databaseSymbolName = ctx.SYMBOL_ID().getText()
+		appService.run()
 
 	def visitSolutionStatement(self, ctx:SqlCurrentParser.SolutionStatementContext):
 		#
@@ -849,115 +743,10 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# CREATE THE DATABASES.
 		#
 		for databaseSymbol in databaseSymbolList:
-			databaseSymbolName = databaseSymbol.name
-
-			if not databaseSymbol.hasProp('create'):
-				print('{}: CREATE: ERROR: No \'create\' property found in database definition.'.format(databaseSymbol.name))
-				continue
-
-			#
-			# GET THE DATABASE CLIENT FOR THIS DATABASE.
-			#
-			driverValue = databaseSymbol.getProp('driver').value
-			connStringValue = databaseSymbol.getProp('connString').value
-			databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
-			databaseClient.connString = connStringValue
-
-			#
-			# GET THE BRANCH NAME FOR THIS DATABASE.
-			#
-			branchPropExpr = databaseSymbol.getProp('branch')
-			branchName = branchPropExpr.name
-
-			#
-			# ENSURE THE DIRECTORY EXISTS THAT CONTAINS THE UPDATE TRACKING FILE.
-			#
-			updateTrackingFileWriter.ensureDirExists(branchName)
-
-			#
-			# IF THE UPDATE TRACKING FILE ALREADY EXISTS, THIS IS AN ERROR.  WE DO NOT TRY TO CREATE A DATABASE TWICE.
-			#
-			if updateTrackingFileWriter.fileExists(branchName, databaseSymbolName):
-				print(MessageBuilder.createUpdateTrackingFileAlreadyExistsMessage(databaseSymbolName, updateTrackingFileWriter.getFilePath(branchName, databaseSymbolName)))
-				continue
-
-			#
-			# CREATE A BATCH ID.
-			#
-			batchId = BatchGenerator.generateBatchId()
-
-			#
-			# GET THE CREATE SCRIPT PROPERTY.
-			#
-			createScriptPropExpr = databaseSymbol.getProp('create')
-
-			#
-			# GET THE SCRIPT FILE PATH FACTORY.
-			#
-			scriptFilePathFactory = ScriptFilePathFactory()
-			scriptFilePathFactory.branchName = branchName
-			scriptFilePathFactory.databaseName = databaseSymbolName
-			scriptFilePathFactory.sqlScriptsDir = SymbolReader.readString(self._symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
-
-			#
-			# RUN THE CREATE SCRIPTS.
-			#
-			createScriptExprList = databaseSymbol.getProp('create').value
-
-			#
-			# TO DO: GET THE TIME WE STARTED ALL OF THESE.
-			#
-			for i in range(len(createScriptExprList)):
-				createScriptFilePath = scriptFilePathFactory.createPath(databaseSymbol.getPropValueAtIndex('create', i))
-
-				if not os.path.exists(createScriptFilePath):
-					print('{}: CREATE: ERROR: No such file or directory: \'{}\'. Stopping.'.format(databaseSymbolName, createScriptFilePath))
-					return
-
-				createScriptText = StringFileReader.readFile(createScriptFilePath)
-
-				#
-				# TELL THE USER WHAT WE'RE DOING.
-				#
-				print('{}: CREATE: RUNNING: \'{}\'.'.format(databaseSymbolName, createScriptFilePath))
-
-				#
-				# RUN THE SCRIPT.
-				#
-				try:
-					databaseClient.runCreateScript(createScriptText)
-				except Exception as e:
-					print('{}: CREATE: ERROR: {}. Stopping.'.format(databaseSymbolName, e.__traceback__))
-					return
-
-				print('{}: CREATE: SUCCESS: \'{}\''.format(databaseSymbolName, createScriptFilePath))
-
-				#
-				# GET THE INITIAL DATABASE VERSION ON CREATE BY INSPECTING THE version PROPERTY.
-				# IF THE version PROPERTY IS NOT FOUND, THEN DEFAULT IT TO 1.0.0.
-				#
-				createVersionStr = '1.0.0'
-
-				if databaseSymbol.hasProp('version'):
-					createVersionStr = databaseSymbol.getProp('version').value
-
-				#
-				# ENSURE THE FILE EXISTS.
-				#
-				updateTrackingFileWriter.ensurefileExists(branchName, databaseSymbolName)
-
-				#
-				# TRACK THE UPDATE.
-				#
-				updateTrackingLine = UpdateTrackingLine()
-				updateTrackingLine.branch = branchName
-				updateTrackingLine.databaseName = databaseSymbolName
-				updateTrackingLine.datetime = DateTimeFormatter.formatForUpdateTrackingFile(DateTimeUtil.getCurrentLocalDateTime())
-				updateTrackingLine.batchId = batchId
-				updateTrackingLine.script = createScriptFilePath
-				updateTrackingLine.version = createVersionStr
-				updateTrackingLine.result = 'success'
-				updateTrackingFileWriter.writeUpdateTrackingLine(branchName, databaseSymbolName, updateTrackingLine)
+			appService = CreateDatabaseAppService()
+			appService.databaseSymbolName = databaseSymbol.name
+			appService.symbolTableManager = self._symbolTableManager
+			appService.run()
 
 	def visitWhereClause(self, ctx:SqlCurrentParser.WhereClauseContext):
 		#
@@ -1114,211 +903,10 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# updateDatabaseStatement: 'update' 'database'? SYMBOL_ID 'to' 'version'? VERSION_ID ';';
 		#
-		symbolName = ctx.SYMBOL_ID().getText()
-		databaseSymbolName = symbolName
-		databaseName = symbolName
-		symbol = self._symbolTableManager.getSymbolByName(symbolName)
-
-		#
-		# GET THE DATABASE CLIENT.
-		#
-		driverValue = symbol.getProp('driver').value
-		connStringValue = symbol.getProp('connString').value
-		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
-		databaseClient.connString = connStringValue
-
-		#
-		# GET THE DATABASE BRANCH.  WHEN THE DATABASE IS CREATED THEN WE STORE THE BRANCH NAME WITH IT.
-		#
-		branchSymbol = symbol.getProp('branch').value
-		branchName = branchSymbol.name
-
-		#
-		# GET THE CURRENT DATABASE VERSION.
-		#
-		updateTrackingFileWriter = UpdateTrackingFileWriter()
-		updateTrackingFileWriter.trackingDir = SymbolReader.readString(self._symbolTableManager.getSymbolByName('globalEnvUpdateTrackingDir'))
-
-		#
-		# IF THE UPDATE TRACKING FILE DOES NOT EXIST THEN WE CANNOT UPDATE.
-		#
-		if not updateTrackingFileWriter.fileExists(branchName, databaseSymbolName):
-			print('Error: Update tracking file not found:{}. Stopping.'.format(updateTrackingFileWriter.getFilePath(branchName, databaseSymbolName)))
-			return
-
-		#
-		# GET THE SPECIFIED VERSION NUMBER.
-		# A SPECIFIED VERSION NUMBER OF NONE MEANS GO ALL THE WAY TO THE LAST VERSION IN THE SCRIPT, WHATEVER THAT MAY BE - THE USER MIGHT NOT KNOW WHAT THAT IS.
-		#
-		specifiedVersionNumber = None
-		specifiedVersionSymbolName = None
-		specifiedVersionSymbol = None
-
-		if ctx.toVersionClause() != None:
-			specifiedVersionNumber = self.visitToVersionClause(ctx.toVersionClause())
-			specifiedVersionSymbolName = VersionSymbolNamer.createName(branchName, specifiedVersionNumber)
-
-			if self._symbolTableManager.hasSymbolByName(specifiedVersionSymbolName):
-				specifiedVersionSymbol = self._symbolTableManager.getSymbolByName(specifiedVersionSymbolName)
-			else:
-				print(MessageBuilder.createSpecifiedVersionNotFoundMessage(branchName, specifiedVersionNumber))
-				return
-
-		#
-		# GET THE LAST SUCCESSFUL VERSION NUMBER FROM THE UPDATE TRACKING FILE.
-		#
-		updateTrackingFileReader = UpdateTrackingFileReader()
-		updateTrackingFileReader.trackingDir = SymbolReader.readString(self._symbolTableManager.getSymbolByName('globalEnvUpdateTrackingDir'))
-		lastSuccessfulVersionNumber = updateTrackingFileReader.readLastSuccessfulVersionNumber(branchName, databaseSymbolName)
-
-		lastSuccessfulVersionSymbolName = VersionSymbolNamer.createName(branchName, lastSuccessfulVersionNumber)
-
-		if not self._symbolTableManager.hasSymbolByName(lastSuccessfulVersionSymbolName):
-			print(MessageBuilder.createLastVersionSymbolNotFoundMessage(branchName, lastSuccessfulVersionNumber))
-			return
-
-		lastSuccessfulVersionSymbol = self._symbolTableManager.getSymbolByName(lastSuccessfulVersionSymbolName)
-
-		if specifiedVersionSymbol != None:
-			#
-			# IF THE VERSION WAS SPECIFIED CHECK IF THE SPECIFIED VERSION SYMBOL IS EQUAL TO THE CURRENT VERSION SYMBOL.
-			#
-			versionCompareResult = VersionSymbolComparator.compare(specifiedVersionSymbol, lastSuccessfulVersionSymbol)
-
-			if versionCompareResult == 0:
-				print(MessageBuilder.createCurrentVersionEqualToSpecifiedVersionMessage(symbolName, branchName, lastSuccessfulVersionNumber))
-				return
-
-			#
-			# CHECK IF THE SPECIFIED VERSION SYMBOL IS LESS THAN THE CURRENT VERSION SYMBOL.
-			#
-			if versionCompareResult < 0:
-				print(MessageBuilder.createSpecifiedVersionLessThanCurrentVersionMessage(symbolName, branchName, specifiedVersionNumber, lastSuccessfulVersionNumber))
-				return
-
-		#
-		# GET THE LIST OF VERSION SYMBOLS THAT WE NEED FOR THE UPDATE.
-		# THESE ARE ALL OF THE VERSIONS AFTER THE LAST SUCCESSFUL VERSION IN THE DATABASE'S BRANCH.
-		# SORT THE VERSIONS SO WE CAN RUN THEM IN THE CORRECT ORDER.
-		# RUN EACH VERSION FOR THIS DATABASE.
-		#
-		nextVersionSymbols = VersionSymbolLoader.getNextVersionSymbolsAfterVersionNumber(lastSuccessfulVersionNumber, branchName, self._symbolTableManager)
-
-		#
-		# IF THERE ARE NO VERSIONS TO UPDATE TO THEN THE DATABASE IS UPDATE TO DATE.
-		# WE WILL ONLY PRINT THIS MESSAGE IF SOMEONE HAS NOT SPECIFIED A VERSION (IF THE USER SPECIFIED A VERSION, THEN THIS WOULD BE DETECTED ABOVE).
-		#
-		if len(nextVersionSymbols) == 0:
-			print('{}: No updates to apply. Current version is {}.'.format(symbolName, lastSuccessfulVersionNumber))
-			return
-
-		#
-		# WE HAVE VERSIONS TO APPLY TO THIS DATABASE.
-		# IF A VERSION WAS SPECIFIED, THEN REMOVE ANY VERSIONS AFTER THE SPECIFIED VERSION.
-		#
-		if specifiedVersionSymbol != None:
-			nextVersionSymbols = VersionSymbolFilterUtil.removeVersionsAfter(specifiedVersionSymbol, nextVersionSymbols)
-
-		if len(nextVersionSymbols) == 0:
-			print('{}: No updates to apply. Current version is {}.'.format(symbolName, lastSuccessfulVersionNumber))
-			return
-
-		#
-		# SORT THE NEXT VERSION SYMBOLS SO WE CAN APPLY THEM IN THE CORRECT ORDER.
-		#
-		nextVersionSymbols = VersionSymbolSortUtil.sortVersionSymbolList(nextVersionSymbols)
-
-		#
-		# IF THE UPDATE TRACKING DOES NOT EXIST, THEN WE ARE DONE.
-		#
-		if not updateTrackingFileWriter.fileExists(branchName, symbolName):
-			print('Update tracking file does not exist.')
-			return
-
-		#
-		# CREATE A BATCH ID.
-		#
-		batchId = str(uuid.uuid4())
-
-		#
-		# CREATE THE PATH FACTORY SO WE CAN FIND SCRIPTS.
-		#
-		pathFactory = ScriptFilePathFactory()
-		pathFactory.branchName = branchName
-		pathFactory.databaseName = databaseName
-		pathFactory.sqlScriptsDir = SymbolReader.readString(self._symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
-
-		#
-		# UPDATE THE DATABASE TO THE NEXT VERSION.
-		#
-		for nextVersionSymbol in nextVersionSymbols:
-			nextVersionStr = VersionSymbolFormatter.formatVersionString(nextVersionSymbol)
-
-			if nextVersionSymbol.hasProp('dir'):
-				pathFactory.versionDir = nextVersionSymbol.getProp('dir').value
-			else:
-				pathFactory.versionDir = None
-
-			#
-			# TO DO: RUN PRECHECK SCRIPTS.
-			#
-
-			#
-			# TELL THE USER WHICH VERSION WE ARE UPDATING THIS DATABASE TO.
-			#
-			print('{}: Updating to version {}.'.format(symbolName, nextVersionStr))
-
-			#
-			# RUN APPLY SCRIPTS.
-			#
-			applyPropExpr = nextVersionSymbol.getProp('apply')
-
-			for applyExpr in applyPropExpr.value:
-				applyScriptFilePath = pathFactory.createPath(applyExpr.value)
-
-				#
-				# START THE UPDATE TRACKING LINE.
-				#
-				updateTrackingLine = UpdateTrackingLine()
-				updateTrackingLine.databaseName = symbolName
-				updateTrackingLine.branch = branchName
-				updateTrackingLine.datetime = DateTimeFormatter.formatForUpdateTrackingFile(DateTimeUtil.getCurrentLocalDateTime())
-				updateTrackingLine.batchId = batchId
-				updateTrackingLine.script = applyScriptFilePath
-				updateTrackingLine.version = nextVersionStr
-
-				#
-				# TELL THE USER WHICH SCRIPT WE'RE RUNNING.
-				#
-				print('{}: Running: \'{}\'.'.format(symbolName, applyScriptFilePath))
-
-				#
-				# GET THE SCRIPT TEXT.
-				#
-				applyScriptText = StringFileReader.readFile(applyScriptFilePath)
-
-				#
-				# EXECUTE THE SCRIPT TEXT AND WRITE THE RESULTS TO THE UPDATE TRACKING FILE.
-				#
-				try:
-					databaseClient.runApplyScript(applyScriptText)
-					updateTrackingLine.result = 'success'
-					print('{}: Success: \'{}\'.'.format(symbolName, applyScriptFilePath))
-				except Exception as e:
-					updateTrackingLine.result = 'failure'
-					print('{}: Error: \'{}\'. Stopping.'.format(symbolName, e))
-					return
-				finally:
-					updateTrackingFileWriter.writeUpdateTrackingLine(branchName, symbolName, updateTrackingLine)
-
-			#
-			# TELL THE USER THAT THE UPDATE WAS SUCCESSFUL.
-			#
-			print('{}: Successfully updated database {} to version {}.'.format(symbolName, symbolName, nextVersionStr))
-
-			#
-			# TO DO: RUN CHECK SCRIPTS.
-			#
+		appService = UpdateDatabaseAppService()
+		appService.databaseSymbolName = ctx.SYMBOL_ID().getText()
+		appService.symbolTableManager = self._symbolTableManager
+		appService.run()
 
 	def visitToVersionClause(self, ctx:SqlCurrentParser.ToVersionClauseContext):
 		#
@@ -1986,7 +1574,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		if versionRevertCount == 1:
 			print('{}: 1 version to revert.'.format(databaseSymbolName))
 		else:
-			print('{}: {} versions to revert.'.format(databaseSymbolName, versionRevertCount))
+			print('{}: {} versions to revert. Reversions are run incrementally.'.format(databaseSymbolName, versionRevertCount))
 
 		#
 		# THE UPDATE TRACKING FILE MUST EXIST.
@@ -2020,7 +1608,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			#
 			# TELL THE USER WHICH VERSION WE ARE CURRENTLY REVERTING.
 			#
-			print('{}: Reverting version {}.'.format(databaseSymbolName, previousVersionStr))
+			print('{}: Reverting to version {} from {}.'.format(databaseSymbolName, nextPreviousVersionStr, previousVersionStr))
 
 			#
 			# GET THE SCRIPT FILE PATH FACTORY.
@@ -2072,7 +1660,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 				#
 				try:
 					databaseClient.runApplyScript(revertScriptText)
-					print('{}: Success: \'{}\'.'.format(databaseSymbolName, revertScriptFilePath))
 					updateTrackingLine.result = 'success'
 				except Exception as e:
 					print('{}: Error: \'{}\'. Stopping.'.format(databaseSymbolName, e))
@@ -2081,7 +1668,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 				finally:
 					updateTrackingFileWriter.writeUpdateTrackingLine(branchName, databaseSymbolName, updateTrackingLine)
 
-			print('{}: Successfully reverted database to version {}.'.format(databaseSymbolName, specifiedVersionNumber))
+		print('{}: Successfully reverted database to version {}.'.format(databaseSymbolName, specifiedVersionNumber))
 
 			#
 			# TO DO: RUN PRECHECK SCRIPTS.
