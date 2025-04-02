@@ -1,2 +1,14 @@
 name,branch,datetime,batchId,script,version,result
 nexus_opdb,operational,2025-04-01 06:56:27.792569,58ef4ffa-3ebb-47ad-9c50-7ea5c22dc441,./sqlcurrent_sqlscripts/operational/create.sql,1.0.0,success
+nexus_opdb,operational,2025-04-01 17:22:41.003541,a518823d-1d65-45d2-9b5e-3f8cae0394c7,./sqlcurrent_sqlscripts/operational/version_1.1.0/schema.sql,1.1.0,success
+nexus_opdb,operational,2025-04-01 17:22:41.061213,a518823d-1d65-45d2-9b5e-3f8cae0394c7,./sqlcurrent_sqlscripts/operational/version_1.1.0/data.sql,1.1.0,success
+nexus_opdb,operational,2025-04-01 17:22:41.080997,a518823d-1d65-45d2-9b5e-3f8cae0394c7,./sqlcurrent_sqlscripts/operational/version_1.2.0/schema.sql,1.2.0,success
+nexus_opdb,operational,2025-04-01 17:22:41.100020,a518823d-1d65-45d2-9b5e-3f8cae0394c7,./sqlcurrent_sqlscripts/operational/version_1.2.0/data.sql,1.2.0,success
+nexus_opdb,operational,2025-04-01 19:50:03.392559,ba44c442-ff24-4a91-9ad6-4f63aff547fa,./sqlcurrent_sqlscripts/operational/version_1.2.0/revert.sql,1.1.0,success
+nexus_opdb,operational,2025-04-01 19:50:32.196443,9f8922b2-f2de-44cb-8873-74dca8d4ade2,./sqlcurrent_sqlscripts/operational/version_1.1.0/revert.sql,1.0.0,success
+nexus_opdb,operational,2025-04-01 20:26:53.589677,700f2825-6f4e-4940-89d7-d7601bac0430,./sqlcurrent_sqlscripts/operational/version_1.1.0/schema.sql,1.1.0,success
+nexus_opdb,operational,2025-04-01 20:26:53.635686,700f2825-6f4e-4940-89d7-d7601bac0430,./sqlcurrent_sqlscripts/operational/version_1.1.0/data.sql,1.1.0,success
+nexus_opdb,operational,2025-04-01 20:26:53.654503,700f2825-6f4e-4940-89d7-d7601bac0430,./sqlcurrent_sqlscripts/operational/version_1.2.0/schema.sql,1.2.0,success
+nexus_opdb,operational,2025-04-01 20:26:53.673509,700f2825-6f4e-4940-89d7-d7601bac0430,./sqlcurrent_sqlscripts/operational/version_1.2.0/data.sql,1.2.0,success
+nexus_opdb,operational,2025-04-01 20:36:43.915207,102cdf43-8e16-4eec-9f4c-7e994409689f,./sqlcurrent_sqlscripts/operational/version_1.2.0/revert.sql,1.1.0,success
+nexus_opdb,operational,2025-04-01 20:36:43.948563,102cdf43-8e16-4eec-9f4c-7e994409689f,./sqlcurrent_sqlscripts/operational/version_1.1.0/revert.sql,1.0.0,success

@@ -33,18 +33,6 @@ class MessageBuilder ():
 		return message
 
 	@staticmethod
-	def createCurrentVersionEqualToSpecifiedVersionMessage (databaseSymbolName:str, branchName:str, currentVersionNumber:str) -> str:
-		message = '{}: The specified version \'{}\' for branch \'{}\' is the same as the current version number \'{}\'.  There is nothing to update.'.format(databaseSymbolName, branchName, currentVersionNumber, currentVersionNumber)
-		return message
-
-	@staticmethod
-	def createSpecifiedVersionLessThanCurrentVersionMessage (databaseSymbolName:str, branchName:str, specifiedVersionNumber:str, currentVersionNumber:str) -> str:
-		message = '{}: ERROR: The specified version \'{}\' for branch \'{}\' is lower than the current version number \'{}\'.'.format(databaseSymbolName, specifiedVersionNumber, branchName, currentVersionNumber)
-		#message += ' * When specifying a version, you cannot use the update statement to revert to a previous version.\n'
-		#message += ' * You must use the revert statement if you want to revert to a previous version.  You cannot use an update statement.'
-		return message
-
-	@staticmethod
 	def createSpecifiedVersionGreaternThanCurrentVersionMessage (databaseSymbolName:str, branchName:str, specifiedVersionNumber:str, currentVersionNumber:str) -> str:
 		message = '{}: ERROR: The specified version \'{}\' for branch \'{}\' is greater than the current version number \'{}\'.'.format(databaseSymbolName, specifiedVersionNumber, branchName, currentVersionNumber)
 		#message += ' * You cannot use the revert statement to update to a newer version.\n'

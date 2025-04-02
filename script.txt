@@ -95,15 +95,6 @@ database nexus_opdb
 	server: nexus;
 	solution: iot_app;
 	tag: 'location_us_de_newcastle_engineering_corydesk';
-
-	//
-	// GET RID OF ALL OF THIS AND MOVE IT INTO THE BRANCH.
-	//
-	//version: 1.0.0; // STARTING VERSION FOR THIS DATABASE?  GET RID OF THIS, THIS SHOULD BE IN THE BRANCH.
-	//create: 'create_nexus_opdb_01.sql'; // DATABASE SPECIFIC CREATE SCRIPTS, RUN AFTER THE BRANCH CREATE SCRIPTS.
-	//create: 'create_nexus_opdb_02.sql'; // DATABASE SPECIFIC CREATE SCRIPTS, RUN AFTER THE BRANCH CREATE SCRIPTS.
-	//reset: 'reset_nexus_opdb_01.sql'; // DATABASE SPECIFIC RESET SCRIPTS, RUN AFTER THE BRANCH RESET SCRIPTS.
-	//reset: 'reset_nexus_opdb_01.sql'; // DATABASE SPECIFIC RESET SCRIPTS, RUN AFTER THE BRANCH RESET SCRIPTS.
 }
 
 database nexus_analyticaldb
@@ -267,36 +258,32 @@ update databases to version 1.0.0 where solution = iot_app;
 select databases where solution = iot_app;
 update nexus_opdb to version 1.1.0;
 select databases;
-revert nexus_opdb to version 1.0.0;
 update nexus_opdb to version 1.1.0;
 update nexus_opdb to version 1.2.0;
 update nexus_opdb to version 1.2.0;
 revert nexus_opdb to version 1.0.0;
+update nexus_opdb to version 1.1.0;
+update databases to version 1.2.0;
+revert databases to version 1.0.0;
 */
+
 //
 // NEXT THING TO IMPLEMENT AND TEST:
 //
-create database nexus_opdb;
+
 
 /*
 check nexus_opdb;
-
 check nexus_opdb to version 1.0.0;
-
 create and update nexus_opdb to version 1.1.0;
-
 create databases where any tag not like 'location_us';
 create databases where every tag not like 'location_us';
-
 create databases where any tag matches 'location_us';
 create databases where every tag matches 'location_us';
-
 create databases where any tag not matches 'location_us';
 create databases where every tag not matches 'location_us';
-
 create databases where any tag in ('location_us');
 create databases where every tag in ('location_us');
-
 create databases where any tag not in ('location_us');
 create databases where every tag not in ('location_us', 'location_my_desk');
 */
@@ -317,4 +304,5 @@ create databases where every tag not in ('location_us', 'location_my_desk');
 // ENVIRONMENT NAMES CONFLICT ACOSS SOLUTIONS (ALL APPS HAVE A DEV, QA, PROD).  PERMIT MULTIPLE SOLUTIONS FOR EACH ENVIRONMENT.
 // HOW DO WE AUTO REVERT IF AN UPDATE FAILS?
 // IF A VERSION FAILED IN THE END, BUT OTHER SCRIPTS IN THE SAME VERSION WERE SUCCESSFUL, THEN WE TREAT THE UPDATE AS SUCCESSFUL INCORRECTLY.
+// IMPORT OTHER SCRIPT FILES INTO A SINGLE SCRIPT.
 //

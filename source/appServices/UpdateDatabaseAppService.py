@@ -9,16 +9,24 @@ from generators.BatchGenerator import *
 from fileReaders.StringFileReader import *
 from formatters.DateTimeFormatter import *
 from messageBuilders.MessageBuilder import *
+from namers.VersionSymbolNamer import *
+from symbolLoaders.VersionSymbolLoader import *
+from formatters.VersionSymbolFormatter import *
+from datetimeUtils.DateTimeUtil import *
+from versionUtils.VersionSymbolFilterUtil import *
+from versionUtils.VersionSymbolSortUtil import *
 
 class UpdateDatabaseAppService ():
 
 	def __init__ (self):
 		self.symbolTableManager = None
 		self.databaseSymbolName:str = None
+		self.specifiedVersionNumber:str = None
+		self.versionWasSpecified:bool = None
 
 	def run (self):
 		databaseSymbolName = self.databaseSymbolName
-		databaseSymbol = self._symbolTableManager.getSymbolByName(databaseSymbolName)
+		databaseSymbol = self.symbolTableManager.getSymbolByName(databaseSymbolName)
 
 		#
 		# GET THE DATABASE CLIENT.
@@ -29,7 +37,7 @@ class UpdateDatabaseAppService ():
 		databaseClient.connString = connStringValue
 
 		#
-		# GET THE DATABASE BRANCH.  WHEN THE DATABASE IS CREATED THEN WE STORE THE BRANCH NAME WITH IT.
+		# GET THE DATABASE BRANCH.
 		#
 		branchSymbol = databaseSymbol.getProp('branch').value
 		branchName = branchSymbol.name
@@ -38,13 +46,13 @@ class UpdateDatabaseAppService ():
 		# GET THE CURRENT DATABASE VERSION.
 		#
 		updateTrackingFileWriter = UpdateTrackingFileWriter()
-		updateTrackingFileWriter.trackingDir = SymbolReader.readString(self._symbolTableManager.getSymbolByName('globalEnvUpdateTrackingDir'))
+		updateTrackingFileWriter.trackingDir = SymbolReader.readString(self.symbolTableManager.getSymbolByName('globalEnvUpdateTrackingDir'))
 
 		#
 		# IF THE UPDATE TRACKING FILE DOES NOT EXIST THEN WE CANNOT UPDATE.
 		#
 		if not updateTrackingFileWriter.fileExists(branchName, databaseSymbolName):
-			print('Error: Update tracking file not found:{}. Stopping.'.format(updateTrackingFileWriter.getFilePath(branchName, databaseSymbolName)))
+			print('{}: Database not created. Update canceled for this database.'.format(databaseSymbolName))
 			return
 
 		#
@@ -55,30 +63,29 @@ class UpdateDatabaseAppService ():
 		specifiedVersionSymbolName = None
 		specifiedVersionSymbol = None
 
-		if ctx.toVersionClause() != None:
-			specifiedVersionNumber = self.visitToVersionClause(ctx.toVersionClause())
+		if self.versionWasSpecified:
+			specifiedVersionNumber = self.specifiedVersionNumber
 			specifiedVersionSymbolName = VersionSymbolNamer.createName(branchName, specifiedVersionNumber)
 
-			if self._symbolTableManager.hasSymbolByName(specifiedVersionSymbolName):
-				specifiedVersionSymbol = self._symbolTableManager.getSymbolByName(specifiedVersionSymbolName)
+			if self.symbolTableManager.hasSymbolByName(specifiedVersionSymbolName):
+				specifiedVersionSymbol = self.symbolTableManager.getSymbolByName(specifiedVersionSymbolName)
 			else:
-				print(MessageBuilder.createSpecifiedVersionNotFoundMessage(branchName, specifiedVersionNumber))
+				print('{}: Version {} for branch {} not defined. Update canceled for this database.'.format(databaseSymbolName, specifiedVersionNumber, branchName))
 				return
 
 		#
 		# GET THE LAST SUCCESSFUL VERSION NUMBER FROM THE UPDATE TRACKING FILE.
 		#
 		updateTrackingFileReader = UpdateTrackingFileReader()
-		updateTrackingFileReader.trackingDir = SymbolReader.readString(self._symbolTableManager.getSymbolByName('globalEnvUpdateTrackingDir'))
+		updateTrackingFileReader.trackingDir = SymbolReader.readString(self.symbolTableManager.getSymbolByName('globalEnvUpdateTrackingDir'))
 		lastSuccessfulVersionNumber = updateTrackingFileReader.readLastSuccessfulVersionNumber(branchName, databaseSymbolName)
-
 		lastSuccessfulVersionSymbolName = VersionSymbolNamer.createName(branchName, lastSuccessfulVersionNumber)
 
-		if not self._symbolTableManager.hasSymbolByName(lastSuccessfulVersionSymbolName):
-			print(MessageBuilder.createLastVersionSymbolNotFoundMessage(branchName, lastSuccessfulVersionNumber))
+		if not self.symbolTableManager.hasSymbolByName(lastSuccessfulVersionSymbolName):
+			print('{}: Version {} for branch {} not defined.'.format(databaseSymbolName, lastSuccessfulVersionNumber, branchName))
 			return
 
-		lastSuccessfulVersionSymbol = self._symbolTableManager.getSymbolByName(lastSuccessfulVersionSymbolName)
+		lastSuccessfulVersionSymbol = self.symbolTableManager.getSymbolByName(lastSuccessfulVersionSymbolName)
 
 		if specifiedVersionSymbol != None:
 			#
@@ -87,14 +94,14 @@ class UpdateDatabaseAppService ():
 			versionCompareResult = VersionSymbolComparator.compare(specifiedVersionSymbol, lastSuccessfulVersionSymbol)
 
 			if versionCompareResult == 0:
-				print(MessageBuilder.createCurrentVersionEqualToSpecifiedVersionMessage(databaseSymbolName, branchName, lastSuccessfulVersionNumber))
+				print('{}: Current version is {}. Update canceled for this database.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
 				return
 
 			#
 			# CHECK IF THE SPECIFIED VERSION SYMBOL IS LESS THAN THE CURRENT VERSION SYMBOL.
 			#
 			if versionCompareResult < 0:
-				print(MessageBuilder.createSpecifiedVersionLessThanCurrentVersionMessage(databaseSymbolName, branchName, specifiedVersionNumber, lastSuccessfulVersionNumber))
+				print('{}: Specified version {} is lower than current version {}. Update canceled for this database.'.format(databaseSymbolName, specifiedVersionNumber, lastSuccessfulVersionNumber))
 				return
 
 		#
@@ -103,14 +110,14 @@ class UpdateDatabaseAppService ():
 		# SORT THE VERSIONS SO WE CAN RUN THEM IN THE CORRECT ORDER.
 		# RUN EACH VERSION FOR THIS DATABASE.
 		#
-		nextVersionSymbols = VersionSymbolLoader.getNextVersionSymbolsAfterVersionNumber(lastSuccessfulVersionNumber, branchName, self._symbolTableManager)
+		nextVersionSymbols = VersionSymbolLoader.getNextVersionSymbolsAfterVersionNumber(lastSuccessfulVersionNumber, branchName, self.symbolTableManager)
 
 		#
 		# IF THERE ARE NO VERSIONS TO UPDATE TO THEN THE DATABASE IS UPDATE TO DATE.
 		# WE WILL ONLY PRINT THIS MESSAGE IF SOMEONE HAS NOT SPECIFIED A VERSION (IF THE USER SPECIFIED A VERSION, THEN THIS WOULD BE DETECTED ABOVE).
 		#
 		if len(nextVersionSymbols) == 0:
-			print('{}: No updates to apply. Current version is {}.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
+			print('{}: Current version is {}. Update canceled for this database.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
 			return
 
 		#
@@ -123,7 +130,7 @@ class UpdateDatabaseAppService ():
 		nextVersionSymbolsLength = len(nextVersionSymbols)
 
 		if nextVersionSymbolsLength == 0:
-			print('{}: No updates to apply. Current version is {}.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
+			print('{}: Current version is {}. Update canceled for this database.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
 			return
 
 		#
@@ -148,7 +155,7 @@ class UpdateDatabaseAppService ():
 		# IF THE UPDATE TRACKING DOES NOT EXIST, THEN WE ARE DONE.
 		#
 		if not updateTrackingFileWriter.fileExists(branchName, databaseSymbolName):
-			print('Update tracking file does not exist.')
+			print('{}: Database not created. Update canceled for this database.'.format(databaseSymbolName))
 			return
 
 		#
@@ -162,7 +169,7 @@ class UpdateDatabaseAppService ():
 		pathFactory = ScriptFilePathFactory()
 		pathFactory.branchName = branchName
 		pathFactory.databaseName = databaseSymbolName
-		pathFactory.sqlScriptsDir = SymbolReader.readString(self._symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
+		pathFactory.sqlScriptsDir = SymbolReader.readString(self.symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
 
 		#
 		# UPDATE THE DATABASE TO THE NEXT VERSION.
@@ -221,7 +228,7 @@ class UpdateDatabaseAppService ():
 					updateTrackingLine.result = 'success'
 				except Exception as e:
 					updateTrackingLine.result = 'failure'
-					print('{}: Error: \'{}\'. Stopping.'.format(databaseSymbolName, e))
+					print('{}: Error: \'{}\'. Update canceled for this database.'.format(databaseSymbolName, e))
 					return
 				finally:
 					updateTrackingFileWriter.writeUpdateTrackingLine(branchName, databaseSymbolName, updateTrackingLine)
@@ -231,7 +238,7 @@ class UpdateDatabaseAppService ():
 			#
 			print('{}: Updated database to version {}.'.format(databaseSymbolName, nextVersionStr))
 
-		print('{}: Successfully updated database to version {}.'.format(databaseSymbolName, targetVersionNumber))
+		print('{}: Update to version {} successful.'.format(databaseSymbolName, targetVersionNumber))
 
 			#
 			# TO DO: RUN CHECK SCRIPTS.

@@ -1,4 +1,3 @@
-
 update databases to version 1.0.0 where server = nexus;
 update databases to version 1.0.0 where environment = qa;
 update databases to version 1.0.0 where tag in 'location_newcastle';
@@ -18,3 +17,6 @@ precheck proxima_postgres;
 precheck databases where name = proxima_embedded;
 precheck databases where name matches 'proxima_embedded';
 precheck databases where name in 'proxima_embedded';
+
+configure database nexus_opdb with configuration config1;
+configure databases with configuration config1 where id = nexus_opdb;
