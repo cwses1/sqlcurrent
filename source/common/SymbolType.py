@@ -11,8 +11,9 @@ class SymbolType ():
 	Branch = 6
 	Environment = 7
 	ReferenceToSymbol = 8
-	List = 9,
-	Version = 10, # VERSION TYPE
-	Int32 = 11,
+	List = 9
+	Version = 10 # VERSION TYPE
+	Int32 = 11
 	PropertyName = 12
 	VersionNumber = 13 # JUST THE VERSION NUMBER '1.2.1' STORED AS A STRING
+	Configuration = 14

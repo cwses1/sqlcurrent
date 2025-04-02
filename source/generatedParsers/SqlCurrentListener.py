@@ -341,5 +341,50 @@ class SqlCurrentListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SqlCurrentParser#configurationStatement.
+    def enterConfigurationStatement(self, ctx:SqlCurrentParser.ConfigurationStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#configurationStatement.
+    def exitConfigurationStatement(self, ctx:SqlCurrentParser.ConfigurationStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#configurationPropList.
+    def enterConfigurationPropList(self, ctx:SqlCurrentParser.ConfigurationPropListContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#configurationPropList.
+    def exitConfigurationPropList(self, ctx:SqlCurrentParser.ConfigurationPropListContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#configurationProp.
+    def enterConfigurationProp(self, ctx:SqlCurrentParser.ConfigurationPropContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#configurationProp.
+    def exitConfigurationProp(self, ctx:SqlCurrentParser.ConfigurationPropContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#applyConfigurationToDatabaseStatement.
+    def enterApplyConfigurationToDatabaseStatement(self, ctx:SqlCurrentParser.ApplyConfigurationToDatabaseStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#applyConfigurationToDatabaseStatement.
+    def exitApplyConfigurationToDatabaseStatement(self, ctx:SqlCurrentParser.ApplyConfigurationToDatabaseStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#applyConfigurationToDatabaseListStatement.
+    def enterApplyConfigurationToDatabaseListStatement(self, ctx:SqlCurrentParser.ApplyConfigurationToDatabaseListStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#applyConfigurationToDatabaseListStatement.
+    def exitApplyConfigurationToDatabaseListStatement(self, ctx:SqlCurrentParser.ApplyConfigurationToDatabaseListStatementContext):
+        pass
+
+
 
 del SqlCurrentParser

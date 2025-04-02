@@ -194,5 +194,30 @@ class SqlCurrentVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SqlCurrentParser#configurationStatement.
+    def visitConfigurationStatement(self, ctx:SqlCurrentParser.ConfigurationStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#configurationPropList.
+    def visitConfigurationPropList(self, ctx:SqlCurrentParser.ConfigurationPropListContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#configurationProp.
+    def visitConfigurationProp(self, ctx:SqlCurrentParser.ConfigurationPropContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#applyConfigurationToDatabaseStatement.
+    def visitApplyConfigurationToDatabaseStatement(self, ctx:SqlCurrentParser.ApplyConfigurationToDatabaseStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#applyConfigurationToDatabaseListStatement.
+    def visitApplyConfigurationToDatabaseListStatement(self, ctx:SqlCurrentParser.ApplyConfigurationToDatabaseListStatementContext):
+        return self.visitChildren(ctx)
+
+
 
 del SqlCurrentParser

@@ -1,6 +1,6 @@
 # SQL Current
 
-SQL Current is a database migrations scripting engine.  It works with any database that has a Python driver.
+SQL Current is a database migrations scripting engine .  It works with any database that has a Python driver.
 
 # Brief Tutorial
 
@@ -111,9 +111,41 @@ A database is a single physical container of your data.  You must tell SQLCurren
 
 ### Database Group Definition
 
-## Other Tools
-* Goose https://github.com/pressly/goose
-* DbUp https://dbup.readthedocs.io/en/latest/
-* Liquibase https://www.liquibase.com - Fake open source tool hidden behind a bunch of pricing pages.  Requires getting Java and sued by Oracle.
-* https://github.com/sqlalchemy/alembic
-* https://github.com/golang-migrate/migrate
+## Other Database Migration Tools
+Here are some other database migration tools to consider.
+
+### DbUp
+
+https://dbup.readthedocs.io/en/latest/
+
+For SQL databases.  The strategy this product takes is you build a console application using .NET.  It has a pretty good philosophy where the developer assumes that change scripts are the correct way to go (he's right).  It's been around for several years, and I've seen this DbUp used successfully in a .NET shop before.  However, you are bound to .NET, so this might not be for you if you are not a .NET developer.
+
+### Goose
+
+https://github.com/pressly/goose
+
+Goose is pretty cool.  It's powerful, terse, and is my favorite of the group.  However, it only supports one database at a time via .env files or environment variables, and you must follow its migration file rules.  It's written in golang, but you won't be tied to the golang platform unless you want to create embedded migrations.  I've seen this used successfully before.
+
+### Liquibase
+
+https://www.liquibase.com
+
+This is a full system that can do a lot of things, but it's complex and half of the documentation pushes you to buy their Pro version.  It's powered by Java.
+
+### alembic
+
+https://github.com/sqlalchemy/alembic
+
+Database migrations for SQLAlchemy.  Migration scripts are written in Python.
+
+### migrate
+
+https://github.com/golang-migrate/migrate
+
+### Visual Studio Database Edition
+
+Various reviews on this.
+
+### Red Gate SQL Compare
+
+This is for schema comparisons and can be used in a very limited fashion in a database migrations context.  The way you'd have to make this work is have a reference database, and apply the diffs from the source database to the target database.

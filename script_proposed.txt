@@ -18,5 +18,20 @@ precheck databases where name = proxima_embedded;
 precheck databases where name matches 'proxima_embedded';
 precheck databases where name in 'proxima_embedded';
 
-configure database nexus_opdb with configuration config1;
-configure databases with configuration config1 where id = nexus_opdb;
+configuration config1 for branch operational
+{
+	name: 'QA Users';
+	desc: 'Flashes the database with specific users in ';
+	environment: dev; // ENVIRONMENT RESTRICTION
+	environment: qa;
+	version: 1.2.0;
+	apply: '';
+	apply: '';
+	apply: '';
+}
+
+apply configuration config1 to database nexus_opdb;
+
+apply configuration config1
+to databases
+where id = nexus_opdb;

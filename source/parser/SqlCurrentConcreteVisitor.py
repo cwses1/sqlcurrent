@@ -1144,3 +1144,83 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 	def visitCheckDatabaseStatement(self, ctx:SqlCurrentParser.CheckDatabaseStatementContext):
 		return self.visitChildren(ctx)
+
+	def visitConfigurationStatement(self, ctx:SqlCurrentParser.ConfigurationStatementContext):
+		#
+		# configurationStatement: 'configuration' SYMBOL_ID '{' configurationPropList '}';
+		#
+
+		#
+		# GET THE SYMBOL NAME.
+		#
+		symbolName = ctx.SYMBOL_ID().getText()
+
+		#
+		# CREATE THE SYMBOL.
+		#
+		createdSymbol = Symbol(symbolName, SymbolType.Configuration)
+
+		#
+		# ADD THE SYMBOL TO THE TABLE.
+		#
+		currentSymbolTable = self._symbolTableManager.getCurrentSymbolTable()
+		currentSymbolTable.insertSymbol(createdSymbol)
+
+		#
+		# PUSH SYMBOL CONTEXT.
+		#
+		currentSymbolTable.contextSymbol = createdSymbol
+
+		#
+		# POPULATE SYMBOL PROPERTIES.
+		#
+		self.visitChildren(ctx)
+
+		#
+		# POP SYMBOL CONTEXT.
+		#
+		currentSymbolTable.contextSymbol = None
+
+	def visitConfigurationProp(self, ctx:SqlCurrentParser.ConfigurationPropContext):
+		#
+		# configurationProp: (SYMBOL_ID | 'environment') ':' expr;
+		#
+
+		#
+		# GET THE PROPERTY NAME.
+		#
+		propName = ctx.getChild(0).getText()
+
+		#
+		# VALIDATE THE PROPERTY NAME.
+		#
+		if SolutionPropNameValidator.isNotValid(propName):
+			raise PropNameNotValidError(SymbolTypeFormatter.format(SymbolType.Solution), propName)
+
+		#
+		# GET THE PROPERTY EXPRESSION VALUE.
+		#
+		propExpr = self.visitExpr(ctx.expr())
+
+		#
+		# VALIDATE THE PROPERTY EXPRESSION VALUE.
+		#
+		if SolutionValueValidator.isNotValid(propName, propExpr):
+			raise PropValueNotValidError(SymbolTypeFormatter.format(SymbolType.Solution), propName, propExpr)
+
+		#
+		# SET THE PROPERTY ON THE SYMBOL.
+		#
+		contextSymbol = self._symbolTableManager.getCurrentSymbolTable().contextSymbol
+
+	def visitApplyConfigurationToDatabaseStatement(self, ctx:SqlCurrentParser.ApplyConfigurationToDatabaseStatementContext):
+		#
+		# applyConfigurationToDatabaseStatement: 'apply' 'configuration'? SYMBOL_ID 'to' 'database'? SYMBOL_ID ';';
+		#
+		pass
+
+	def visitApplyConfigurationToDatabaseListStatement(self, ctx:SqlCurrentParser.ApplyConfigurationToDatabaseListStatementContext):
+		#
+		# applyConfigurationToDatabaseListStatement: 'apply' 'configuration'? SYMBOL_ID ('to' 'databases')? whereClause? orderByClause? ';';
+		#
+		pass
