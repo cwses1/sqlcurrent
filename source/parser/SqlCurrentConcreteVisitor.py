@@ -65,6 +65,8 @@ from entityReaders.SymbolReader import *
 from appServices.CreateDatabaseAppService import *
 from appServices.UpdateDatabaseAppService import *
 from appServices.RevertDatabaseAppService import *
+from validators.ConfigurationPropNameValidator import *
+from validators.ConfigurationValueValidator import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -1147,13 +1149,29 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 	def visitConfigurationStatement(self, ctx:SqlCurrentParser.ConfigurationStatementContext):
 		#
-		# configurationStatement: 'configuration' SYMBOL_ID '{' configurationPropList '}';
+		# configurationStatement: 'configuration' SYMBOL_ID ('for' 'branch' expr)? '{' configurationPropList '}';
 		#
 
 		#
-		# GET THE SYMBOL NAME.
+		# GET THE BRANCH NAME.
+		# IF NO NAME IS GIVEN THEN WE USE 'default'.
 		#
-		symbolName = ctx.SYMBOL_ID().getText()
+		branchName = 'default'
+
+		if ctx.expr() != None:
+			branchExpr = self.visitExpr(ctx.expr())
+
+			if branchExpr.type == SymbolType.String:
+				branchName = branchExpr.value
+			elif branchExpr.type == SymbolType.ReferenceToSymbol:
+				branchName = branchExpr.name
+			else:
+				raise VisitorMethodRuleFalloffError('Could not determine branch name.')
+
+		#
+		# CONSTRUCT THE SYMBOL NAME.
+		#
+		symbolName = ctx.SYMBOL_ID().getText() + '_' + branchName
 
 		#
 		# CREATE THE SYMBOL.
@@ -1194,7 +1212,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# VALIDATE THE PROPERTY NAME.
 		#
-		if SolutionPropNameValidator.isNotValid(propName):
+		if ConfigurationPropNameValidator.isNotValid(propName):
 			raise PropNameNotValidError(SymbolTypeFormatter.format(SymbolType.Solution), propName)
 
 		#
@@ -1205,7 +1223,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# VALIDATE THE PROPERTY EXPRESSION VALUE.
 		#
-		if SolutionValueValidator.isNotValid(propName, propExpr):
+		if ConfigurationValueValidator.isNotValid(propName, propExpr):
 			raise PropValueNotValidError(SymbolTypeFormatter.format(SymbolType.Solution), propName, propExpr)
 
 		#

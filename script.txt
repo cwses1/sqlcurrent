@@ -270,9 +270,23 @@ revert databases to version 1.0.0;
 //
 // NEXT THING TO IMPLEMENT AND TEST:
 //
-create databases;
+configuration config1 for branch operational
+{
+	name: 'QA Users';
+	desc: 'Flashes the database with specific users in ';
+	environment: dev; // ENVIRONMENT RESTRICTION
+	environment: qa;
+	version: 1.2.0; // MINIMUM VERSION
+	apply: ''; // APPLY SCRIPTS THAT FLASH THE DATABASE WITH EXACTLY WHAT IS NEEDED.
+	apply: '';
+	apply: '';
+}
+
+apply configuration config1 to database nexus_opdb;
 
 /*
+apply configuration config1 to databases where id = nexus_opdb;
+
 check nexus_opdb;
 check nexus_opdb to version 1.0.0;
 create and update nexus_opdb to version 1.1.0;

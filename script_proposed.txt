@@ -29,9 +29,3 @@ configuration config1 for branch operational
 	apply: '';
 	apply: '';
 }
-
-apply configuration config1 to database nexus_opdb;
-
-apply configuration config1
-to databases
-where id = nexus_opdb;

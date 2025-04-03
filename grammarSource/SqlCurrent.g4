@@ -82,9 +82,9 @@ checkDatabaseListStatement: 'check' 'databases' whereClause? orderByClause? ';';
 revertDatabaseStatement: 'revert' 'database'? SYMBOL_ID toVersionClause ';';
 checkDatabaseStatement: 'check' 'database'? SYMBOL_ID ('version' VERSION_ID)? ';';
 
-configurationStatement: 'configuration' SYMBOL_ID '{' configurationPropList '}';
+configurationStatement: 'configuration' SYMBOL_ID ('for' 'branch' expr)? '{' configurationPropList '}';
 configurationPropList: (configurationProp ';')+;
-configurationProp: (SYMBOL_ID | 'environment') ':' expr;
+configurationProp: (SYMBOL_ID | 'environment' | 'version' | 'apply') ':' expr;
 
 applyConfigurationToDatabaseStatement: 'apply' 'configuration'? SYMBOL_ID 'to' 'database'? SYMBOL_ID ';';
-applyConfigurationToDatabaseListStatement: 'apply' 'configuration'? SYMBOL_ID ('to' 'databases')? whereClause? orderByClause? ';';
+applyConfigurationToDatabaseListStatement: 'apply' 'configuration'? SYMBOL_ID 'to' 'databases' whereClause? orderByClause? ';';

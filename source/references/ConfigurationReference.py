@@ -8,8 +8,8 @@ class ConfigurationReference ():
 
 	@staticmethod
 	def propNameSupported (name:str) -> bool:
-		return name in DatabaseReference.propNames
+		return name in ConfigurationReference.propNames
 
 	@staticmethod
 	def propCanHaveMultipleValues (name:str) -> bool:
-		return DatabaseReference.propNames[name]
+		return ConfigurationReference.propNames[name]
