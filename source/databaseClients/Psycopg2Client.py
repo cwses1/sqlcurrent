@@ -32,3 +32,13 @@ class Psycopg2Client (DatabaseClientBase):
 				curs.execute(createScript)
 
 		conn.close()
+
+	def runCheckScript (self, scriptText:str):
+		conn = psycopg2.connect(self.connString)
+
+		with conn:
+			with conn.cursor() as cur:
+				cur.execute(scriptText)
+				return cur.fetchone()
+
+		conn.close()

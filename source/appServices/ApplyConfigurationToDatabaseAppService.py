@@ -18,6 +18,8 @@ from versionUtils.VersionSymbolSortUtil import *
 from symbolTables.Symbol import *
 from formatters.UUID4Formatter import *
 from scriptRunners.ConfigurationApplyScriptRunner import *
+from scriptRunners.ConfigurationPrecheckScriptRunner import *
+from entities.ScriptRunnerResultSet import *
 
 class ApplyConfigurationToDatabaseAppService ():
 
@@ -27,6 +29,8 @@ class ApplyConfigurationToDatabaseAppService ():
 		self.databaseSymbolName:str = None
 		self.databaseSymbol:Symbol = None
 		self.symbolTableManager = None
+		self.runPrechecks = True
+		self.runChecks = True
 
 	def run (self):
 		configurationSymbolName = self.configurationSymbolName
@@ -82,7 +86,8 @@ class ApplyConfigurationToDatabaseAppService ():
 		# IF THE UPDATE TRACKING DOES NOT EXIST, THEN WE ARE DONE.
 		#
 		if not updateTrackingFileWriter.fileExists(branchName, databaseSymbolName):
-			print('{}: Database not created. Apply configuration canceled for this database.'.format(databaseSymbolName))
+			print('{}: Database not created.'.format(databaseSymbolName))
+			print('{0}: Apply configuration \'{1}\' canceled for database \'{0}\'.'.format(databaseSymbolName, configurationSymbolName))
 			return
 
 		#
@@ -96,6 +101,7 @@ class ApplyConfigurationToDatabaseAppService ():
 		pathFactory = ScriptFilePathFactory()
 		pathFactory.branchName = branchName
 		pathFactory.databaseName = databaseSymbolName
+		pathFactory.configurationName = configurationSymbolName
 		pathFactory.sqlScriptsDir = SymbolReader.readString(self.symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
 
 		if configurationSymbol.hasProp('dir'):
@@ -124,17 +130,54 @@ class ApplyConfigurationToDatabaseAppService ():
 			return
 
 		#
-		# TO DO: RUN PRECHECK SCRIPTS.
+		# RUN PRECHECK SCRIPTS.
 		#
+		if self.runPrechecks:
+			precheckScriptList:List[str] = SymbolReader.readPropAsStringList(configurationSymbol, 'precheck')
+			precheckScriptListLength = len(precheckScriptList)
+			precheckScriptNumber:int = 0
 
-		#
-		# TELL THE USER WHICH CONFIGURATION WE ARE APPLYING.
-		#
-		print('{0}: Applying configuration \'{1}\' to database \'{0}\'.'.format(databaseSymbolName, configurationSymbolName))
+			if precheckScriptListLength == 1:
+				print('{0}: Running 1 precheck script in configuration \'{1}\' against database \'{0}\'.'.format(databaseSymbolName, configurationSymbolName))
+			else:
+				print('{0}: Running {2} precheck scripts in configuration \'{1}\' against database \'{0}\'.'.format(databaseSymbolName, configurationSymbolName, precheckScriptListLength))
+
+			for currentFilePath in precheckScriptList:
+				precheckScriptNumber += 1
+				precheckScriptFilePath = pathFactory.createPath(currentFilePath)
+
+				scriptRunner = ConfigurationPrecheckScriptRunner()
+				scriptRunner.configurationSymbolName = self.configurationSymbolName
+				scriptRunner.configurationSymbol = self.configurationSymbol
+				scriptRunner.databaseSymbolName = self.databaseSymbolName
+				scriptRunner.databaseSymbol = self.databaseSymbol
+				scriptRunner.symbolTableManager = self.symbolTableManager
+				scriptRunner.databaseClient = databaseClient
+				scriptRunner.branchSymbol = branchSymbol
+				scriptRunner.branchName = branchName
+				scriptRunner.pathFactory = pathFactory
+				scriptRunner.batchId = batchId
+				scriptRunner.updateTrackingFileWriter = updateTrackingFileWriter
+				scriptRunner.currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+				scriptRunner.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(scriptRunner.currentDateTime)
+				scriptRunner.lastSuccessfulVersionNumber = lastSuccessfulVersionNumber
+				scriptRunner.scriptNumber = precheckScriptNumber
+				scriptRunner.scriptListLength = precheckScriptListLength
+				scriptRunnerResultSet = scriptRunner.runScript(precheckScriptFilePath)
+
+				if scriptRunnerResultSet.scriptFailed:
+					print('{0}: Precheck configuration script {1} of {2} failed for database \'{0}\'.'.format(databaseSymbolName, precheckScriptNumber, precheckScriptListLength))
+					print('{0}: {1}'.format(databaseSymbolName, scriptRunnerResultSet.scriptFailedReason))
+					return
+				else:
+					print('{0}: Precheck configuration script {1} of {2} passed.'.format(databaseSymbolName, precheckScriptNumber, precheckScriptListLength))
+
 
 		#
 		# RUN APPLY SCRIPTS.
 		#
+		print('{0}: Running apply scripts in configuration \'{1}\' against database \'{0}\'.'.format(databaseSymbolName, configurationSymbolName))
+
 		for currentFilePath in SymbolReader.readPropAsStringList(configurationSymbol, 'apply'):
 			scriptRunner = ConfigurationApplyScriptRunner()
 			scriptRunner.configurationSymbolName = self.configurationSymbolName
@@ -161,3 +204,5 @@ class ApplyConfigurationToDatabaseAppService ():
 		#
 		# TO DO: RUN CHECK SCRIPTS.
 		#
+		if self.runChecks:
+			pass

@@ -7,10 +7,13 @@ class ScriptFilePathFactory ():
 		self.databaseName:str = None
 		self.sqlScriptsDir:str = None
 		self.versionDir:str = None
+		self.configurationName:str = None
+		self.versionNumber:str = None
 
 	def createPath (self, pathParam:str) -> str:
 		#
 		# IF THE VERSION DIRECTORY IS SPECIFIED, THEN USE THAT.
+		# WE SIMPLY APPEND THE DIRECTORY AND THE PATH.
 		#
 		if self.versionDir != None:
 			return self.versionDir + os.sep + pathParam
@@ -30,4 +33,7 @@ class ScriptFilePathFactory ():
 		#
 		# RELATIVE PATH, NOT FORCED (NO STARTING DOT): myscripts/version_1.1.1/apply_version.sql
 		#
-		return self.sqlScriptsDir + os.sep + self.branchName + os.sep + pathParam
+		if self.configurationName != None:
+			return self.sqlScriptsDir + os.sep + self.branchName + os.sep + 'configurations' + os.sep + self.configurationName + os.sep + pathParam
+
+		return self.sqlScriptsDir + os.sep + self.branchName + os.sep + 'versions' + os.sep + pathParam
