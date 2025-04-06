@@ -44,7 +44,7 @@ class RevertDatabaseAppService ():
 		#
 		# CREATE A BATCH ID.
 		#
-		batchId = str(uuid.uuid4())
+		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
 
 		#
 		# REVERT THE DATABASE.
@@ -242,6 +242,7 @@ class RevertDatabaseAppService ():
 				updateTrackingLine.batchId = batchId
 				updateTrackingLine.script = revertScriptFilePath
 				updateTrackingLine.version = nextPreviousVersionStr
+				updateTrackingLine.operation = 'revert'
 
 				#
 				# TELL THE USER WHICH SCRIPT WE'RE RUNNING.

@@ -10,12 +10,12 @@ class UpdateTrackingFileWriter ():
 	def createFile (self, branchName:str, databaseSymbolName:str):
 		with open(self.getFilePath(branchName, databaseSymbolName), 'w', encoding='utf-8') as handle:
 			writer = csv.writer(handle)
-			writer.writerow(['name','branch','datetime','batchId','script','version', 'result'])
+			writer.writerow(['datetime', 'operation', 'version', 'result', 'script', 'batchId', 'name', 'branch'])
 
 	def writeUpdateTrackingLine(self, branchName:str, databaseSymbolName:str, updateTrackingLine):
 		with open(self.getFilePath(branchName, databaseSymbolName), 'a', encoding='utf-8') as handle:
 			writer = csv.writer(handle)
-			writer.writerow([updateTrackingLine.databaseName, updateTrackingLine.branch, updateTrackingLine.datetime, updateTrackingLine.batchId, updateTrackingLine.script, updateTrackingLine.version, updateTrackingLine.result])
+			writer.writerow([updateTrackingLine.datetime, updateTrackingLine.operation, updateTrackingLine.version, updateTrackingLine.result, updateTrackingLine.script, updateTrackingLine.batchId, updateTrackingLine.databaseName, updateTrackingLine.branch])
 
 	def ensureDirExists (self, branchName:str) -> None:
 		if not self.dirExists(branchName):

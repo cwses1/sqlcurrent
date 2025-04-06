@@ -34,3 +34,11 @@ class SymbolTable ():
 				symbolList.append(symbol)
 
 		return symbolList
+
+	def getAllSymbols (self) -> List[Symbol]:
+		symbolList:List[Symbol] = []
+
+		for symbol in self.table.values():
+			symbolList.append(symbol)
+
+		return symbolList

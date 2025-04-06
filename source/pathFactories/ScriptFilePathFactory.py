@@ -10,6 +10,12 @@ class ScriptFilePathFactory ():
 
 	def createPath (self, pathParam:str) -> str:
 		#
+		# IF THE VERSION DIRECTORY IS SPECIFIED, THEN USE THAT.
+		#
+		if self.versionDir != None:
+			return self.versionDir + os.sep + pathParam
+
+		#
 		# ABSOLUTE PATH: / OR C:\
 		#
 		if os.path.isabs(pathParam):
@@ -18,13 +24,10 @@ class ScriptFilePathFactory ():
 		#
 		# FORCED RELATIVE PATH: ./myscripts/version_1.1.1/apply_version.sql
 		#
-		elif pathParam.startswith('.'):
+		if pathParam.startswith('.'):
 			return os.getcwd() + os.sep + pathParam.lstrip('.')
 
 		#
 		# RELATIVE PATH, NOT FORCED (NO STARTING DOT): myscripts/version_1.1.1/apply_version.sql
 		#
-		if self.versionDir == None:
-			return self.sqlScriptsDir + os.sep + self.branchName + os.sep + pathParam
-
-		return self.sqlScriptsDir + os.sep + self.branchName + os.sep + self.versionDir + os.sep + pathParam
+		return self.sqlScriptsDir + os.sep + self.branchName + os.sep + pathParam

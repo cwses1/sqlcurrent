@@ -273,13 +273,18 @@ revert databases to version 1.0.0;
 configuration config1 for branch operational
 {
 	name: 'QA Users';
-	desc: 'Flashes the database with specific users in ';
-	environment: dev; // ENVIRONMENT RESTRICTION
-	environment: qa;
-	version: 1.2.0; // MINIMUM VERSION
-	apply: ''; // APPLY SCRIPTS THAT FLASH THE DATABASE WITH EXACTLY WHAT IS NEEDED.
-	apply: '';
-	apply: '';
+	desc: 'Flashes the database with specific users.';
+	environment: dev;
+	version: 1.0.0;
+	dir: './sqlcurrent_sqlscripts/operational/_configurations';
+	apply: 'config1.sql';
+	apply: 'config2.sql';
+	precheck: '';
+	precheck: '';
+	check: '';
+	check: '';
+	revert: '';
+	revert: '';
 }
 
 apply configuration config1 to database nexus_opdb;
@@ -309,7 +314,7 @@ create databases where every tag not in ('location_us', 'location_my_desk');
 // ADD ALGORITHM FOR CUT-ACROSS AND DEEP UPDATING.
 // ADD OPTIONS FOR ERROR HANDLING.
 // ADD OPTIONS FOR WHERE UPDATES CAN BE STORED.
-// INTRODUCE sqlcurrent-env.json CONFIGURATION FILE.
+// INTRODUCE sqlcurrent-env.json CONFIGURATION FILE WITH GLOBAL SYMBOLS TO INSERT.
 // IMPLEMENT CHECKS DURING THE UPDATES, ALSO PERMIT CONFIGURATION TO SKIP OR FORCE PRECHECKS & CHECKS.
 // WHEN CREATING MULTIPLE DATABASES, DO WE STOP ON ANY ERROR?
 // WHEN CREATING A DATABASE, DO WE ALLOW A RECREATE TO HAPPEN?
@@ -319,4 +324,11 @@ create databases where every tag not in ('location_us', 'location_my_desk');
 // HOW DO WE AUTO REVERT IF AN UPDATE FAILS?
 // IF A VERSION FAILED IN THE END, BUT OTHER SCRIPTS IN THE SAME VERSION WERE SUCCESSFUL, THEN WE TREAT THE UPDATE AS SUCCESSFUL INCORRECTLY.
 // IMPORT OTHER SCRIPT FILES INTO A SINGLE SCRIPT.
+// PRINT STATEMENTS LIKE '4 APPLY SCRIPTS TO RUN.' AND 'RUNNING APPLY SCRIPT 1 OF 4: 'FILE NAME''.
+// DEBUGGING STATEMENTS, VERBOSITY SETTINGS.
+// INTRODUCE @import FOR STRUCTURING SCRIPTS BETTER.
+// COMPONENTIZE THE PARSING SYSTEM SO OTHER PROGRAMS CAN EMBED THIS INTO THEM.
+// FOR EACH STATEMENT, ADD A "FORCE" OPTION TO IGNORE ERRORS AND KEEP GOING.
+// ADD A SCRIPT PROPERTY TYPE SUCH AS check, precheck, apply, revert TO THE UPDATE TRACKING FILE SO WE KNOW WHAT THE USER AND SCRIPT WAS TRYING TO DO.
+// PRINT EACH STATEMENT BEFORE RUNNING OPTION.
 //

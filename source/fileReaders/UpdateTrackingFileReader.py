@@ -23,13 +23,14 @@ class UpdateTrackingFileReader ():
 			updateTrackingFileReader = csv.DictReader(updateTrackingFileHandle)
 			for row in updateTrackingFileReader:
 				updateTrackingLine = UpdateTrackingLine()
-				updateTrackingLine.databaseName = row['name']
-				updateTrackingLine.branch = row['branch']
 				updateTrackingLine.datetime = row['datetime']
-				updateTrackingLine.batchId = row['batchId']
-				updateTrackingLine.version = row['script']
+				updateTrackingLine.operation = row['operation']
 				updateTrackingLine.version = row['version']
 				updateTrackingLine.result = row['result']
+				updateTrackingLine.script = row['script']
+				updateTrackingLine.batchId = row['batchId']
+				updateTrackingLine.databaseName = row['name']
+				updateTrackingLine.branch = row['branch']
 				updateTrackingLineList.append(updateTrackingLine)
 
 		#
@@ -39,7 +40,7 @@ class UpdateTrackingFileReader ():
 		updateTrackingLineList.reverse()
 
 		for updateTrackingLine in updateTrackingLineList:
-			if updateTrackingLine.result == 'success':
+			if updateTrackingLine.result == 'success' and (updateTrackingLine.operation == 'create' or updateTrackingLine.operation == 'update' or updateTrackingLine.operation == 'revert'):
 				return updateTrackingLine.version
 
 

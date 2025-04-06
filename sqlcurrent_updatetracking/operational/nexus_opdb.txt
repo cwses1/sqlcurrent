@@ -1,14 +1,46 @@
-name,branch,datetime,batchId,script,version,result
-nexus_opdb,operational,2025-04-01 06:56:27.792569,58ef4ffa-3ebb-47ad-9c50-7ea5c22dc441,./sqlcurrent_sqlscripts/operational/create.sql,1.0.0,success
-nexus_opdb,operational,2025-04-01 17:22:41.003541,a518823d-1d65-45d2-9b5e-3f8cae0394c7,./sqlcurrent_sqlscripts/operational/version_1.1.0/schema.sql,1.1.0,success
-nexus_opdb,operational,2025-04-01 17:22:41.061213,a518823d-1d65-45d2-9b5e-3f8cae0394c7,./sqlcurrent_sqlscripts/operational/version_1.1.0/data.sql,1.1.0,success
-nexus_opdb,operational,2025-04-01 17:22:41.080997,a518823d-1d65-45d2-9b5e-3f8cae0394c7,./sqlcurrent_sqlscripts/operational/version_1.2.0/schema.sql,1.2.0,success
-nexus_opdb,operational,2025-04-01 17:22:41.100020,a518823d-1d65-45d2-9b5e-3f8cae0394c7,./sqlcurrent_sqlscripts/operational/version_1.2.0/data.sql,1.2.0,success
-nexus_opdb,operational,2025-04-01 19:50:03.392559,ba44c442-ff24-4a91-9ad6-4f63aff547fa,./sqlcurrent_sqlscripts/operational/version_1.2.0/revert.sql,1.1.0,success
-nexus_opdb,operational,2025-04-01 19:50:32.196443,9f8922b2-f2de-44cb-8873-74dca8d4ade2,./sqlcurrent_sqlscripts/operational/version_1.1.0/revert.sql,1.0.0,success
-nexus_opdb,operational,2025-04-01 20:26:53.589677,700f2825-6f4e-4940-89d7-d7601bac0430,./sqlcurrent_sqlscripts/operational/version_1.1.0/schema.sql,1.1.0,success
-nexus_opdb,operational,2025-04-01 20:26:53.635686,700f2825-6f4e-4940-89d7-d7601bac0430,./sqlcurrent_sqlscripts/operational/version_1.1.0/data.sql,1.1.0,success
-nexus_opdb,operational,2025-04-01 20:26:53.654503,700f2825-6f4e-4940-89d7-d7601bac0430,./sqlcurrent_sqlscripts/operational/version_1.2.0/schema.sql,1.2.0,success
-nexus_opdb,operational,2025-04-01 20:26:53.673509,700f2825-6f4e-4940-89d7-d7601bac0430,./sqlcurrent_sqlscripts/operational/version_1.2.0/data.sql,1.2.0,success
-nexus_opdb,operational,2025-04-01 20:36:43.915207,102cdf43-8e16-4eec-9f4c-7e994409689f,./sqlcurrent_sqlscripts/operational/version_1.2.0/revert.sql,1.1.0,success
-nexus_opdb,operational,2025-04-01 20:36:43.948563,102cdf43-8e16-4eec-9f4c-7e994409689f,./sqlcurrent_sqlscripts/operational/version_1.1.0/revert.sql,1.0.0,success
+datetime,operation,version,result,script,batchId,name,branch
+2025-04-03T22:11:33,create,1.0.0,success,./sqlcurrent_sqlscripts/operational/create.sql,4887a6cf8fb84a5bad74fee91d15761e,nexus_opdb,operational
+2025-04-04T17:31:17,configure,,success,./sqlcurrent_sqlscripts/operational/_configurations/config1/apply.sql,72c05881faf7402b92da2d18bc8e6a13,nexus_opdb,operational
+2025-04-04T17:32:09,configure,,success,./sqlcurrent_sqlscripts/operational/_configurations/config1/apply.sql,d989473765ef40519d1364b156123ebc,nexus_opdb,operational
+2025-04-04T20:54:30,configure,,success,./sqlcurrent_sqlscripts/operational/_configurations/config1/apply.sql,b13cd25731504ecb820baa3b0166c718,nexus_opdb,operational
+2025-04-04T20:58:01,configure,,success,./sqlcurrent_sqlscripts/operational/_configurations/config1/apply.sql,5285a7ca96fc4c49be8e4c61c3859416,nexus_opdb,operational
+2025-04-04T21:00:08,configure,,success,./sqlcurrent_sqlscripts/operational/_configurations/config1/apply.sql,6092e51b95244bb4b76e59ee0a2949e9,nexus_opdb,operational
+2025-04-05T07:32:48,configure,,success,./sqlcurrent_sqlscripts/operational/_configurations/config1/apply.sql,a2b338ddd3ac485a8373a12da3dc0c5b,nexus_opdb,operational
+2025-04-05T07:34:26,configure,,success,./sqlcurrent_sqlscripts/operational/_configurations/config1/apply.sql,0b63f26d9aee4a238cbb8779bffc2038,nexus_opdb,operational
+2025-04-05T07:36:28,configure,,success,./sqlcurrent_sqlscripts/operational/_configurations/config1/apply.sql,f3d8a0920649415eb5080845a32c3aaf,nexus_opdb,operational
+2025-04-05T07:36:41,configure,,success,./sqlcurrent_sqlscripts/operational/_configurations/config1/apply.sql,5deebdbd90664cbe9dc4801db9bc95b8,nexus_opdb,operational
+2025-04-05T07:37:40,configure,,success,./sqlcurrent_sqlscripts/operational/_configurations/config1/apply.sql,b63331902d2543a58c4b63a7676ba9ba,nexus_opdb,operational
+2025-04-05T07:38:18,configure,,success,./sqlcurrent_sqlscripts/operational/_configurations/config1/apply.sql,2026455b2e154852894ac0fea38fdb69,nexus_opdb,operational
+2025-04-05T07:44:25,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config1/apply.sql,c0832ab7eb2d47db8893c1ecf8be443a,nexus_opdb,operational
+2025-04-05T07:49:51,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config1/apply.sql,1911ecf72c5547be8f3f3211599232b9,nexus_opdb,operational
+2025-04-05T07:49:51,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config1/apply.sql,1911ecf72c5547be8f3f3211599232b9,nexus_opdb,operational
+2025-04-05T07:51:04,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/apply.sql,767d4eee2ce14e4caaac905a081d9cfb,nexus_opdb,operational
+2025-04-05T07:51:04,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/apply.sql,767d4eee2ce14e4caaac905a081d9cfb,nexus_opdb,operational
+2025-04-05T08:09:30,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config1.sql,76708a54025d4ff2b28b21f21f5bd82b,nexus_opdb,operational
+2025-04-05T08:10:44,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config1.sql,2b61d5469b6e4dacb3bd3fdd84b7d76d,nexus_opdb,operational
+2025-04-05T08:12:00,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config1.sql,a23e958f54b74d769ea149bef0eee631,nexus_opdb,operational
+2025-04-05T08:38:55,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config1.sql,eae69d569d5444feb9f8c01124aa2c4e,nexus_opdb,operational
+2025-04-05T08:39:36,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config1.sql,fdd305b69ca54920b5a2cdc15db06360,nexus_opdb,operational
+2025-04-05T08:39:37,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config2.sql,fdd305b69ca54920b5a2cdc15db06360,nexus_opdb,operational
+2025-04-05T08:41:52,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config1.sql,72c9a56a2dee445f8f99fdd99b5a4009,nexus_opdb,operational
+2025-04-05T08:41:52,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config2.sql,72c9a56a2dee445f8f99fdd99b5a4009,nexus_opdb,operational
+2025-04-05T17:32:20,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config1.sql,ff6079312a464dc48455411fbdb10955,nexus_opdb,operational
+2025-04-05T17:32:20,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config2.sql,ff6079312a464dc48455411fbdb10955,nexus_opdb,operational
+2025-04-05T17:33:06,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config1.sql,917205e5515848d9832bf9be35f765ff,nexus_opdb,operational
+2025-04-05T17:33:06,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config2.sql,917205e5515848d9832bf9be35f765ff,nexus_opdb,operational
+2025-04-05T17:34:26,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config1.sql,6d32d149f54347f6b3f7e22547f3c25f,nexus_opdb,operational
+2025-04-05T17:34:26,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config2.sql,6d32d149f54347f6b3f7e22547f3c25f,nexus_opdb,operational
+2025-04-05T17:34:55,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config1.sql,251090d016a345c1b2581b57a0efaa63,nexus_opdb,operational
+2025-04-05T17:34:55,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config2.sql,251090d016a345c1b2581b57a0efaa63,nexus_opdb,operational
+2025-04-05T17:35:11,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config1.sql,b864644159bd469b833e4e38d7264203,nexus_opdb,operational
+2025-04-05T17:35:11,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config2.sql,b864644159bd469b833e4e38d7264203,nexus_opdb,operational
+2025-04-05T17:36:09,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config1.sql,f7b487b5429d4215a69742098bedd80c,nexus_opdb,operational
+2025-04-05T17:36:09,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config2.sql,f7b487b5429d4215a69742098bedd80c,nexus_opdb,operational
+2025-04-05T17:37:59,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config1.sql,6f90adbb1684416a8e04276f8969604a,nexus_opdb,operational
+2025-04-05T17:37:59,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config2.sql,6f90adbb1684416a8e04276f8969604a,nexus_opdb,operational
+,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config1.sql,0ee27b6e6b564a8d89ef1219e6abf17d,nexus_opdb,operational
+,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config2.sql,0ee27b6e6b564a8d89ef1219e6abf17d,nexus_opdb,operational
+,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config1.sql,0bd4f3c572e344679f82620f852bd988,nexus_opdb,operational
+,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config2.sql,0bd4f3c572e344679f82620f852bd988,nexus_opdb,operational
+2025-04-05T21:39:46,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config1.sql,e60f326b76824be199154120fa7f48c9,nexus_opdb,operational
+2025-04-05T21:39:46,configure,1.0.0,success,./sqlcurrent_sqlscripts/operational/_configurations/config2.sql,e60f326b76824be199154120fa7f48c9,nexus_opdb,operational

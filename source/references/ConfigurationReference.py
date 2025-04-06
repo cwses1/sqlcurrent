@@ -5,6 +5,10 @@ class ConfigurationReference ():
 	propNames['environment'] = True
 	propNames['version'] = False
 	propNames['apply'] = True
+	propNames['dir'] = False
+	propNames['precheck'] = True
+	propNames['check'] = True
+	propNames['revert'] = True
 
 	@staticmethod
 	def propNameSupported (name:str) -> bool:

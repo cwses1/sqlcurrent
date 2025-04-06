@@ -27,6 +27,7 @@ statement: serverStatement
 	| configurationStatement
 	| applyConfigurationToDatabaseStatement
 	| applyConfigurationToDatabaseListStatement
+	| printSymbolsStatement
 	;
 
 serverStatement: 'server' SYMBOL_ID '{' serverPropList '}';
@@ -41,7 +42,7 @@ expr: STRING_LITERAL | SYMBOL_ID | VERSION_ID;
 
 versionStatement: 'version' VERSION_ID ('for' 'branch' expr)? '{' versionPropList '}';
 versionPropList: (versionProp ';')+;
-versionProp: (SYMBOL_ID | 'branch' | 'revert' | 'check' | 'apply') ':' expr;
+versionProp: (SYMBOL_ID | 'branch' | 'revert' | 'check' | 'apply' | 'precheck') ':' expr;
 
 createDatabaseStatement: 'create' 'database'? SYMBOL_ID ';';
 
@@ -82,9 +83,11 @@ checkDatabaseListStatement: 'check' 'databases' whereClause? orderByClause? ';';
 revertDatabaseStatement: 'revert' 'database'? SYMBOL_ID toVersionClause ';';
 checkDatabaseStatement: 'check' 'database'? SYMBOL_ID ('version' VERSION_ID)? ';';
 
-configurationStatement: 'configuration' SYMBOL_ID ('for' 'branch' expr)? '{' configurationPropList '}';
+configurationStatement: 'configuration' SYMBOL_ID 'for' 'branch' expr? '{' configurationPropList '}';
 configurationPropList: (configurationProp ';')+;
-configurationProp: (SYMBOL_ID | 'environment' | 'version' | 'apply') ':' expr;
+configurationProp: (SYMBOL_ID | 'environment' | 'version' | 'apply' | 'precheck' | 'check' | 'revert') ':' expr;
 
 applyConfigurationToDatabaseStatement: 'apply' 'configuration'? SYMBOL_ID 'to' 'database'? SYMBOL_ID ';';
 applyConfigurationToDatabaseListStatement: 'apply' 'configuration'? SYMBOL_ID 'to' 'databases' whereClause? orderByClause? ';';
+
+printSymbolsStatement: 'print' 'symbols' ';';

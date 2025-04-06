@@ -386,5 +386,14 @@ class SqlCurrentListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SqlCurrentParser#printSymbolsStatement.
+    def enterPrintSymbolsStatement(self, ctx:SqlCurrentParser.PrintSymbolsStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#printSymbolsStatement.
+    def exitPrintSymbolsStatement(self, ctx:SqlCurrentParser.PrintSymbolsStatementContext):
+        pass
+
+
 
 del SqlCurrentParser

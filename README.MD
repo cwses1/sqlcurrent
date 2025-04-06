@@ -1,11 +1,10 @@
 # SQL Current
 
-SQL Current is a database migrations scripting engine .  It works with any database that has a Python driver.
+SQL Current is a database migrations scripting engine and domain specific language written in Python.  It works with any database (SQL, NoSQL, etc.) that has a Python driver or adapter.  Here is what a very simple SQL Current script looks like:
 
-# Brief Tutorial
-
-Here is a simple SQL Current script:
-
+	//
+	// DEFINE YOUR DATABASE: THE TYPE, WHERE IT IS, AND THE CREATE SCRIPT TO RUN WHEN CREATING THE DATABASE.
+	//
 	database mydb
 	{
 		driver: 'postgres';
@@ -13,6 +12,9 @@ Here is a simple SQL Current script:
 		create: 'create.sql';
 	}
 
+	//
+	// CREATE YOUR DATABASE.  THIS WILL RUN THE 'create.sql' SCRIPT.
+	//
 	create mydb;
 
 Run the script:
@@ -31,7 +33,7 @@ What this script does:
 
 Try running the script again.  You should get this error:
 
-	mydb ERROR: This database already exists.
+	mydb: This database already exists.
 
 SQL Current will not attempt to create a database that already exists.
 

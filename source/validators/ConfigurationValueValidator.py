@@ -5,6 +5,11 @@ from .ConfigurationEnvironmentValueValidator import *
 from .ConfigurationVersionValueValidator import *
 from .ConfigurationApplyValueValidator import *
 
+from .ConfigurationDirValueValidator import *
+from .ConfigurationPrecheckValueValidator import *
+from .ConfigurationCheckValueValidator import *
+from .ConfigurationRevertValueValidator import *
+
 class ConfigurationValueValidator ():
 
 	@staticmethod
@@ -20,5 +25,13 @@ class ConfigurationValueValidator ():
 				return ConfigurationVersionValueValidator.isNotValid(value)
 			case 'apply':
 				return ConfigurationApplyValueValidator.isNotValid(value)
+			case 'dir':
+				return ConfigurationDirValueValidator.isNotValid(value)
+			case 'precheck':
+				return ConfigurationPrecheckValueValidator.isNotValid(value)
+			case 'check':
+				return ConfigurationCheckValueValidator.isNotValid(value)
+			case 'revert':
+				return ConfigurationRevertValueValidator.isNotValid(value)
 			case _:
 				raise MatchUnderscoreError('ConfigurationValueValidator hit the default case for property name: {}.'.format(name))

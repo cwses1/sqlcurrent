@@ -8,6 +8,8 @@ class ExprReader ():
 	def readString (expr:Expr) -> str:
 		if expr.type == SymbolType.String:
 			return expr.value
+		if expr.type == SymbolType.ReferenceToSymbol:
+			return expr.name
 		return str(expr.value)
 
 	@staticmethod
@@ -15,10 +17,7 @@ class ExprReader ():
 		stringList:List[str] = []
 
 		for expr in exprList:
-			if expr.type == SymbolType.String:
-				stringList.append(expr.value)
-			else:
-				stringList.append(str(expr.value))
+			stringList.append(ExprReader.readString(expr))
 
 		return stringList
 

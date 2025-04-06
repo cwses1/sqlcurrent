@@ -38,7 +38,16 @@ class SymbolReader ():
 	def readPropAsString (symbol: Symbol, propName:str) -> List[str]:
 		return ExprReader.readString(symbol.getProp(propName))
 
-
 	@staticmethod
 	def readPropAsSymbol (symbol: Symbol, propName:str) -> List[str]:
 		return ExprReader.readSymbol(symbol.getProp(propName))
+
+	@staticmethod
+	def readPropAsBitMap (symbol: Symbol, propName:str) -> List[str]:
+		bitMap = {}
+
+		for propValue in SymbolReader.readPropAsStringList(symbol, propName):
+			bitMap[propValue] = True
+		
+		return bitMap
+

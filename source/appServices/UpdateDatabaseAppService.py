@@ -161,7 +161,7 @@ class UpdateDatabaseAppService ():
 		#
 		# CREATE A BATCH ID.
 		#
-		batchId = str(uuid.uuid4())
+		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
 
 		#
 		# CREATE THE PATH FACTORY SO WE CAN FIND SCRIPTS.
@@ -209,6 +209,7 @@ class UpdateDatabaseAppService ():
 				updateTrackingLine.batchId = batchId
 				updateTrackingLine.script = applyScriptFilePath
 				updateTrackingLine.version = nextVersionStr
+				updateTrackingLine.operation = 'update'
 
 				#
 				# TELL THE USER WHICH SCRIPT WE'RE RUNNING.

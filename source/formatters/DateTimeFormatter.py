@@ -4,4 +4,4 @@ class DateTimeFormatter ():
 
 	@staticmethod
 	def formatForUpdateTrackingFile (param:datetime) -> str:
-		return str(param)
+		return param.strftime('%Y-%m-%dT%H:%M:%S')

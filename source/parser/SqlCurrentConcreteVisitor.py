@@ -67,6 +67,7 @@ from appServices.UpdateDatabaseAppService import *
 from appServices.RevertDatabaseAppService import *
 from validators.ConfigurationPropNameValidator import *
 from validators.ConfigurationValueValidator import *
+from appServices.ApplyConfigurationToDatabaseAppService import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -1149,34 +1150,32 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 	def visitConfigurationStatement(self, ctx:SqlCurrentParser.ConfigurationStatementContext):
 		#
-		# configurationStatement: 'configuration' SYMBOL_ID ('for' 'branch' expr)? '{' configurationPropList '}';
+		# configurationStatement: 'configuration' SYMBOL_ID 'for' 'branch' expr? '{' configurationPropList '}';
 		#
 
 		#
 		# GET THE BRANCH NAME.
 		# IF NO NAME IS GIVEN THEN WE USE 'default'.
 		#
-		branchName = 'default'
+		branchExpr = self.visitExpr(ctx.expr())
 
-		if ctx.expr() != None:
-			branchExpr = self.visitExpr(ctx.expr())
-
-			if branchExpr.type == SymbolType.String:
-				branchName = branchExpr.value
-			elif branchExpr.type == SymbolType.ReferenceToSymbol:
-				branchName = branchExpr.name
-			else:
-				raise VisitorMethodRuleFalloffError('Could not determine branch name.')
+		if branchExpr.type == SymbolType.String:
+			branchName = branchExpr.value
+		elif branchExpr.type == SymbolType.ReferenceToSymbol:
+			branchName = branchExpr.name
+		else:
+			branchName = 'default'
 
 		#
 		# CONSTRUCT THE SYMBOL NAME.
 		#
-		symbolName = ctx.SYMBOL_ID().getText() + '_' + branchName
+		symbolName = ctx.SYMBOL_ID().getText()
 
 		#
 		# CREATE THE SYMBOL.
 		#
 		createdSymbol = Symbol(symbolName, SymbolType.Configuration)
+		createdSymbol.setProp(branchName, branchExpr)
 
 		#
 		# ADD THE SYMBOL TO THE TABLE.
@@ -1213,7 +1212,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# VALIDATE THE PROPERTY NAME.
 		#
 		if ConfigurationPropNameValidator.isNotValid(propName):
-			raise PropNameNotValidError(SymbolTypeFormatter.format(SymbolType.Solution), propName)
+			raise PropNameNotValidError(SymbolTypeFormatter.format(SymbolType.Configuration), propName)
 
 		#
 		# GET THE PROPERTY EXPRESSION VALUE.
@@ -1231,14 +1230,57 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		contextSymbol = self._symbolTableManager.getCurrentSymbolTable().contextSymbol
 
+		if not ConfigurationReference.propCanHaveMultipleValues(propName):
+			contextSymbol.setProp(propName, propExpr)
+		else:
+			contextSymbol.appendProp(propName, propExpr)
+
 	def visitApplyConfigurationToDatabaseStatement(self, ctx:SqlCurrentParser.ApplyConfigurationToDatabaseStatementContext):
 		#
 		# applyConfigurationToDatabaseStatement: 'apply' 'configuration'? SYMBOL_ID 'to' 'database'? SYMBOL_ID ';';
 		#
-		pass
+
+		#
+		# GET THE CONFIGURATION SYMBOL NAME AND SYMBOL.
+		#
+		configurationSymbolName = ctx.SYMBOL_ID(0).getText()
+
+		if not self._symbolTableManager.hasSymbolByName(configurationSymbolName):
+			print('{}: Configuration definition not found.'.format(configurationSymbolName))
+			return
+
+		configurationSymbol = self._symbolTableManager.getSymbolByName(configurationSymbolName)
+
+		#
+		# GET THE DATABASE SYMBOL NAME AND SYMBOL.
+		#
+		databaseSymbolName = ctx.SYMBOL_ID(1).getText()
+
+		if not self._symbolTableManager.hasSymbolByName(databaseSymbolName):
+			print('{}: Database definition not found.'.format(databaseSymbolName))
+			return
+		
+		databaseSymbol = self._symbolTableManager.getSymbolByName(databaseSymbolName)
+
+		#
+		# APPLY THE CONFIGURATION.
+		#
+		appService = ApplyConfigurationToDatabaseAppService()
+		appService.configurationSymbolName = configurationSymbolName
+		appService.configurationSymbol = configurationSymbol
+		appService.databaseSymbolName = databaseSymbolName
+		appService.databaseSymbol = databaseSymbol
+		appService.symbolTableManager = self._symbolTableManager
+		appService.run()
 
 	def visitApplyConfigurationToDatabaseListStatement(self, ctx:SqlCurrentParser.ApplyConfigurationToDatabaseListStatementContext):
 		#
 		# applyConfigurationToDatabaseListStatement: 'apply' 'configuration'? SYMBOL_ID ('to' 'databases')? whereClause? orderByClause? ';';
 		#
 		pass
+
+	def visitPrintSymbolsStatement(self, ctx:SqlCurrentParser.PrintSymbolsStatementContext):
+		#
+		# printSymbolsStatement: 'print' 'symbols';
+		#
+		print(SymbolListFormatter.formatText(self._symbolTableManager.getAllSymbols()))

@@ -219,5 +219,10 @@ class SqlCurrentVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SqlCurrentParser#printSymbolsStatement.
+    def visitPrintSymbolsStatement(self, ctx:SqlCurrentParser.PrintSymbolsStatementContext):
+        return self.visitChildren(ctx)
+
+
 
 del SqlCurrentParser

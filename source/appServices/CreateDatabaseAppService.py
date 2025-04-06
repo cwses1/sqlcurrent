@@ -10,6 +10,7 @@ from fileReaders.StringFileReader import *
 from formatters.DateTimeFormatter import *
 from messageBuilders.MessageBuilder import *
 from datetimeUtils.DateTimeUtil import *
+from formatters.UUID4Formatter import *
 
 class CreateDatabaseAppService ():
 
@@ -62,7 +63,7 @@ class CreateDatabaseAppService ():
 		#
 		# CREATE A BATCH ID.
 		#
-		batchId = BatchGenerator.generateBatchId()
+		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
 
 		#
 		# GET THE BRANCH STARTING VERSION.
@@ -134,6 +135,7 @@ class CreateDatabaseAppService ():
 			updateTrackingLine.script = scriptFilePath
 			updateTrackingLine.version = createVersionStr
 			updateTrackingLine.result = 'success'
+			updateTrackingLine.operation = 'create'
 			updateTrackFileWriter.writeUpdateTrackingLine(branchSymbolName, databaseSymbolName, updateTrackingLine)
 
 		#
