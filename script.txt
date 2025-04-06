@@ -287,7 +287,7 @@ configuration config1 for branch operational
 	//dir: './sqlcurrent_sqlscripts/operational/_configurations';
 }
 
-apply configuration config1 to database nexus_opdb;
+apply configuration config1 to databases where id in (nexus_opdb);
 
 /*
 apply configuration config1 to databases where id = nexus_opdb;

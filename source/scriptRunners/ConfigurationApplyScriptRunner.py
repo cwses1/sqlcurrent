@@ -18,6 +18,8 @@ class ConfigurationApplyScriptRunner ():
 		self.currentDatetime = None
 		self.currentDateTimeFormatted = None
 		self.lastSuccessfulVersionNumber = None
+		self.scriptNumber = None
+		self.scriptListLength = None
 
 	def runScript (self, applyScriptFilePath:str) -> None:
 		configurationSymbolName = self.configurationSymbolName
@@ -33,6 +35,8 @@ class ConfigurationApplyScriptRunner ():
 		currentDatetime = self.currentDatetime
 		currentDateTimeFormatted = self.currentDateTimeFormatted
 		lastSuccessfulVersionNumber = self.lastSuccessfulVersionNumber
+		scriptNumber = self.scriptNumber
+		scriptListLength = self.scriptListLength
 
 		#
 		# ENSURE THE PATH EXISTS.
@@ -65,7 +69,7 @@ class ConfigurationApplyScriptRunner ():
 		#
 		# TELL THE USER WHICH SCRIPT WE'RE RUNNING.
 		#
-		print('{}: Running apply script \'{}\' in configuration \'{}\'.'.format(databaseSymbolName, applyScriptFilePath, configurationSymbolName))
+		print('{0}: Running apply script {3} of {4}: \'{1}\' in configuration \'{2}\'.'.format(databaseSymbolName, applyScriptFilePath, configurationSymbolName, scriptNumber, scriptListLength))
 
 		#
 		# GET THE SCRIPT TEXT.

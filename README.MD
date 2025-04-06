@@ -1,28 +1,56 @@
-# SQL Current
+SQL Current is database migrations scripting engine that defines its own language, called "Current Script."  It works with any database that has a Python driver.  Here is what a current script looks like:
 
-SQL Current is a database migrations scripting engine and domain specific language written in Python.  It works with any database (SQL, NoSQL, etc.) that has a Python driver or adapter.  Here is what a very simple SQL Current script looks like:
-
-	//
-	// DEFINE YOUR DATABASE: THE TYPE, WHERE IT IS, AND THE CREATE SCRIPT TO RUN WHEN CREATING THE DATABASE.
-	//
 	database mydb
 	{
 		driver: 'postgres';
 		connString: 'host=127.0.0.1 port=5432 dbname=mydb user=postgres password=postgres';
-		create: 'create.sql';
+		create: './create.sql';
 	}
 
-	//
-	// CREATE YOUR DATABASE.  THIS WILL RUN THE 'create.sql' SCRIPT.
-	//
 	create mydb;
 
-Run the script:
+The above script creates the database and keeps track of that fact.  This is how you would run the script from the command line:
 
-	> cd /home/repos/sqlcurrent
 	> sqlcurrent script.txt
 
-What this script does:
+If you ran the script twice in a row you would get this error:
+
+	mydb: This database already exists.
+
+SQL Current will not attempt to create a database that already exists.
+
+## Setup
+
+### Python
+
+SQL Current is written in Python.  You will need to get Python.
+
+https://www.python.org
+
+### ANTLR Python Runtime
+
+	pip install antlr4-python3-runtime
+
+### Python Database Drivers
+
+	pip install psycopg
+
+## Usage
+
+	./sqlcurrent script.txt
+
+## Script Breakdown
+
+Let's go through the script at the top:
+
+	database mydb
+	{
+		driver: 'postgres';
+		connString: 'host=127.0.0.1 port=5432 dbname=mydb user=postgres password=postgres';
+		create: './create.sql';
+	}
+
+	create mydb;
 
 1. The database variable "mydb" is created with the following properties:
 	* driver - the type of database server we are connecting to (such as PostgreSQL, MySQL, SQL Server, MongoDB, InfluxDB).  This determines the Python driver / adapter library to use.
@@ -30,12 +58,6 @@ What this script does:
 	* create - the path to the create script.
 2. The 'create.sql' script is run.  Whatever you did in the script happens.
 3. An update tracking file is created to track the version of this database.  Since no version was specified in the script, SQL Current uses version 1.0.0.
-
-Try running the script again.  You should get this error:
-
-	mydb: This database already exists.
-
-SQL Current will not attempt to create a database that already exists.
 
 ## Motivation
 

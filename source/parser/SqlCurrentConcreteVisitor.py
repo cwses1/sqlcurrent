@@ -56,7 +56,6 @@ from versionUtils.VersionSymbolFilterUtil import *
 from fileReaders.UpdateTrackingFileReader import *
 from fileWriters.UpdateTrackingFileWriter import *
 from formatters.DateTimeFormatter import *
-from datetimeUtils.DateTimeUtil import *
 from entities.Env import *
 from pathFactories.ScriptFilePathFactory import *
 from generators.BatchGenerator import *
@@ -1241,6 +1240,17 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 
 		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+		currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+
+		#
+		# CREATE A BATCH ID.
+		#
+		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+
+		#
 		# GET THE CONFIGURATION SYMBOL NAME AND SYMBOL.
 		#
 		configurationSymbolName = ctx.SYMBOL_ID(0).getText()
@@ -1271,13 +1281,107 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		appService.databaseSymbolName = databaseSymbolName
 		appService.databaseSymbol = databaseSymbol
 		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = currentDateTimeFormatted
+		appService.batchId = batchId
 		appService.run()
 
 	def visitApplyConfigurationToDatabaseListStatement(self, ctx:SqlCurrentParser.ApplyConfigurationToDatabaseListStatementContext):
 		#
-		# applyConfigurationToDatabaseListStatement: 'apply' 'configuration'? SYMBOL_ID ('to' 'databases')? whereClause? orderByClause? ';';
+		# applyConfigurationToDatabaseListStatement: 'apply' 'configuration'? SYMBOL_ID 'to' 'databases' whereClause? orderByClause? ';';
 		#
-		pass
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+		currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+
+		#
+		# CREATE A BATCH ID.
+		#
+		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+
+		#
+		# GET THE CONFIGURATION SYMBOL NAME AND SYMBOL.
+		#
+		configurationSymbolName = ctx.SYMBOL_ID().getText()
+
+		if not self._symbolTableManager.hasSymbolByName(configurationSymbolName):
+			print('{}: Configuration definition not found.'.format(configurationSymbolName))
+			return
+
+		configurationSymbol = self._symbolTableManager.getSymbolByName(configurationSymbolName)
+
+		#
+		# GET THE ENTIRE LIST OF DATABASES.
+		#
+		databaseSymbolList = self._symbolTableManager.getAllDatabaseSymbols()
+		databaseSymbolListLength = len(databaseSymbolList)
+
+		#
+		# IF THERE ARE NO DATABASES DEFINED THEN WE ARE DONE.
+		#
+		if databaseSymbolListLength == 0:
+			print('No databases defined.')
+			return
+
+		#
+		# APPLY THE CONSTRAINT TO THE LIST OF DATABASES.
+		#
+		whereConstraint = None
+
+		if ctx.whereClause() != None:
+			whereConstraint = self.visitWhereClause(ctx.whereClause())
+			databaseSymbolList = whereConstraint.applyConstraint(databaseSymbolList)
+
+		#
+		# IF THERE ARE NO DATABASES TO UPDATE AFTER THE WHERE CLAUSE IS APPLIED, THEN LET THE USER KNOW.
+		#
+		databaseSymbolListLength = len(databaseSymbolList)
+
+		if databaseSymbolListLength == 0:
+			print('No databases remaining after where constraints applied.')
+			return
+
+		#
+		# LET THE USER KNOW HOW MANY DATABASES WE'RE DEALING WITH.
+		#
+		if databaseSymbolListLength == 1:
+			print('Configuring 1 database.')
+		else:
+			print('Configuring {} databases.'.format(databaseSymbolListLength))
+
+		#
+		# ORDER THE DATABASES.
+		#
+		orderByConstraint = None
+
+		if ctx.orderByClause() != None:
+			orderByConstraint = self.visitOrderByClause(ctx.orderByClause())
+			databaseSymbolList = orderByConstraint.applyConstraint(databaseSymbolList)
+
+		#
+		# CONFIGURE EACH DATABASE.
+		#
+		databaseNumber = 0
+
+		for databaseSymbol in databaseSymbolList:
+			databaseSymbolName = databaseSymbol.name
+			databaseNumber += 1
+
+			print('{0}: Configuring database {1} of {2}.'.format(databaseSymbolName, databaseNumber, databaseSymbolListLength))
+
+			appService = ApplyConfigurationToDatabaseAppService()
+			appService.configurationSymbolName = configurationSymbolName
+			appService.configurationSymbol = configurationSymbol
+			appService.databaseSymbolName = databaseSymbolName
+			appService.databaseSymbol = databaseSymbol
+			appService.symbolTableManager = self._symbolTableManager
+			appService.currentDateTime = currentDateTime
+			appService.currentDateTimeFormatted = currentDateTimeFormatted
+			appService.batchId = batchId
+			appService.run()
 
 	def visitPrintSymbolsStatement(self, ctx:SqlCurrentParser.PrintSymbolsStatementContext):
 		#

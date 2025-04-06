@@ -18,8 +18,8 @@ from versionUtils.VersionSymbolSortUtil import *
 from symbolTables.Symbol import *
 from formatters.UUID4Formatter import *
 from scriptRunners.ConfigurationApplyScriptRunner import *
-from scriptRunners.ConfigurationPrecheckScriptRunner import *
 from entities.ScriptRunnerResultSet import *
+from scriptRunners.ConfigurationCheckScriptRunner import *
 
 class ApplyConfigurationToDatabaseAppService ():
 
@@ -31,6 +31,9 @@ class ApplyConfigurationToDatabaseAppService ():
 		self.symbolTableManager = None
 		self.runPrechecks = True
 		self.runChecks = True
+		self.currentDateTime = None
+		self.currentDateTimeFormatted = None
+		self.batchId = None
 
 	def run (self):
 		configurationSymbolName = self.configurationSymbolName
@@ -38,6 +41,9 @@ class ApplyConfigurationToDatabaseAppService ():
 		databaseSymbolName = self.databaseSymbolName
 		databaseSymbol = self.databaseSymbol
 		symbolTableManager = self.symbolTableManager
+		currentDateTime = self.currentDateTime
+		currentDateTimeFormatted = self.currentDateTimeFormatted
+		batchId = self.batchId
 
 		#
 		# GET THE DATABASE CLIENT.
@@ -91,11 +97,6 @@ class ApplyConfigurationToDatabaseAppService ():
 			return
 
 		#
-		# CREATE A BATCH ID.
-		#
-		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
-
-		#
 		# CREATE THE PATH FACTORY SO WE CAN FIND SCRIPTS.
 		#
 		pathFactory = ScriptFilePathFactory()
@@ -146,7 +147,7 @@ class ApplyConfigurationToDatabaseAppService ():
 				precheckScriptNumber += 1
 				precheckScriptFilePath = pathFactory.createPath(currentFilePath)
 
-				scriptRunner = ConfigurationPrecheckScriptRunner()
+				scriptRunner = ConfigurationCheckScriptRunner()
 				scriptRunner.configurationSymbolName = self.configurationSymbolName
 				scriptRunner.configurationSymbol = self.configurationSymbol
 				scriptRunner.databaseSymbolName = self.databaseSymbolName
@@ -158,8 +159,8 @@ class ApplyConfigurationToDatabaseAppService ():
 				scriptRunner.pathFactory = pathFactory
 				scriptRunner.batchId = batchId
 				scriptRunner.updateTrackingFileWriter = updateTrackingFileWriter
-				scriptRunner.currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
-				scriptRunner.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(scriptRunner.currentDateTime)
+				scriptRunner.currentDateTime = currentDateTime
+				scriptRunner.currentDateTimeFormatted = currentDateTimeFormatted
 				scriptRunner.lastSuccessfulVersionNumber = lastSuccessfulVersionNumber
 				scriptRunner.scriptNumber = precheckScriptNumber
 				scriptRunner.scriptListLength = precheckScriptListLength
@@ -172,13 +173,22 @@ class ApplyConfigurationToDatabaseAppService ():
 				else:
 					print('{0}: Precheck configuration script {1} of {2} passed.'.format(databaseSymbolName, precheckScriptNumber, precheckScriptListLength))
 
-
 		#
 		# RUN APPLY SCRIPTS.
 		#
-		print('{0}: Running apply scripts in configuration \'{1}\' against database \'{0}\'.'.format(databaseSymbolName, configurationSymbolName))
+		applyScriptList:List[str] = SymbolReader.readPropAsStringList(configurationSymbol, 'apply')
+		applyScriptListLength = len(applyScriptList)
+		applyScriptNumber:int = 0
 
-		for currentFilePath in SymbolReader.readPropAsStringList(configurationSymbol, 'apply'):
+		if applyScriptListLength == 1:
+			print('{0}: Running 1 apply script in configuration \'{1}\' against database \'{0}\'.'.format(databaseSymbolName, configurationSymbolName))
+		else:
+			print('{0}: Running {2} apply scripts in configuration \'{1}\' against database \'{0}\'.'.format(databaseSymbolName, configurationSymbolName, applyScriptListLength))
+
+		for currentFilePath in applyScriptList:
+			applyScriptNumber += 1
+			applyScriptFilePath = pathFactory.createPath(currentFilePath)
+
 			scriptRunner = ConfigurationApplyScriptRunner()
 			scriptRunner.configurationSymbolName = self.configurationSymbolName
 			scriptRunner.configurationSymbol = self.configurationSymbol
@@ -191,18 +201,57 @@ class ApplyConfigurationToDatabaseAppService ():
 			scriptRunner.pathFactory = pathFactory
 			scriptRunner.batchId = batchId
 			scriptRunner.updateTrackingFileWriter = updateTrackingFileWriter
-			scriptRunner.currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
-			scriptRunner.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(scriptRunner.currentDateTime)
+			scriptRunner.currentDateTime = currentDateTime
+			scriptRunner.currentDateTimeFormatted = currentDateTimeFormatted
 			scriptRunner.lastSuccessfulVersionNumber = lastSuccessfulVersionNumber
-			scriptRunner.runScript(pathFactory.createPath(currentFilePath))
+			scriptRunner.scriptNumber = applyScriptNumber
+			scriptRunner.scriptListLength = applyScriptListLength
+			scriptRunner.runScript(applyScriptFilePath)
 
 		#
-		# TELL THE USER THAT THE UPDATE WAS SUCCESSFUL.
-		#
-		print('{0}: Successfully applied configuration \'{1}\' to database \'{0}\'.'.format(databaseSymbolName, configurationSymbolName))
-
-		#
-		# TO DO: RUN CHECK SCRIPTS.
+		# RUN CHECK SCRIPTS.
 		#
 		if self.runChecks:
-			pass
+			checkScriptList:List[str] = SymbolReader.readPropAsStringList(configurationSymbol, 'check')
+			checkScriptListLength = len(checkScriptList)
+			checkScriptNumber:int = 0
+
+			if checkScriptListLength == 1:
+				print('{0}: Running 1 check script in configuration \'{1}\' against database \'{0}\'.'.format(databaseSymbolName, configurationSymbolName))
+			else:
+				print('{0}: Running {2} check scripts in configuration \'{1}\' against database \'{0}\'.'.format(databaseSymbolName, configurationSymbolName, checkScriptListLength))
+
+			for currentFilePath in checkScriptList:
+				checkScriptNumber += 1
+				checkScriptFilePath = pathFactory.createPath(currentFilePath)
+
+				scriptRunner = ConfigurationCheckScriptRunner()
+				scriptRunner.configurationSymbolName = self.configurationSymbolName
+				scriptRunner.configurationSymbol = self.configurationSymbol
+				scriptRunner.databaseSymbolName = self.databaseSymbolName
+				scriptRunner.databaseSymbol = self.databaseSymbol
+				scriptRunner.symbolTableManager = self.symbolTableManager
+				scriptRunner.databaseClient = databaseClient
+				scriptRunner.branchSymbol = branchSymbol
+				scriptRunner.branchName = branchName
+				scriptRunner.pathFactory = pathFactory
+				scriptRunner.batchId = batchId
+				scriptRunner.updateTrackingFileWriter = updateTrackingFileWriter
+				scriptRunner.currentDateTime = currentDateTime
+				scriptRunner.currentDateTimeFormatted = currentDateTimeFormatted
+				scriptRunner.lastSuccessfulVersionNumber = lastSuccessfulVersionNumber
+				scriptRunner.scriptNumber = checkScriptNumber
+				scriptRunner.scriptListLength = checkScriptListLength
+				scriptRunnerResultSet = scriptRunner.runScript(checkScriptFilePath)
+
+				if scriptRunnerResultSet.scriptFailed:
+					print('{0}: Check configuration script {1} of {2} failed for database \'{0}\'.'.format(databaseSymbolName, checkScriptNumber, checkScriptListLength))
+					print('{0}: {1}'.format(databaseSymbolName, scriptRunnerResultSet.scriptFailedReason))
+					return
+				else:
+					print('{0}: Check configuration script {1} of {2} passed.'.format(databaseSymbolName, checkScriptNumber, checkScriptListLength))
+
+		#
+		# TELL THE USER THAT THE CONFIGURATION WAS SUCCESSFUL.
+		#
+		print('{0}: Successfully applied configuration \'{1}\' to database \'{0}\'.'.format(databaseSymbolName, configurationSymbolName))

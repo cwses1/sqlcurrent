@@ -4,7 +4,7 @@ from fileReaders.StringFileReader import *
 from entities.ScriptRunnerResultSet import *
 from entityFactories.ScriptRunnerResultSetFactory import *
 
-class ConfigurationPrecheckScriptRunner ():
+class ConfigurationCheckScriptRunner ():
 
 	def __init__ (self):
 		self.configurationSymbolName = None
@@ -44,12 +44,12 @@ class ConfigurationPrecheckScriptRunner ():
 		# ENSURE THE PATH EXISTS.
 		#
 		if not os.path.exists(scriptFilePath):
-			return ScriptRunnerResultSetFactory.createFailureResultSet('{0}: Precheck script file path not found: \'{2}\' in configuration \'{1}\'.'.format(databaseSymbolName, configurationSymbolName, scriptFilePath))
+			return ScriptRunnerResultSetFactory.createFailureResultSet('{0}: Check script file path not found: \'{2}\' in configuration \'{1}\'.'.format(databaseSymbolName, configurationSymbolName, scriptFilePath))
 		#
 		# ENSURE THE PATH IS A FILE.
 		#
 		if not os.path.isfile(scriptFilePath):
-			return ScriptRunnerResultSetFactory.createFailureResultSet('{0}: Configuration \'{1}\' precheck script file path is not a file: \'{2}\'.'.format(databaseSymbolName, configurationSymbolName, scriptFilePath))
+			return ScriptRunnerResultSetFactory.createFailureResultSet('{0}: Configuration \'{1}\' check script file path is not a file: \'{2}\'.'.format(databaseSymbolName, configurationSymbolName, scriptFilePath))
 
 		#
 		# START THE UPDATE TRACKING LINE.
@@ -66,7 +66,7 @@ class ConfigurationPrecheckScriptRunner ():
 		#
 		# TELL THE USER WHICH SCRIPT WE'RE RUNNING.
 		#
-		print('{0}: Running precheck script {3} of {4}: \'{1}\' in configuration \'{2}\'.'.format(databaseSymbolName, scriptFilePath, configurationSymbolName, scriptNumber, scriptListLength))
+		print('{0}: Running check script {3} of {4}: \'{1}\' in configuration \'{2}\'.'.format(databaseSymbolName, scriptFilePath, configurationSymbolName, scriptNumber, scriptListLength))
 
 		#
 		# GET THE SCRIPT TEXT.
@@ -90,6 +90,6 @@ class ConfigurationPrecheckScriptRunner ():
 			return ScriptRunnerResultSetFactory.createResultSetFromRow(scriptFailed, scriptFailedReason)
 		except Exception as e:
 			updateTrackingLine.result = 'failure'
-			return ScriptRunnerResultSetFactory.createFailureResultSet('{0}: Error running precheck script: \'{1}\' in configuration \'{2}\'.'.format(databaseSymbolName, e, configurationSymbolName))
+			return ScriptRunnerResultSetFactory.createFailureResultSet('{0}: Error running check script: \'{1}\' in configuration \'{2}\'.'.format(databaseSymbolName, e, configurationSymbolName))
 		finally:
 			updateTrackingFileWriter.writeUpdateTrackingLine(branchName, databaseSymbolName, updateTrackingLine)
