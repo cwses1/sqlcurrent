@@ -28,6 +28,7 @@ statement: serverStatement
 	| applyConfigurationToDatabaseStatement
 	| applyConfigurationToDatabaseListStatement
 	| printSymbolsStatement
+	| checkDatabaseStatement
 	;
 
 serverStatement: 'server' SYMBOL_ID '{' serverPropList '}';

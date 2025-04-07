@@ -67,6 +67,7 @@ from appServices.RevertDatabaseAppService import *
 from validators.ConfigurationPropNameValidator import *
 from validators.ConfigurationValueValidator import *
 from appServices.ApplyConfigurationToDatabaseAppService import *
+from appServices.CheckDatabaseAppService import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -468,9 +469,36 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# createDatabaseStatement: 'create' 'database'? SYMBOL_ID;
 		#
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+		currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+
+		#
+		# CREATE A BATCH ID.
+		#
+		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+
+		#
+		# GET THE DATABASE SYMBOL NAME AND SYMBOL.
+		#
+		databaseSymbolName = ctx.SYMBOL_ID(1).getText()
+
+		if not self._symbolTableManager.hasSymbolByName(databaseSymbolName):
+			print('{}: Database definition not found.'.format(databaseSymbolName))
+			return
+		
+		databaseSymbol = self._symbolTableManager.getSymbolByName(databaseSymbolName)
+
 		appService = CreateDatabaseAppService()
+		appService.databaseSymbolName = databaseSymbolName
+		appService.databaseSymbol = databaseSymbol
 		appService.symbolTableManager = self._symbolTableManager
-		appService.databaseSymbolName = ctx.SYMBOL_ID().getText()
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = currentDateTimeFormatted
+		appService.batchId = batchId
 		appService.run()
 
 	def visitSolutionStatement(self, ctx:SqlCurrentParser.SolutionStatementContext):
@@ -1145,7 +1173,52 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		appService.run()
 
 	def visitCheckDatabaseStatement(self, ctx:SqlCurrentParser.CheckDatabaseStatementContext):
-		return self.visitChildren(ctx)
+		#
+		# checkDatabaseStatement: 'check' 'database'? SYMBOL_ID ('version' VERSION_ID)? ';';
+		#
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+		currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+
+		#
+		# CREATE A BATCH ID.
+		#
+		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+
+		#
+		# GET THE DATABASE SYMBOL NAME AND SYMBOL.
+		#
+		databaseSymbolName = ctx.SYMBOL_ID().getText()
+
+		if not self._symbolTableManager.hasSymbolByName(databaseSymbolName):
+			print('{}: Database definition not found.'.format(databaseSymbolName))
+			return
+		
+		databaseSymbol = self._symbolTableManager.getSymbolByName(databaseSymbolName)
+
+		#
+		# GET THE VERSION NUMBER.
+		#
+		specifiedVersionNumber = None
+
+		if ctx.VERSION_ID() != None:
+			specifiedVersionNumber = ctx.VERSION_ID().getText()
+
+		#
+		# RUN THE DATABASE CHECKS.
+		#
+		appService = CheckDatabaseAppService()
+		appService.databaseSymbolName = databaseSymbolName
+		appService.databaseSymbol = databaseSymbol
+		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = currentDateTimeFormatted
+		appService.batchId = batchId
+		appService.specifiedVersionNumber = specifiedVersionNumber
+		appService.run()
 
 	def visitConfigurationStatement(self, ctx:SqlCurrentParser.ConfigurationStatementContext):
 		#

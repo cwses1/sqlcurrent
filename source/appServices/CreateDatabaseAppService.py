@@ -17,10 +17,17 @@ class CreateDatabaseAppService ():
 	def __init__ (self):
 		self.symbolTableManager = None
 		self.databaseSymbolName:str = None
+		self.databaseSymbol:Symbol = None
+		self.currentDateTime = None
+		self.currentDateTimeFormatted:str = None
+		self.batchId = None
 
 	def run (self):
 		databaseSymbolName = self.databaseSymbolName
-		databaseSymbol = self.symbolTableManager.getSymbolByName(databaseSymbolName)
+		databaseSymbol = self.databaseSymbol
+		currentDateTime = self.currentDateTime
+		currentDateTimeFormatted = self.currentDateTimeFormatted
+		batchId = self.batchId
 
 		#
 		# TELL THE USER WHAT WE'RE DOING.
@@ -61,11 +68,6 @@ class CreateDatabaseAppService ():
 			return
 
 		#
-		# CREATE A BATCH ID.
-		#
-		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
-
-		#
 		# GET THE BRANCH STARTING VERSION.
 		# IF NOT FOUND, THEN DEFAULT IT TO VERSION 1.0.0.
 		#
@@ -84,10 +86,11 @@ class CreateDatabaseAppService ():
 		scriptFilePathFactory.branchName = branchSymbolName
 		scriptFilePathFactory.databaseName = databaseSymbolName
 		scriptFilePathFactory.sqlScriptsDir = SymbolReader.readString(self.symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
-
-		#
-		# TO DO: GET THE TIME WE STARTED ALL OF THESE.
-		#
+		
+		if branchSymbol.hasProp('dir'):	
+			scriptFilePathFactory.createDir = SymbolReader.readPropAsString(branchSymbol, 'dir')
+		else:
+			scriptFilePathFactory.createDir = 'create'
 
 		#
 		# RUN THE BRANCH CREATE SCRIPTS.
@@ -130,7 +133,7 @@ class CreateDatabaseAppService ():
 			updateTrackingLine = UpdateTrackingLine()
 			updateTrackingLine.branch = branchSymbolName
 			updateTrackingLine.databaseName = databaseSymbolName
-			updateTrackingLine.datetime = DateTimeFormatter.formatForUpdateTrackingFile(DateTimeUtil.getCurrentLocalDateTime())
+			updateTrackingLine.datetime = currentDateTimeFormatted
 			updateTrackingLine.batchId = batchId
 			updateTrackingLine.script = scriptFilePath
 			updateTrackingLine.version = createVersionStr
@@ -141,4 +144,4 @@ class CreateDatabaseAppService ():
 		#
 		# TELL THE USER WHAT WE'RE DOING.
 		#
-		print('{}: Created database with version {}.'.format(databaseSymbolName, createVersionStr))
+		print('{}: Database created with version \'{}\'.'.format(databaseSymbolName, createVersionStr))

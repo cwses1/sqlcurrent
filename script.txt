@@ -45,10 +45,8 @@ branch operational
 {
 	name: 'Operational Database';
 	solution: iot_app;
-	create: 'create.sql';
-	//create: 'create2.sql';
-	//reset: 'reset1.sql';
-	//reset: 'reset2.sql';
+	create: 'create1.sql';
+	create: 'create2.sql';
 	version: 1.0.0;
 }
 
@@ -137,7 +135,7 @@ database proxima_analyticaldb
 version 1.1.0 for branch operational
 {
 	name: 'brilliant_dog'; // OPTIONAL
-	dir: 'version_1.1.0'; // BASE DIRECTORY FOR THIS VERSION, INFER IF EXCLUDED, ./sqlcurrent_sqlscripts/branchName/version_1.0.1
+	//dir: 'version_1.1.0'; // BASE DIRECTORY FOR THIS VERSION, INFER IF EXCLUDED, ./sqlcurrent_sqlscripts/branchName/versions/1.1.0
 	apply: 'schema.sql';
 	apply: 'data.sql';
 	precheck: 'precheck1.sql';
@@ -150,14 +148,14 @@ version 1.1.0 for branch operational
 version 1.2.0 for branch operational
 {
 	name: 'brilliant_dog'; // OPTIONAL
-	dir: 'version_1.2.0'; // BASE DIRECTORY FOR THIS VERSION, INFER IF EXCLUDED, ./sqlcurrent_sqlscripts/branchName/version_1.0.1
-	precheck: 'check1.sql';
-	precheck: 'check2.sql';
+	//dir: 'version_1.2.0'; // BASE DIRECTORY FOR THIS VERSION, INFER IF EXCLUDED, ./sqlcurrent_sqlscripts/branchName/version_1.2.0
+	precheck: 'precheck1.sql';
+	precheck: 'precheck2.sql';
 	apply: 'schema.sql';
 	apply: 'data.sql';
 	revert: 'revert.sql';
-	check: 'check3.sql';
-	check: 'check4.sql';
+	check: 'check1.sql';
+	check: 'check2.sql';
 }
 
 version 1.0.1 for branch analytical
@@ -170,6 +168,23 @@ version 1.0.1 for branch analytical
 	revert: 'revert.txt';
 	check: 'check3.txt';
 	check: 'check4.txt';
+}
+
+configuration config1 for branch operational
+{
+	name: 'QA Users';
+	desc: 'Flashes the database with specific users.';
+	environment: dev;
+	version: 1.0.0;
+	precheck: 'precheck1.sql';
+	precheck: 'precheck2.sql';
+	apply: 'apply1.sql';
+	apply: 'apply2.sql';
+	revert: 'revert1.sql';
+	revert: 'revert2.sql';
+	check: 'check1.sql';
+	check: 'check2.sql';
+	//dir: './sqlcurrent_sqlscripts/operational/_configurations';
 }
 
 /*
@@ -265,33 +280,22 @@ revert nexus_opdb to version 1.0.0;
 update nexus_opdb to version 1.1.0;
 update databases to version 1.2.0;
 revert databases to version 1.0.0;
+apply configuration config1 to databases where id in (nexus_opdb);
+apply configuration config1 to databases where id = nexus_opdb;
 */
 
 //
 // NEXT THING TO IMPLEMENT AND TEST:
 //
-configuration config1 for branch operational
-{
-	name: 'QA Users';
-	desc: 'Flashes the database with specific users.';
-	environment: dev;
-	version: 1.0.0;
-	precheck: 'precheck1.sql';
-	precheck: 'precheck2.sql';
-	apply: 'apply1.sql';
-	apply: 'apply2.sql';
-	revert: 'revert1.sql';
-	revert: 'revert2.sql';
-	check: 'check1.sql';
-	check: 'check2.sql';
-	//dir: './sqlcurrent_sqlscripts/operational/_configurations';
-}
+//print symbols;
+//select databases;
+//update nexus_opdb;
+check database nexus_opdb;
 
-apply configuration config1 to databases where id in (nexus_opdb);
 
 /*
-apply configuration config1 to databases where id = nexus_opdb;
-check nexus_opdb;
+create nexus_opdb;
+
 check nexus_opdb to version 1.0.0;
 create and update nexus_opdb to version 1.1.0;
 create databases where any tag not like 'location_us';
@@ -331,4 +335,6 @@ create databases where every tag not in ('location_us', 'location_my_desk');
 // FOR EACH STATEMENT, ADD A "FORCE" OPTION TO IGNORE ERRORS AND KEEP GOING.
 // ADD A SCRIPT PROPERTY TYPE SUCH AS check, precheck, apply, revert TO THE UPDATE TRACKING FILE SO WE KNOW WHAT THE USER AND SCRIPT WAS TRYING TO DO.
 // PRINT EACH STATEMENT BEFORE RUNNING OPTION.
+// ADD CHECK SCRIPTS FOR DATABASE CREATE.
+// ADD CHECK SCRIPTS FOR BRANCH CREATE.
 //

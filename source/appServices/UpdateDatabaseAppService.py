@@ -15,6 +15,7 @@ from formatters.VersionSymbolFormatter import *
 from datetimeUtils.DateTimeUtil import *
 from versionUtils.VersionSymbolFilterUtil import *
 from versionUtils.VersionSymbolSortUtil import *
+from formatters.UUID4Formatter import *
 
 class UpdateDatabaseAppService ():
 
@@ -176,6 +177,7 @@ class UpdateDatabaseAppService ():
 		#
 		for nextVersionSymbol in nextVersionSymbols:
 			nextVersionStr = VersionSymbolFormatter.formatVersionString(nextVersionSymbol)
+			pathFactory.versionNumber = nextVersionStr
 
 			if nextVersionSymbol.hasProp('dir'):
 				pathFactory.versionDir = nextVersionSymbol.getProp('dir').value

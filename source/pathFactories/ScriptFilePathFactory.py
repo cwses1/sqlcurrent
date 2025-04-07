@@ -9,6 +9,7 @@ class ScriptFilePathFactory ():
 		self.versionDir:str = None
 		self.configurationName:str = None
 		self.versionNumber:str = None
+		self.createDir:str = None
 
 	def createPath (self, pathParam:str) -> str:
 		#
@@ -36,4 +37,7 @@ class ScriptFilePathFactory ():
 		if self.configurationName != None:
 			return self.sqlScriptsDir + os.sep + self.branchName + os.sep + 'configurations' + os.sep + self.configurationName + os.sep + pathParam
 
-		return self.sqlScriptsDir + os.sep + self.branchName + os.sep + 'versions' + os.sep + pathParam
+		if self.createDir != None:
+			return self.sqlScriptsDir + os.sep + self.branchName + os.sep + self.createDir + os.sep + self.configurationName + os.sep + pathParam
+
+		return self.sqlScriptsDir + os.sep + self.branchName + os.sep + 'versions' + os.sep + self.versionNumber + os.sep + pathParam
