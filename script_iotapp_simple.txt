@@ -1,0 +1,99 @@
+solution iot_app
+{
+	name: 'IoT Application';
+}
+
+environment dev
+{
+	name: 'Development Environment';
+	solution: iot_app;
+}
+
+environment qa
+{
+	name: 'Quality Assurance Environment';
+	solution: iot_app;
+}
+
+environment prod
+{
+	name: 'Production Environment';
+	solution: iot_app;
+}
+
+branch operational
+{
+	name: 'Operational Database';
+	solution: iot_app;
+	version: 1.0.0;
+	create: 'branch_create1.sql';
+	create: 'branch_create2.sql';
+	check: 'branch_check1.sql';
+	check: 'branch_check2.sql';
+	reset: 'branch_reset1.sql';
+	reset: 'branch_reset2.sql';
+}
+
+server nexus
+{
+	branch: operational; // FOR SERVERS DEDICATED TO A BRANCH.  A DATABASE ASSIGNED TO THIS SERVER WILL DEFAULT TO THIS BRANCH.
+	environment: dev; // FOR SERVERS DEDICATED TO AN ENVIRONMENT.  A DATABASE ASSIGNED TO THIS SERVER WILL DEFAULT TO THIS ENVIRONMENT.
+	host: 'nexus.sqlcurrent.com';
+	solution: iot_app; // FOR SERVERS DEDICATED TO A SOLUTION.  A DATABASE ASSIGNED TO THIS SERVER WILL DEFAULT TO THIS SOLUTION.
+	tag: 'location_us_de_newcastle_engineering_corydesk';
+}
+
+database nexus_opdb
+{
+	branch: operational;
+	connString: 'postgresql://postgres:postgres@127.0.0.1/binningtool';
+	driver: 'psycopg2';
+	environment: dev;
+	name: 'Nexus Instrument Operational Database';
+	server: nexus;
+	solution: iot_app;
+	tag: 'location_us_de_newcastle_engineering_corydesk';
+	tag: 'us';
+	tag: 'delaware';
+	tag: 'newcastle';
+	tag: 'engineering';
+	tag: 'corydesk';
+	create: 'database_create3.sql';
+	create: 'database_create4.sql';
+	check: 'database_check3.sql';
+	check: 'database_check4.sql';
+	reset: 'database_reset3.sql';
+	reset: 'database_reset4.sql';
+}
+
+version 1.1.0 branch operational
+{
+	name: 'brilliant_dog'; // OPTIONAL
+	//dir: 'version_1.1.0'; // BASE DIRECTORY FOR THIS VERSION, INFER IF EXCLUDED, ./sqlcurrent_sqlscripts/branchName/versions/1.1.0
+	apply: 'schema.sql';
+	apply: 'data.sql';
+	precheck: 'precheck1.sql';
+	precheck: 'precheck2.sql';
+	check: 'check1.sql';
+	check: 'check2.sql';
+	revert: 'revert.sql';
+}
+
+version 1.2.0 branch operational
+{
+	name: 'brilliant_dog'; // OPTIONAL
+	//dir: 'version_1.2.0'; // BASE DIRECTORY FOR THIS VERSION, INFER IF EXCLUDED, ./sqlcurrent_sqlscripts/branchName/version_1.2.0
+	precheck: 'precheck1.sql';
+	precheck: 'precheck2.sql';
+	apply: 'schema.sql';
+	apply: 'data.sql';
+	revert: 'revert.sql';
+	check: 'check1.sql';
+	check: 'check2.sql';
+}
+
+//
+// PUT YOUR TEST STATEMENTS HERE:
+//
+print symbols;
+//check database nexus_opdb version 1.0.0;

@@ -1,4 +1,5 @@
 from entities.Expr import *
+from exceptions.MatchUnderscoreError import *
 
 from .DatabaseTypeValueValidator import *
 from .DatabaseServerValueValidator import *
@@ -10,6 +11,8 @@ from .DatabaseSolutionValueValidator import *
 from .DatabaseBranchValueValidator import *
 from .DatabaseNameValueValidator import *
 from .DatabaseDescValueValidator import *
+from .DatabaseCheckValueValidator import *
+from .DatabaseResetValueValidator import *
 
 class DatabaseValueValidator ():
 
@@ -36,5 +39,9 @@ class DatabaseValueValidator ():
 				return DatabaseNameValueValidator.isNotValid(value)
 			case 'desc':
 				return DatabaseDescValueValidator.isNotValid(value)
+			case 'check':
+				return DatabaseCheckValueValidator.isNotValid(value)
+			case 'reset':
+				return DatabaseResetValueValidator.isNotValid(value)
 			case _:
 				raise MatchUnderscoreError('DatabaseValueValidator hit the default case for property name: {}.'.format(name))

@@ -68,6 +68,7 @@ from validators.ConfigurationPropNameValidator import *
 from validators.ConfigurationValueValidator import *
 from appServices.ApplyConfigurationToDatabaseAppService import *
 from appServices.CheckDatabaseAppService import *
+from appServices.ResetDatabaseAppService import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -209,7 +210,8 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		currentSymbolTable.contextSymbol = None
 
 		#
-		# ENSURE THE DATABASE HAS A BRANCH.  IF THIS DOES NOT EXIST, THEN USE STRING 'default'.
+		# IF THE DATABASE DOES NOT HAVE A BRANCH, THEN JUST USE STRING 'default'.
+		# ELSEWHERE - WE CHECK IF THE BRANCH VALUE IS A REFERENCE TO A SYMBOL OR JUST A STRING WHEN VERSIONING.
 		#
 		branchName = 'default'
 
@@ -221,16 +223,16 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			elif branchPropExpr.type == SymbolType.String:
 				branchName = branchPropExpr.value
 			else:
-				raise NotImplementedError('Cannot get branchName.')
+				raise NotImplementedError('Cannot get branch name.')
 		else:
 			branchExpr = Expr()
-			branchExpr.name = 'branch'
 			branchExpr.type = SymbolType.String
 			branchExpr.value = branchName
 			createdSymbol.setProp('branch', branchExpr)
 
 		#
-		# ENSURE THE DATABASE HAS A STARTER VERSION.  IF THIS DOES NOT EXIST, THEN USE STRING '1.0.0'.
+		# ENSURE THE DATABASE HAS A STARTER VERSION.
+		# IF THIS DOES NOT EXIST, THEN USE STRING '1.0.0'.
 		#
 		versionNumber = '1.0.0'
 
@@ -255,7 +257,8 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 		#
 		# CREATE AN 'ARTIFICIAL' VERSION SYMBOL FOR THE DATABASE STARTER VERSION.
-		# THIS IS USED FOR BUILDING OUT THE VERSION LINEAGE.
+		# THIS IS USED FOR BUILDING OUT THE VERSION LINEAGE LATER.
+		# THE FIRST VERSION OF THE DATABASE STARTS AT THE DATABASE DEFINITION.
 		#
 		createdVersionSymbolName = VersionSymbolNamer.createName(branchName, versionNumber)
 		createdVersionSymbol = Symbol(createdVersionSymbolName, SymbolType.Version)
@@ -263,7 +266,48 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		createdVersionSymbol.setProp('major', VersionNumberParser.parseMajorAsExpr(versionNumber))
 		createdVersionSymbol.setProp('minor', VersionNumberParser.parseMinorAsExpr(versionNumber))
 		createdVersionSymbol.setProp('patch', VersionNumberParser.parsePatchAsExpr(versionNumber))
+
+		#
+		# ADD THE CHECK SCRIPTS TO THE VERSION.
+		# CHECK SCRIPTS CAN BE DEFINED IN BOTH THE BRANCH AND THE DATABASE DEFINITION, THEY ARE COPIED IN THAT ORDER TO THE VERSION SYMBOL.
+		#
+		branchPropExpr = createdSymbol.getProp('branch')
+		checkScriptExprList = []
+
+		#
+		# ADD THE BRANCH CHECK SCRIPTS TO THE VERSION.
+		#
+		if branchPropExpr.type == SymbolType.ReferenceToSymbol:
+			branchSymbol = branchPropExpr.value
+			if branchSymbol.hasProp('check'):
+				for currentExpr in branchSymbol.getProp('check').value:
+					checkScriptExprList.append(currentExpr)
+
+		#
+		# ADD THE DATABASE CHECK SCRIPTS TO THE VERSION.
+		#
+		#if createdSymbol.hasProp('check'):
+		#	for currentExpr in createdSymbol.getProp('check').value:
+		#		checkScriptExprList.append(currentExpr)
+
+		checkExpr = Expr()
+		checkExpr.name = 'check'
+		checkExpr.type = SymbolType.List
+		checkExpr.value = checkScriptExprList
+		createdVersionSymbol.setProp('check', checkExpr)
+
 		currentSymbolTable.insertSymbol(createdVersionSymbol)
+
+		#
+		# ENSURE THE DATABASE HAS A DEFAULT ENVIRONMENT (FOR CONFIGURATIONS DEFINITIONS).
+		# IF THIS DOES NOT EXIST, THEN USE STRING 'default'.
+		#
+		if not createdSymbol.hasProp('environment'):
+			environmentExpr = Expr()
+			environmentExpr.name = 'environment'
+			environmentExpr.type = SymbolType.String
+			environmentExpr.value = 'default'
+			createdSymbol.setProp('environment', environmentExpr)
 
 	def visitDatabaseProp(self, ctx:SqlCurrentParser.DatabasePropContext):
 		#
@@ -299,8 +343,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# APPLY TEMPLATES TO THIS PROPERTY.
 		#
-
-
 
 		#
 		# SET THE PROPERTY ON THE SYMBOL.
@@ -484,7 +526,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# GET THE DATABASE SYMBOL NAME AND SYMBOL.
 		#
-		databaseSymbolName = ctx.SYMBOL_ID(1).getText()
+		databaseSymbolName = ctx.SYMBOL_ID().getText()
 
 		if not self._symbolTableManager.hasSymbolByName(databaseSymbolName):
 			print('{}: Database definition not found.'.format(databaseSymbolName))
@@ -1461,3 +1503,42 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# printSymbolsStatement: 'print' 'symbols';
 		#
 		print(SymbolListFormatter.formatText(self._symbolTableManager.getAllSymbols()))
+
+	def visitResetDatabaseStatement(self, ctx:SqlCurrentParser.ResetDatabaseStatementContext):
+		#
+		# resetDatabaseStatement: 'reset' 'database'? SYMBOL_ID ';';
+		#
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+		currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+
+		#
+		# CREATE A BATCH ID.
+		#
+		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+
+		#
+		# GET THE DATABASE SYMBOL NAME AND SYMBOL.
+		#
+		databaseSymbolName = ctx.SYMBOL_ID().getText()
+
+		if not self._symbolTableManager.hasSymbolByName(databaseSymbolName):
+			print('{}: Database not found.'.format(databaseSymbolName))
+			return
+		
+		databaseSymbol = self._symbolTableManager.getSymbolByName(databaseSymbolName)
+
+		#
+		# RUN THE DATABASE CHECKS.
+		#
+		appService = ResetDatabaseAppService()
+		appService.databaseSymbolName = databaseSymbolName
+		appService.databaseSymbol = databaseSymbol
+		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = currentDateTimeFormatted
+		appService.batchId = batchId
+		appService.run()

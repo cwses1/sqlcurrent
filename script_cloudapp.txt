@@ -1,0 +1,194 @@
+solution iot_app
+{
+	name: 'IoT Application';
+}
+
+solution cloud_app
+{
+	name: 'Cloud Application';
+}
+
+environment dev
+{
+	name: 'Development Environment';
+	solution: cloud_app;
+	solution: iot_app;
+}
+
+environment qa
+{
+	name: 'Quality Assurance Environment';
+	solution: cloud_app;
+	solution: iot_app;
+}
+
+environment uat
+{
+	name: 'User Acceptance Testing Environment';
+	solution: cloud_app;
+}
+
+environment perf
+{
+	name: 'Performance Testing Environment';
+	solution: iot_app;
+}
+
+environment prod
+{
+	name: 'Production Environment';
+	solution: cloud_app;
+	solution: iot_app;
+}
+
+branch operational
+{
+	name: 'Operational Database';
+	solution: iot_app;
+	create: 'create1.sql';
+	create: 'create2.sql';
+	version: 1.0.0;
+}
+
+branch analytical
+{
+	name: 'Time Series Database';
+	solution: iot_app;
+}
+
+branch topology
+{
+	solution: cloud_app;
+}
+
+branch customer
+{
+	solution: cloud_app;
+}
+
+server nexus
+{
+	branch: operational; // FOR SERVERS DEDICATED TO A BRANCH.  A DATABASE ASSIGNED TO THIS SERVER WILL DEFAULT TO THIS BRANCH.
+	environment: dev; // FOR SERVERS DEDICATED TO AN ENVIRONMENT.  A DATABASE ASSIGNED TO THIS SERVER WILL DEFAULT TO THIS ENVIRONMENT.
+	host: 'nexus.sqlcurrent.com';
+	solution: iot_app; // FOR SERVERS DEDICATED TO A SOLUTION.  A DATABASE ASSIGNED TO THIS SERVER WILL DEFAULT TO THIS SOLUTION.
+	tag: 'location_us_de_newcastle_engineering_corydesk';
+}
+
+server proxima
+{
+	environment: qa;
+	host: 'proxima.sqlcurrent.com';
+	solution: iot_app;
+	tag: 'location_us_de_newcastle_engineering_rdlab';
+}
+
+database nexus_opdb
+{
+	branch: operational;
+	connString: 'postgresql://postgres:postgres@127.0.0.1/binningtool';
+	driver: 'psycopg2';
+	environment: dev;
+	name: 'Nexus Instrument Operational Database';
+	server: nexus;
+	solution: iot_app;
+	tag: 'location_us_de_newcastle_engineering_corydesk';
+}
+
+database nexus_analyticaldb
+{
+	branch: analytical;
+	connString: 'server={{nexus}} database=embedded';
+	driver: 'influx';
+	environment: dev;
+	name: 'Nexus Analytical Database';
+	server: nexus;
+	solution: iot_app;
+	tag: 'location_us_de_newcastle_engineering_corydesk';
+}
+
+database proxima_opdb
+{
+	branch: operational;
+	connString: 'server={{proxima}} dbname=binningtool user=postgres password=postgres';
+	create: 'create.sql';
+	driver: 'psycopg2';
+	environment: dev;
+	name: 'b';
+	server: proxima;
+	solution: iot_app;
+	tag: 'location_us_de_newcastle_engineering_rdlab';
+}
+
+database proxima_analyticaldb
+{
+	branch: analytical;
+	connString: 'server={{proxima}} dbname=binningtool user=postgres password=postgres';
+	driver: 'influx';
+	environment: dev;
+	name: 'a';
+	server: proxima;
+	solution: iot_app;
+	tag: 'location_us_de_newcastle_engineering_rdlab';
+}
+
+version 1.1.0 branch operational
+{
+	name: 'brilliant_dog'; // OPTIONAL
+	//dir: 'version_1.1.0'; // BASE DIRECTORY FOR THIS VERSION, INFER IF EXCLUDED, ./sqlcurrent_sqlscripts/branchName/versions/1.1.0
+	apply: 'schema.sql';
+	apply: 'data.sql';
+	precheck: 'precheck1.sql';
+	precheck: 'precheck2.sql';
+	check: 'check1.sql';
+	check: 'check2.sql';
+	revert: 'revert.sql';
+}
+
+version 1.2.0 branch operational
+{
+	name: 'brilliant_dog'; // OPTIONAL
+	//dir: 'version_1.2.0'; // BASE DIRECTORY FOR THIS VERSION, INFER IF EXCLUDED, ./sqlcurrent_sqlscripts/branchName/version_1.2.0
+	precheck: 'precheck1.sql';
+	precheck: 'precheck2.sql';
+	apply: 'schema.sql';
+	apply: 'data.sql';
+	revert: 'revert.sql';
+	check: 'check1.sql';
+	check: 'check2.sql';
+}
+
+version 1.0.1 branch analytical
+{
+	name: 'brilliant_dog';
+	dir: './branches/analytical/version_1.0.1';
+	precheck: 'check1.txt';
+	precheck: 'check2.txt';
+	apply: 'apply.txt';
+	revert: 'revert.txt';
+	check: 'check3.txt';
+	check: 'check4.txt';
+}
+
+configuration config1 in branch operational
+{
+	name: 'QA Users';
+	desc: 'Flashes the database with specific users.';
+	environment: dev;
+	version: 1.0.0;
+	precheck: 'precheck1.sql';
+	precheck: 'precheck2.sql';
+	apply: 'apply1.sql';
+	apply: 'apply2.sql';
+	revert: 'revert1.sql';
+	revert: 'revert2.sql';
+	check: 'check1.sql';
+	check: 'check2.sql';
+	//dir: './sqlcurrent_sqlscripts/operational/_configurations';
+}
+
+//
+// PUT YOUR TEST STATEMENTS HERE:
+//
+print symbols;
+check database nexus_opdb version 1.0.0;

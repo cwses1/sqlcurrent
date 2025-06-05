@@ -7,6 +7,7 @@ class BranchReference ():
 	propNames['create'] = True
 	propNames['reset'] = True
 	propNames['version'] = False
+	propNames['check'] = True
 
 	@staticmethod
 	def propNameSupported (name:str) -> bool:

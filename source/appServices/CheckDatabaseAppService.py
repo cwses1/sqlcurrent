@@ -66,8 +66,9 @@ class CheckDatabaseAppService ():
 		#
 		specifiedVersionSymbolName = None
 		specifiedVersionSymbol = None
+		exactVersionNumberSpecified = specifiedVersionNumber != None
 
-		if specifiedVersionNumber != None:
+		if exactVersionNumberSpecified:
 			specifiedVersionSymbolName = VersionSymbolNamer.createName(branchName, specifiedVersionNumber)
 
 			if self.symbolTableManager.hasSymbolByName(specifiedVersionSymbolName):
@@ -103,7 +104,7 @@ class CheckDatabaseAppService ():
 		# ENFORCE VERSION RESTRICTIONS.
 		# WE CAN ONLY CHECK A VERSION THAT IS LESS THAN OR EQUAL TO THE DATABASE'S CURRENT VERSION.
 		#
-		if specifiedVersionSymbol != None:
+		if exactVersionNumberSpecified:
 			#
 			# IF THE VERSION WAS SPECIFIED CHECK IF THE SPECIFIED VERSION SYMBOL IS LESS THAN OR EQUAL TO THE CURRENT VERSION SYMBOL.
 			#
@@ -139,7 +140,8 @@ class CheckDatabaseAppService ():
 		# THE STARTER VERSION SYMBOL (USUALLY 1.0.0) EXISTS ONLY FOR OPERATIONAL PURPOSES DURING UPDATES AND NEVER HAS ANY CHECK SCRIPTS.
 		# WE DISCARD THIS VERSION SYMBOL.  IT'S ALWAYS THE FIRST LIST ITEM AFTER SORTING.
 		#
-		del versionSymbols[0]
+		if not exactVersionNumberSpecified:
+			del versionSymbols[0]
 
 		#
 		# CREATE THE PATH FACTORY SO WE CAN FIND SCRIPTS.
@@ -169,9 +171,9 @@ class CheckDatabaseAppService ():
 			checkScriptNumber:int = 0
 
 			if checkScriptListLength == 1:
-				print('{0}: Running 1 check script against version \'{1}\'.'.format(databaseSymbolName, versionSymbolName))
+				print('{0}: Running 1 check script against version \'{1}\' in branch \'{2}\'.'.format(databaseSymbolName, versionNumber, branchName))
 			else:
-				print('{0}: Running {1} check scripts against version \'{2}\'.'.format(databaseSymbolName, checkScriptListLength, versionSymbolName))
+				print('{0}: Running {1} check scripts against version \'{2}\' in branch \'{3}\'.'.format(databaseSymbolName, checkScriptListLength, versionNumber, branchName))
 
 			for currentFilePath in checkScriptList:
 				checkScriptNumber += 1

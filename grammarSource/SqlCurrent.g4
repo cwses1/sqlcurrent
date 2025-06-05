@@ -29,6 +29,7 @@ statement: serverStatement
 	| applyConfigurationToDatabaseListStatement
 	| printSymbolsStatement
 	| checkDatabaseStatement
+	| resetDatabaseStatement
 	;
 
 serverStatement: 'server' SYMBOL_ID '{' serverPropList '}';
@@ -37,11 +38,11 @@ serverProp: (SYMBOL_ID | 'solution' | 'environment' | 'branch') ':' expr;
 
 databaseStatement: 'database' SYMBOL_ID '{' databasePropList '}';
 databasePropList: (databaseProp ';')+;
-databaseProp: (SYMBOL_ID | 'solution' | 'branch' | 'server' | 'create' | 'environment' | 'version') ':' expr;
+databaseProp: (SYMBOL_ID | 'solution' | 'branch' | 'server' | 'create' | 'environment' | 'version' | 'check' | 'reset') ':' expr;
 
 expr: STRING_LITERAL | SYMBOL_ID | VERSION_ID;
 
-versionStatement: 'version' VERSION_ID ('for' 'branch' expr)? '{' versionPropList '}';
+versionStatement: 'version' VERSION_ID ('in'? 'branch' expr)? '{' versionPropList '}';
 versionPropList: (versionProp ';')+;
 versionProp: (SYMBOL_ID | 'branch' | 'revert' | 'check' | 'apply' | 'precheck') ':' expr;
 
@@ -53,7 +54,7 @@ solutionProp: SYMBOL_ID ':' expr;
 
 branchStatement: 'branch' SYMBOL_ID '{' branchPropList '}';
 branchPropList: (branchProp ';')+;
-branchProp: (SYMBOL_ID | 'solution' | 'create' | 'version' | 'reset') ':' expr;
+branchProp: (SYMBOL_ID | 'solution' | 'create' | 'version' | 'reset' | 'check') ':' expr;
 
 environmentStatement: 'environment' SYMBOL_ID '{' environmentPropList '}';
 environmentPropList: (environmentProp ';')+;
@@ -83,8 +84,9 @@ revertDatabaseListStatement: 'revert' 'databases' toVersionClause whereClause? o
 checkDatabaseListStatement: 'check' 'databases' whereClause? orderByClause? ';';
 revertDatabaseStatement: 'revert' 'database'? SYMBOL_ID toVersionClause ';';
 checkDatabaseStatement: 'check' 'database'? SYMBOL_ID ('version' VERSION_ID)? ';';
+resetDatabaseStatement: 'reset' 'database'? SYMBOL_ID ';';
 
-configurationStatement: 'configuration' SYMBOL_ID 'for' 'branch' expr? '{' configurationPropList '}';
+configurationStatement: 'configuration' SYMBOL_ID 'in' 'branch' expr? '{' configurationPropList '}';
 configurationPropList: (configurationProp ';')+;
 configurationProp: (SYMBOL_ID | 'environment' | 'version' | 'apply' | 'precheck' | 'check' | 'revert') ':' expr;
 

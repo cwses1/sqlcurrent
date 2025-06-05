@@ -1,4 +1,4 @@
-SQL Current is database migrations scripting engine that defines its own language, called "Current Script."  It works with any database that has a Python driver.  Here is what a current script looks like:
+SQL Current is database migrations scripting engine written in Python.  It works with any database that has a Python driver.  A very simple script looks like this:
 
 	database mydb
 	{
@@ -12,6 +12,10 @@ SQL Current is database migrations scripting engine that defines its own languag
 The above script creates the database and keeps track of that fact.  This is how you would run the script from the command line:
 
 	> sqlcurrent script.txt
+
+If the script is successful you would get a message similar to this:
+
+	mydb: Database created with version '1.0.0'.
 
 If you ran the script twice in a row you would get this error:
 
@@ -41,7 +45,7 @@ https://www.python.org
 
 ## Script Breakdown
 
-Let's go through the script at the top:
+Let's go through the script in greater detail:
 
 	database mydb
 	{
@@ -52,12 +56,12 @@ Let's go through the script at the top:
 
 	create mydb;
 
-1. The database variable "mydb" is created with the following properties:
-	* driver - the type of database server we are connecting to (such as PostgreSQL, MySQL, SQL Server, MongoDB, InfluxDB).  This determines the Python driver / adapter library to use.
-	* connString - the connection string or DSN of the database
-	* create - the path to the create script.
-2. The 'create.sql' script is run.  Whatever you did in the script happens.
-3. An update tracking file is created to track the version of this database.  Since no version was specified in the script, SQL Current uses version 1.0.0.
+1. We *define* a database `mydb` with the following properties:
+	* `driver`: The type of database we are connecting to.
+	* `connString`: The connection details.
+	* `create`: The path to the create script.
+1. `create mydb;` creates the database by connecting to `mydb` and executes the create script `./create.sql` against it.
+1. An update tracking file is created at `./sqlcurrent_updatetracking/default/mydb.txt` to track the version of this database.  The version defaults to 1.0.0.
 
 ## Motivation
 
@@ -86,24 +90,6 @@ SQL Current is a database migrations tool.  To perform a migration (a change to 
 * Topology database and customer data scenario.
 * Operational database and analytical database scenario.
 * Some applications use multiple databases for different purposes, these are called branches.
-
-## Setup
-
-### Python
-
-The interpreter is written in Python.  You will need to get Python.
-
-### ANTLR Python Runtime
-
-	pip install antlr4-python3-runtime
-
-### Java
-
-If you want to compile the grammar, you will need Java.
-
-## Usage
-
-	./sqlcurrent script.txt
 
 ## Scripting Language Guide
 

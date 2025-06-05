@@ -1,11 +1,14 @@
+from entities.Expr import *
+from exceptions.MatchUnderscoreError import *
+
 from .BranchNameValueValidator import *
 from .BranchDescValueValidator import *
 from .BranchSolutionValueValidator import *
 from .GeneralTagValueValidator import *
-from entities.Expr import *
 from .BranchCreateValueValidator import *
 from .BranchResetValueValidator import *
 from .BranchVersionValueValidator import *
+from .BranchCheckValueValidator import *
 
 class BranchValueValidator ():
 
@@ -21,10 +24,12 @@ class BranchValueValidator ():
 			case 'tag':
 				return GeneralTagValueValidator.isNotValid(value)
 			case 'create':
-				return BranchDescValueValidator.isNotValid(value)
+				return BranchCreateValueValidator.isNotValid(value)
 			case 'reset':
-				return BranchDescValueValidator.isNotValid(value)
+				return BranchResetValueValidator.isNotValid(value)
 			case 'version':
-				return BranchDescValueValidator.isNotValid(value)
+				return BranchVersionValueValidator.isNotValid(value)
+			case 'check':
+				return BranchCheckValueValidator.isNotValid(value)
 			case _:
 				raise MatchUnderscoreError('BranchValueValidator hit the default case for property name: {}.'.format(name))

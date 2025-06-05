@@ -18,3 +18,22 @@ precheck databases where name = proxima_embedded;
 precheck databases where name matches 'proxima_embedded';
 precheck databases where name in 'proxima_embedded';
 
+/*
+create nexus_opdb;
+
+check nexus_opdb to version 1.0.0;
+
+
+create and update nexus_opdb to version 1.1.0;
+create databases where any tag not like 'location_us';
+create databases where every tag not like 'location_us';
+create databases where any tag matches 'location_us';
+create databases where every tag matches 'location_us';
+create databases where any tag not matches 'location_us';
+create databases where every tag not matches 'location_us';
+create databases where any tag in ('location_us');
+create databases where every tag in ('location_us');
+create databases where any tag not in ('location_us');
+create databases where every tag not in ('location_us', 'location_my_desk');
+*/
+

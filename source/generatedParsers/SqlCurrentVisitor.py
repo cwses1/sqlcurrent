@@ -194,6 +194,11 @@ class SqlCurrentVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SqlCurrentParser#resetDatabaseStatement.
+    def visitResetDatabaseStatement(self, ctx:SqlCurrentParser.ResetDatabaseStatementContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by SqlCurrentParser#configurationStatement.
     def visitConfigurationStatement(self, ctx:SqlCurrentParser.ConfigurationStatementContext):
         return self.visitChildren(ctx)

@@ -9,7 +9,8 @@ class ScriptFilePathFactory ():
 		self.versionDir:str = None
 		self.configurationName:str = None
 		self.versionNumber:str = None
-		self.createDir:str = None
+		self.createDir:str = 'create'
+		self.resetDir:str = 'reset'
 
 	def createPath (self, pathParam:str) -> str:
 		#
@@ -34,10 +35,88 @@ class ScriptFilePathFactory ():
 		#
 		# RELATIVE PATH, NOT FORCED (NO STARTING DOT): myscripts/version_1.1.1/apply_version.sql
 		#
+		if self.createDir != None:
+			return self.sqlScriptsDir + os.sep + self.branchName + os.sep + self.createDir + os.sep + pathParam
+
 		if self.configurationName != None:
 			return self.sqlScriptsDir + os.sep + self.branchName + os.sep + 'configurations' + os.sep + self.configurationName + os.sep + pathParam
 
-		if self.createDir != None:
-			return self.sqlScriptsDir + os.sep + self.branchName + os.sep + self.createDir + os.sep + self.configurationName + os.sep + pathParam
 
 		return self.sqlScriptsDir + os.sep + self.branchName + os.sep + 'versions' + os.sep + self.versionNumber + os.sep + pathParam
+
+	def createCreatePathForStandaloneDatabase (self, pathParam:str) -> str:
+		#
+		# IF THE VERSION DIRECTORY IS SPECIFIED, THEN USE THAT.
+		# WE SIMPLY APPEND THE DIRECTORY AND THE PATH.
+		#
+		if self.versionDir != None:
+			return self.versionDir + os.sep + pathParam
+
+		#
+		# ABSOLUTE PATH: / OR C:\
+		#
+		if os.path.isabs(pathParam):
+			return pathParam
+
+		#
+		# FORCED RELATIVE PATH: ./myscripts/version_1.1.1/apply_version.sql
+		#
+		if pathParam.startswith('.'):
+			return os.getcwd() + os.sep + pathParam.lstrip('.')
+
+		#
+		# RELATIVE PATH, NOT FORCED (NO STARTING DOT): myscripts/version_1.1.1/apply_version.sql
+		# IN THIS METHOD WE IGNORE THE BRANCH.
+		#
+		if self.createDir != None:
+			return self.sqlScriptsDir + os.sep + self.databaseName + os.sep + self.createDir + os.sep + pathParam
+
+		return self.sqlScriptsDir + os.sep + self.databaseName + os.sep + 'create' + os.sep + pathParam
+
+	def createResetPath (self, pathParam:str) -> str:
+		#
+		# IF THE VERSION DIRECTORY IS SPECIFIED, THEN USE THAT.
+		# WE SIMPLY APPEND THE DIRECTORY AND THE PATH.
+		#
+		if self.versionDir != None:
+			return self.versionDir + os.sep + pathParam
+
+		#
+		# ABSOLUTE PATH: / OR C:\
+		#
+		if os.path.isabs(pathParam):
+			return pathParam
+
+		#
+		# FORCED RELATIVE PATH: ./myscripts/version_1.1.1/apply_version.sql
+		#
+		if pathParam.startswith('.'):
+			return os.getcwd() + os.sep + pathParam.lstrip('.')
+
+		return self.sqlScriptsDir + os.sep + self.branchName + os.sep + self.databaseName + os.sep + self.resetDir + os.sep + pathParam
+
+	def createResetPathForStandaloneDatabase (self, pathParam:str) -> str:
+		#
+		# IF THE VERSION DIRECTORY IS SPECIFIED, THEN USE THAT.
+		# WE SIMPLY APPEND THE DIRECTORY AND THE PATH.
+		#
+		if self.versionDir != None:
+			return self.versionDir + os.sep + pathParam
+
+		#
+		# ABSOLUTE PATH: / OR C:\
+		#
+		if os.path.isabs(pathParam):
+			return pathParam
+
+		#
+		# FORCED RELATIVE PATH: ./myscripts/version_1.1.1/apply_version.sql
+		#
+		if pathParam.startswith('.'):
+			return os.getcwd() + os.sep + pathParam.lstrip('.')
+
+		#
+		# RELATIVE PATH, NOT FORCED (NO STARTING DOT): myscripts/version_1.1.1/apply_version.sql
+		# IN THIS METHOD WE IGNORE THE BRANCH.
+		#
+		return self.sqlScriptsDir + os.sep + self.databaseName + os.sep + self.resetDir + os.sep + pathParam

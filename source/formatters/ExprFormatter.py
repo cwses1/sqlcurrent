@@ -13,10 +13,10 @@ class ExprFormatter ():
 			listLen = len(expr.value)
 			text += '(len={})'.format(str(listLen))
 			text += '['
-			text += '{}'.format(ExprFormatter.formatText(expr.value[0]))
-			for i in range(1, listLen):
-				currentValue = expr.value[i]
-				text += ', {}'.format(ExprFormatter.formatText(currentValue))
+			for i in range(0, listLen - 1):
+				text += '{}, '.format(ExprFormatter.formatText(expr.value[i]))
+			if listLen - 1 >= 0:
+				text += '{}'.format(ExprFormatter.formatText(expr.value[listLen - 1]))
 			text += ']:{}'.format(SymbolTypeFormatter.format(expr.type))
 		elif expr.type == SymbolType.ReferenceToSymbol:
 			text += '{}:{}'.format(expr.name, SymbolTypeFormatter.format(expr.value.type))

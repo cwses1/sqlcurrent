@@ -1,8 +1,13 @@
 database nexus
 {
-	type: 'postgres';
-	connString: 'Server=127.0.0.1;database=embedded';
-	create: 'create.sql';
+	driver: 'postgres';
+	connString: 'postgresql://postgres:postgres@127.0.0.1/binningtool';
+	create: 'database_create1.sql';
+	create: 'database_create2.sql';
+	check: 'database_check1.sql';
+	check: 'database_check2.sql';
+	reset: 'database_reset1.sql';
+	reset: 'database_reset2.sql';
 }
-
+print symbols;
 create nexus;
