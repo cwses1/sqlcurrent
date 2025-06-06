@@ -212,7 +212,7 @@ class RevertDatabaseAppService ():
 			# GET THE SCRIPT FILE PATH FACTORY.
 			#
 			scriptFilePathFactory = ScriptFilePathFactory()
-			scriptFilePathFactory.branchName = branchName
+			scriptFilePathFactory.branchSymbolName = branchName
 			scriptFilePathFactory.databaseName = databaseSymbolName
 			scriptFilePathFactory.sqlScriptsDir = SymbolReader.readString(symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
 			

@@ -19,6 +19,7 @@ from symbolTables.Symbol import *
 from formatters.UUID4Formatter import *
 from entities.ScriptRunnerResultSet import *
 from scriptRunners.VersionCheckScriptRunner import *
+from appServices.ScriptRunnerAppService import *
 
 class ResetDatabaseAppService ():
 
@@ -47,107 +48,48 @@ class ResetDatabaseAppService ():
 		databaseClient.connString = connStringValue
 
 		#
-		# GET THE DATABASE BRANCH, IF ANY.
+		# GET THE BRANCH FOR THIS DATABASE, IF ANY.
 		#
-		hasBranch = databaseSymbol.hasProp('branch')
+		hasBranchSymbol:bool = False
 
-		if hasBranch:
+		if databaseSymbol.hasProp('branch'):
+			branchPropExpr = databaseSymbol.getProp('branch')
+			hasBranchSymbol = branchPropExpr.type == SymbolType.ReferenceToSymbol
+		
+		if hasBranchSymbol:
 			branchSymbol = databaseSymbol.getProp('branch').value
-			branchName = branchSymbol.name
+			branchSymbolName = branchSymbol.name
 		else:
 			branchSymbol = None
-			branchName = None
+			branchSymbolName = None
 
 		#
-		# GET THE CURRENT DATABASE VERSION.
+		# DETERMINE IF WE HAVE RESET SCRIPTS ATTACHED TO THE DATABASE DEFINITION TO RUN.
 		#
-		updateTrackingFileWriter = UpdateTrackingFileWriter()
-		updateTrackingFileWriter.trackingDir = SymbolReader.readString(self.symbolTableManager.getSymbolByName('globalEnvUpdateTrackingDir'))
-
-		#
-		# ENSURE THE DIRECTORY EXISTS THAT CONTAINS THE UPDATE TRACKING FILE.
-		#
-		updateTrackingFileWriter.ensureDirExists(branchSymbolName)
+		databaseHasResetScripts:bool = databaseSymbol.hasProp('reset')
 
 		#
-		# CREATE THE PATH FACTORY SO WE CAN FIND SCRIPTS.
+		# CREATE AND CONFIGURE THE SCRIPT RUNNER APP SERVICE.
 		#
-		pathFactory = ScriptFilePathFactory()
-		pathFactory.sqlScriptsDir = SymbolReader.readString(self.symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
-		pathFactory.branchName = branchName
-		pathFactory.databaseName = databaseSymbolName
-
-		if databaseSymbol.hasProp('dir'):
-			pathFactory.versionDir = SymbolReader.readPropAsString(databaseSymbol, 'dir')
-
-		#
-		# RUN BRANCH RESET SCRIPTS.
-		#
-		if hasBranch:
-			#
-			# GET THE SCRIPT FILE PATH FACTORY AND DETERMINE WHERE THE SCRIPTS SHOULD BE.
-			#
-			scriptFilePathFactory = ScriptFilePathFactory()
-			scriptFilePathFactory.sqlScriptsDir = SymbolReader.readString(self.symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
-			scriptFilePathFactory.branchName = branchName
-			scriptFilePathFactory.databaseName = databaseSymbolName
-
-			if branchSymbol.hasProp('dir'):
-				scriptFilePathFactory.resetDir = SymbolReader.readPropAsString(branchSymbol, 'dir')
-			else:
-				scriptFilePathFactory.resetDir = 'reset'
-
-			for scriptExpr in branchSymbol.getProp('reset').value:
-				scriptFilePath = scriptFilePathFactory.createResetPath(scriptExpr.value)
-
-				if not os.path.exists(scriptFilePath):
-					print('{}: Error: No such file or directory: \'{}\'. Stopping.'.format(databaseSymbolName, scriptFilePath))
-					print('{}: Stopping.'.format(databaseSymbolName))
-					return
-
-				createScriptText = StringFileReader.readFile(scriptFilePath)
-
-				#
-				# TELL THE USER WHICH SCRIPT WE'RE RUNNING.
-				#
-				print('{}: Running \'{}\'.'.format(databaseSymbolName, scriptFilePath))
-
-				#
-				# RUN THE SCRIPT.
-				#
-				try:
-					databaseClient.runScript(createScriptText)
-				except Exception as e:
-					print('{}: Error. {}. Stopping.'.format(databaseSymbolName, str(e)))
-					return
-
-				print('{}: Success.'.format(databaseSymbolName))
-
-				#
-				# ENSURE THE UPDATE TRACKING FILE EXISTS SO WE CAN TRACK THE UPDATE.
-				#
-				updateTrackingFileWriter.ensurefileExists(branchSymbolName, databaseSymbolName)
-
-				#
-				# TRACK THE UPDATE.
-				#
-				updateTrackingLine = UpdateTrackingLine()
-				updateTrackingLine.branch = branchSymbolName
-				updateTrackingLine.databaseName = databaseSymbolName
-				updateTrackingLine.datetime = currentDateTimeFormatted
-				updateTrackingLine.batchId = batchId
-				updateTrackingLine.script = scriptFilePath
-				updateTrackingLine.version = createVersionStr
-				updateTrackingLine.result = 'success'
-				updateTrackingLine.operation = 'create'
-				updateTrackingFileWriter.writeUpdateTrackingLine(branchSymbolName, databaseSymbolName, updateTrackingLine)
-
+		scriptRunnerService = ScriptRunnerAppService()
+		scriptRunnerService.symbolTableManager = self.symbolTableManager
+		scriptRunnerService.hasBranchSymbol = hasBranchSymbol
+		scriptRunnerService.branchSymbolName = branchSymbolName
+		scriptRunnerService.branchSymbol = branchSymbol
+		scriptRunnerService.databaseSymbolName = databaseSymbolName
+		scriptRunnerService.databaseSymbol = databaseSymbol
+		scriptRunnerService.databaseClient = databaseClient
+		scriptRunnerService.currentDateTimeFormatted = currentDateTimeFormatted
+		scriptRunnerService.batchId = batchId
 
 		#
-		# RUN DATABASE RESET SCRIPTS.
+		# RUN BRANCH-LEVEL RESET SCRIPTS.
 		#
+		if hasBranchSymbol:			
+			scriptRunnerService.runBranchResetScripts()
 
 		#
-		# TELL THE USER THAT THE RESET WAS SUCCESSFUL.
+		# RUN DATABASE-LEVEL RESET SCRIPTS.
 		#
-		print('{0}: Successfully reset database.'.format(databaseSymbolName))
+		if databaseHasResetScripts:
+			scriptRunnerService.runDatabaseResetScripts()

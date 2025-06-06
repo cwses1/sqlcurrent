@@ -534,9 +534,29 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		
 		databaseSymbol = self._symbolTableManager.getSymbolByName(databaseSymbolName)
 
+		#
+		# GET THE BRANCH NAME AND SYMBOL FOR THIS DATABASE.
+		#
+		hasBranchSymbol = False
+		branchSymbol = None
+		branchSymbolName = None
+
+		if databaseSymbol.hasProp('branch'):
+			branchPropExpr = databaseSymbol.getProp('branch')
+			hasBranchSymbol = branchPropExpr.type == SymbolType.ReferenceToSymbol
+			if hasBranchSymbol:
+				branchSymbol = ExprReader.readSymbol(branchPropExpr)
+				branchSymbolName = branchSymbol.name
+
+		#
+		# CREATE AND RUN THE APP SERVICE
+		#
 		appService = CreateDatabaseAppService()
 		appService.databaseSymbolName = databaseSymbolName
 		appService.databaseSymbol = databaseSymbol
+		appService.hasBranchSymbol = hasBranchSymbol
+		appService.branchSymbol = branchSymbol
+		appService.branchSymbolName = branchSymbolName
 		appService.symbolTableManager = self._symbolTableManager
 		appService.currentDateTime = currentDateTime
 		appService.currentDateTimeFormatted = currentDateTimeFormatted

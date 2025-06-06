@@ -9,5 +9,7 @@ database nexus
 	reset: 'database_reset1.sql';
 	reset: 'database_reset2.sql';
 }
+
 print symbols;
+reset nexus;
 create nexus;
