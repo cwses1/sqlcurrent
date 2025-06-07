@@ -1,2 +1,0 @@
-datetime,operation,version,result,script,batchId,name,branch
-2025-06-06T14:08:31,create,1.0.0,success,./sqlcurrent_sqlscripts/nexus/create/database_create1.sql,0fb3cb67661843ff810e96f41e4ff58d,nexus,default

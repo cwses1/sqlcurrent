@@ -14,7 +14,6 @@ class UpdateTrackingFileWriter ():
 
 	def createDatabaseFile (self, databaseSymbolName:str):
 		with open(self.getDatabaseFilePath(databaseSymbolName), 'w', encoding='utf-8') as handle:
-			self.writeHeaderRow(handle)
 			writer = csv.writer(handle)
 			self.writeHeaderRow(writer)
 
@@ -63,10 +62,16 @@ class UpdateTrackingFileWriter ():
 		return self.getDirPath(branchName) + '/' + self.getFileName(databaseSymbolName)
 
 	def getDatabaseFilePath (self, databaseSymbolName:str) -> str:
-		return self.trackingDir + '/' + self.getFileName(databaseSymbolName)
+		return self.trackingDir + '/standalone/' + self.getFileName(databaseSymbolName)
 
 	def getDirPath (self, branchName:str) -> str:
-		return self.trackingDir + '/' + branchName
+		return self.trackingDir + '/branches/' + branchName
 
 	def getFileName (self, databaseSymbolName:str) -> str:
 		return databaseSymbolName + '.txt';
+
+	def deleteFile (self, branchName:str, databaseSymbolName:str):
+		os.remove(self.getFilePath(branchName, databaseSymbolName))
+
+	def deleteDatabaseFile (self, databaseSymbolName:str):
+		os.remove(self.getDatabaseFilePath(databaseSymbolName))

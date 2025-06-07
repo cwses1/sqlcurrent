@@ -25,34 +25,28 @@ class CheckDatabaseAppService ():
 	def __init__ (self):
 		self.databaseSymbolName:str = None
 		self.databaseSymbol:Symbol = None
+		self.hasBranchSymbol:bool = None
+		self.branchSymbol:Symbol = None
+		self.branchSymbolName:Symbol = None
 		self.symbolTableManager = None
 		self.currentDateTime = None
 		self.currentDateTimeFormatted = None
 		self.batchId = None
 		self.specifiedVersionNumber = None
+		self.databaseClient = None
 
 	def run (self):
 		databaseSymbolName = self.databaseSymbolName
 		databaseSymbol = self.databaseSymbol
+		hasBranchSymbol = self.hasBranchSymbol
+		branchSymbol = self.branchSymbol
+		branchSymbolName = self.branchSymbolName
 		symbolTableManager = self.symbolTableManager
 		currentDateTime = self.currentDateTime
 		currentDateTimeFormatted = self.currentDateTimeFormatted
 		batchId = self.batchId
 		specifiedVersionNumber = self.specifiedVersionNumber
-
-		#
-		# GET THE DATABASE CLIENT.
-		#
-		driverValue = databaseSymbol.getProp('driver').value
-		connStringValue = databaseSymbol.getProp('connString').value
-		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
-		databaseClient.connString = connStringValue
-
-		#
-		# GET THE DATABASE BRANCH.
-		#
-		branchSymbol = databaseSymbol.getProp('branch').value
-		branchName = branchSymbol.name
+		databaseClient = self.databaseClient
 
 		#
 		# GET THE CURRENT DATABASE VERSION.
@@ -69,7 +63,7 @@ class CheckDatabaseAppService ():
 		exactVersionNumberSpecified = specifiedVersionNumber != None
 
 		if exactVersionNumberSpecified:
-			specifiedVersionSymbolName = VersionSymbolNamer.createName(branchName, specifiedVersionNumber)
+			specifiedVersionSymbolName = VersionSymbolNamer.createName(branchSymbolName, specifiedVersionNumber)
 
 			if self.symbolTableManager.hasSymbolByName(specifiedVersionSymbolName):
 				specifiedVersionSymbol = self.symbolTableManager.getSymbolByName(specifiedVersionSymbolName)
@@ -80,9 +74,13 @@ class CheckDatabaseAppService ():
 		#
 		# IF THE UPDATE TRACKING FILE DOES NOT EXIST THEN WE CANNOT PROCEED.
 		#
-		if not updateTrackingFileWriter.fileExists(branchName, databaseSymbolName):
-			print('{}: Database not created.'.format(databaseSymbolName))
-			print('{0}: Check canceled for database \'{0}\'.'.format(databaseSymbolName))
+		if hasBranchSymbol and not updateTrackingFileWriter.fileExists(branchSymbolName, databaseSymbolName):
+			print('{}: Could not find update tracking file for branch.'.format(databaseSymbolName))
+			print('{0}: Stopping.'.format(databaseSymbolName))
+			return
+		elif not updateTrackingFileWriter.databaseFileExists(databaseSymbolName):
+			print('{}: Could not find update tracking file for standalone database.'.format(databaseSymbolName))
+			print('{0}: Stopping.'.format(databaseSymbolName))
 			return
 
 		#
@@ -90,14 +88,25 @@ class CheckDatabaseAppService ():
 		#
 		updateTrackingFileReader = UpdateTrackingFileReader()
 		updateTrackingFileReader.trackingDir = SymbolReader.readString(self.symbolTableManager.getSymbolByName('globalEnvUpdateTrackingDir'))
-		lastSuccessfulVersionNumber = updateTrackingFileReader.readLastSuccessfulVersionNumber(branchName, databaseSymbolName)
-		lastSuccessfulVersionSymbolName = VersionSymbolNamer.createName(branchName, lastSuccessfulVersionNumber)
 
+		if hasBranchSymbol:
+			lastSuccessfulVersionNumber = updateTrackingFileReader.readLastSuccessfulVersionNumberForBranch(branchSymbolName, databaseSymbolName)
+			lastSuccessfulVersionSymbolName = VersionSymbolNamer.createName(branchSymbolName, lastSuccessfulVersionNumber)
+		else:
+			lastSuccessfulVersionNumber = updateTrackingFileReader.readLastSuccessfulVersionNumberForDatabase(databaseSymbolName)
+			lastSuccessfulVersionSymbolName = VersionSymbolNamer.createName(databaseSymbolName, lastSuccessfulVersionNumber)
+
+		#
+		# IF WE CANNOT FIND THE LAST SUCCESSFUL VERSION SYMBOL IN THE UPDATE TRACKING FILE THEN WE CANNOT PROCEED.
+		#
 		if not self.symbolTableManager.hasSymbolByName(lastSuccessfulVersionSymbolName):
-			print('{}: Version \'{}\' for branch \'{}\' not defined.'.format(databaseSymbolName, lastSuccessfulVersionNumber, branchName))
+			print('{}: Version \'{}\' for branch \'{}\' not defined.'.format(databaseSymbolName, lastSuccessfulVersionNumber, branchSymbolName))
 			print('{0}: Check \'{1}\' canceled for database \'{0}\'.'.format(databaseSymbolName))
 			return
 
+		#
+		# GET THE LAST SUCCESSFUL VERSION SYMBOL.
+		#
 		lastSuccessfulVersionSymbol = self.symbolTableManager.getSymbolByName(lastSuccessfulVersionSymbolName)
 
 		#
@@ -127,7 +136,11 @@ class CheckDatabaseAppService ():
 			# GET THE LIST OF VERSION SYMBOLS FOR THE CHECK.
 			# THIS IS EVERYTHING STARTING FROM CREATE CHECK SCRIPTS ALL THE WAY THROUGH THE CURRENT VERSION CHECK SCRIPTS.
 			#
-			versionSymbols = VersionSymbolLoader.getPreviousVersionSymbolsBeforeVersionNumber(lastSuccessfulVersionNumber, branchName, symbolTableManager)
+			if hasBranchSymbol:
+				versionSymbols = VersionSymbolLoader.getPreviousVersionSymbolsBeforeVersionNumber(lastSuccessfulVersionNumber, branchSymbolName, symbolTableManager)
+			else:
+				versionSymbols = VersionSymbolLoader.getPreviousVersionSymbolsBeforeVersionNumber(lastSuccessfulVersionNumber, databaseSymbolName, symbolTableManager)
+
 			versionSymbols.append(lastSuccessfulVersionSymbol)
 
 		#
@@ -140,23 +153,21 @@ class CheckDatabaseAppService ():
 		# THE STARTER VERSION SYMBOL (USUALLY 1.0.0) EXISTS ONLY FOR OPERATIONAL PURPOSES DURING UPDATES AND NEVER HAS ANY CHECK SCRIPTS.
 		# WE DISCARD THIS VERSION SYMBOL.  IT'S ALWAYS THE FIRST LIST ITEM AFTER SORTING.
 		#
-		if not exactVersionNumberSpecified:
-			del versionSymbols[0]
+		#if not exactVersionNumberSpecified:
+		#del versionSymbols[0]
+		# THIS IS NOT TRUE ANYMORE, THE VERSION HAS CHECK SCRIPTS ADDED TO IT.
+		#
 
 		#
 		# CREATE THE PATH FACTORY SO WE CAN FIND SCRIPTS.
 		#
 		pathFactory = ScriptFilePathFactory()
-		pathFactory.branchName = branchName
-		pathFactory.databaseName = databaseSymbolName
 		pathFactory.sqlScriptsDir = SymbolReader.readString(self.symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
+		pathFactory.branchSymbolName = branchSymbolName
+		pathFactory.databaseName = databaseSymbolName
 
 		if databaseSymbol.hasProp('dir'):
 			pathFactory.versionDir = SymbolReader.readPropAsString(databaseSymbol, 'dir')
-
-		#
-		# RUN CHECK SCRIPTS FOR THE CREATE.
-		#
 
 		#
 		# RUN CHECK SCRIPTS FOR EACH VERSION.
@@ -171,13 +182,23 @@ class CheckDatabaseAppService ():
 			checkScriptNumber:int = 0
 
 			if checkScriptListLength == 1:
-				print('{0}: Running 1 check script against version \'{1}\' in branch \'{2}\'.'.format(databaseSymbolName, versionNumber, branchName))
+				if hasBranchSymbol:
+					print('{0}: Running 1 check script against version \'{1}\' in branch \'{2}\'.'.format(databaseSymbolName, versionNumber, branchSymbolName))
+				else:
+					print('{0}: Running 1 check script against version \'{1}\'.'.format(databaseSymbolName, versionNumber))
 			else:
-				print('{0}: Running {1} check scripts against version \'{2}\' in branch \'{3}\'.'.format(databaseSymbolName, checkScriptListLength, versionNumber, branchName))
+				if hasBranchSymbol:
+					print('{0}: Running {1} check scripts against version \'{2}\' in branch \'{3}\'.'.format(databaseSymbolName, checkScriptListLength, versionNumber, branchSymbolName))
+				else:
+					print('{0}: Running {1} check scripts against version \'{2}\'.'.format(databaseSymbolName, checkScriptListLength, versionNumber))
 
 			for currentFilePath in checkScriptList:
 				checkScriptNumber += 1
-				checkScriptFilePath = pathFactory.createPath(currentFilePath)
+
+				if hasBranchSymbol:
+					checkScriptFilePath = pathFactory.createCheckPathForBranch(currentFilePath)
+				else:
+					checkScriptFilePath = pathFactory.createCheckPathForStandaloneDatabase(currentFilePath)
 
 				scriptRunner = VersionCheckScriptRunner()
 				scriptRunner.versionSymbolName = versionSymbolName
@@ -187,8 +208,9 @@ class CheckDatabaseAppService ():
 				scriptRunner.databaseSymbol = self.databaseSymbol
 				scriptRunner.symbolTableManager = self.symbolTableManager
 				scriptRunner.databaseClient = databaseClient
+				scriptRunner.hasBranchSymbol = hasBranchSymbol
 				scriptRunner.branchSymbol = branchSymbol
-				scriptRunner.branchName = branchName
+				scriptRunner.branchName = branchSymbolName
 				scriptRunner.pathFactory = pathFactory
 				scriptRunner.batchId = batchId
 				scriptRunner.updateTrackingFileWriter = updateTrackingFileWriter

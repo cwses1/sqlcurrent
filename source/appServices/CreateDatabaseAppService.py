@@ -25,6 +25,7 @@ class CreateDatabaseAppService ():
 		self.hasBranchSymbol = None
 		self.branchSymbol = None
 		self.branchSymbolName = None
+		self.databaseClient = None
 
 	def run (self):
 		symbolTableManager = self.symbolTableManager
@@ -36,14 +37,7 @@ class CreateDatabaseAppService ():
 		hasBranchSymbol = self.hasBranchSymbol
 		branchSymbol = self.branchSymbol
 		branchSymbolName = self.branchSymbolName
-
-		#
-		# GET THE DATABASE CLIENT.
-		#
-		driverValue = databaseSymbol.getProp('driver').value
-		connStringValue = databaseSymbol.getProp('connString').value
-		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
-		databaseClient.connString = connStringValue
+		databaseClient = self.databaseClient
 
 		#
 		# TELL THE USER WHAT WE'RE DOING.

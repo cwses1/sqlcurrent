@@ -26,42 +26,31 @@ class ResetDatabaseAppService ():
 	def __init__ (self):
 		self.databaseSymbolName:str = None
 		self.databaseSymbol:Symbol = None
+		self.hasBranchSymbol:bool = None
+		self.branchSymbol:Symbol = None
+		self.branchSymbolName:Symbol = None
 		self.symbolTableManager = None
 		self.currentDateTime = None
 		self.currentDateTimeFormatted = None
 		self.batchId = None
+		self.databaseClient = None
 
 	def run (self):
 		databaseSymbolName = self.databaseSymbolName
 		databaseSymbol = self.databaseSymbol
+		hasBranchSymbol = self.hasBranchSymbol
+		branchSymbol = self.branchSymbol
+		branchSymbolName = self.branchSymbolName
 		symbolTableManager = self.symbolTableManager
 		currentDateTime = self.currentDateTime
 		currentDateTimeFormatted = self.currentDateTimeFormatted
 		batchId = self.batchId
+		databaseClient = self.databaseClient
 
 		#
-		# GET THE DATABASE CLIENT.
+		# TELL THE USER WHAT WE'RE DOING.
 		#
-		driverValue = databaseSymbol.getProp('driver').value
-		connStringValue = databaseSymbol.getProp('connString').value
-		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
-		databaseClient.connString = connStringValue
-
-		#
-		# GET THE BRANCH FOR THIS DATABASE, IF ANY.
-		#
-		hasBranchSymbol:bool = False
-
-		if databaseSymbol.hasProp('branch'):
-			branchPropExpr = databaseSymbol.getProp('branch')
-			hasBranchSymbol = branchPropExpr.type == SymbolType.ReferenceToSymbol
-		
-		if hasBranchSymbol:
-			branchSymbol = databaseSymbol.getProp('branch').value
-			branchSymbolName = branchSymbol.name
-		else:
-			branchSymbol = None
-			branchSymbolName = None
+		print('{}: Resetting database.'.format(databaseSymbolName))
 
 		#
 		# DETERMINE IF WE HAVE RESET SCRIPTS ATTACHED TO THE DATABASE DEFINITION TO RUN.
@@ -85,7 +74,7 @@ class ResetDatabaseAppService ():
 		#
 		# RUN BRANCH-LEVEL RESET SCRIPTS.
 		#
-		if hasBranchSymbol:			
+		if hasBranchSymbol:
 			scriptRunnerService.runBranchResetScripts()
 
 		#
@@ -93,3 +82,22 @@ class ResetDatabaseAppService ():
 		#
 		if databaseHasResetScripts:
 			scriptRunnerService.runDatabaseResetScripts()
+
+		#
+		# DELETE THE UPDATE TRACKING FILE SO AFTER YOU RESET THE DATABASE, YOU CAN CREATE IT AGAIN WITHOUT ERRORS.
+		#
+		updateTrackingFileWriter = UpdateTrackingFileWriter()
+		updateTrackingFileWriter.trackingDir = SymbolReader.readString(symbolTableManager.getSymbolByName('globalEnvUpdateTrackingDir'))
+		
+		if hasBranchSymbol:
+			#
+			# THIS DATABASE IS CONNECTED TO A BRANCH.
+			# DELETE THE UPDATE TRACKING FILE UNDER THE BRANCH.
+			#
+			updateTrackingFileWriter.deleteFile(branchSymbolName, databaseSymbolName)
+		else:
+			#
+			# THIS DATABASE IS A STANDALONE DATABASE, NOT CONNECTED TO A BRANCH.
+			# DELETE THE UPDATE TRACKING FILE FOR THE STANDALONE DATABASE.
+			#
+			updateTrackingFileWriter.deleteDatabaseFile(databaseSymbolName)

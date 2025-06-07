@@ -393,7 +393,7 @@ class ScriptRunnerAppService ():
 			if hasBranchSymbol:
 				updateTrackingFileWriter.ensurefileExists(branchSymbolName, databaseSymbolName)
 			else:
-				updateTrackingFileWriter.ensureDatabaseFileExists(branchSymbolName, databaseSymbolName)
+				updateTrackingFileWriter.ensureDatabaseFileExists(databaseSymbolName)
 
 			#
 			# TRACK THE UPDATE.
@@ -410,6 +410,6 @@ class ScriptRunnerAppService ():
 			if hasBranchSymbol:
 				updateTrackingLine.branch = branchSymbolName
 			else:
-				updateTrackingLine.branch = ''
+				updateTrackingLine.branch = databaseSymbolName
 
-			updateTrackingFileWriter.writeUpdateTrackingLine(branchSymbolName, databaseSymbolName, updateTrackingLine)
+			updateTrackingFileWriter.writeDatabaseUpdateTrackingLine(databaseSymbolName, updateTrackingLine)

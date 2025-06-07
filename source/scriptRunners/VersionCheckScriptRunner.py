@@ -14,6 +14,7 @@ class VersionCheckScriptRunner ():
 		self.databaseSymbol = None
 		self.symbolTableManager = None
 		self.databaseClient = None
+		self.hasBranchSymbol:bool = None
 		self.branchSymbol = None
 		self.branchName = None
 		self.batchId = None
@@ -32,6 +33,7 @@ class VersionCheckScriptRunner ():
 		databaseSymbol = self.databaseSymbol
 		symbolTableManager = self.symbolTableManager
 		databaseClient = self.databaseClient
+		hasBranchSymbol = self.hasBranchSymbol
 		branchSymbol = self.branchSymbol
 		branchName = self.branchName
 		batchId = self.batchId
@@ -46,13 +48,20 @@ class VersionCheckScriptRunner ():
 		# ENSURE THE PATH EXISTS.
 		#
 		if not os.path.exists(scriptFilePath):
-			return ScriptRunnerResultSetFactory.createFailureResultSet('{0}: Check script file path not found: \'{2}\' in version \'{1}\' for branch \'{3}\'.'.format(databaseSymbolName, versionNumber, scriptFilePath, branchName))
+			if hasBranchSymbol:
+				return ScriptRunnerResultSetFactory.createFailureResultSet('{0}: Check script file path not found: \'{2}\' in version \'{1}\' for branch \'{3}\'.'.format(databaseSymbolName, versionNumber, scriptFilePath, branchName))
+			else:
+				return ScriptRunnerResultSetFactory.createFailureResultSet('{0}: Check script file path not found: \'{2}\' in version \'{1}\'.'.format(databaseSymbolName, versionNumber, scriptFilePath))
+				
 		#
 		# ENSURE THE PATH IS A FILE.
 		#
 		if not os.path.isfile(scriptFilePath):
-			return ScriptRunnerResultSetFactory.createFailureResultSet('{0}: Check script file path is not a file: \'{1}\' in version \'{2}\' for branch \'{3}\'.'.format(databaseSymbolName, scriptFilePath, versionNumber, branchName))
-
+			if hasBranchSymbol:
+				return ScriptRunnerResultSetFactory.createFailureResultSet('{0}: Check script file path is not a file: \'{1}\' in version \'{2}\' for branch \'{3}\'.'.format(databaseSymbolName, scriptFilePath, versionNumber, branchName))
+			else:
+				return ScriptRunnerResultSetFactory.createFailureResultSet('{0}: Check script file path is not a file: \'{1}\' in version \'{2}\'.'.format(databaseSymbolName, scriptFilePath, versionNumber))
+	
 		#
 		# START THE UPDATE TRACKING LINE.
 		#
@@ -63,13 +72,20 @@ class VersionCheckScriptRunner ():
 		updateTrackingLine.script = scriptFilePath
 		updateTrackingLine.batchId = batchId
 		updateTrackingLine.databaseName = databaseSymbolName
-		updateTrackingLine.branch = branchName
+
+		if hasBranchSymbol:
+			updateTrackingLine.branch = branchName
+		else:
+			updateTrackingLine.branch = databaseSymbolName
 
 		#
 		# TELL THE USER WHICH SCRIPT WE'RE RUNNING.
 		#
-		print('{0}: Running check script {3} of {4}: \'{1}\' in version \'{2}\' for branch \'{5}\'.'.format(databaseSymbolName, scriptFilePath, versionNumber, scriptNumber, scriptListLength, branchName))
-
+		if hasBranchSymbol:
+			print('{0}: Running check script {3} of {4}: \'{1}\' in version \'{2}\' for branch \'{5}\'.'.format(databaseSymbolName, scriptFilePath, versionNumber, scriptNumber, scriptListLength, branchName))
+		else:
+			print('{0}: Running check script {3} of {4}: \'{1}\' in version \'{2}\'.'.format(databaseSymbolName, scriptFilePath, versionNumber, scriptNumber, scriptListLength))
+			
 		#
 		# GET THE SCRIPT TEXT.
 		#
@@ -94,4 +110,7 @@ class VersionCheckScriptRunner ():
 			updateTrackingLine.result = 'failure'
 			return ScriptRunnerResultSetFactory.createFailureResultSet('{0}: Error running check script: \'{1}\' in version \'{2}\' for branch \'{3}\'.'.format(databaseSymbolName, e, versionNumber, branchName))
 		finally:
-			updateTrackingFileWriter.writeUpdateTrackingLine(branchName, databaseSymbolName, updateTrackingLine)
+			if hasBranchSymbol:
+				updateTrackingFileWriter.writeUpdateTrackingLine(branchName, databaseSymbolName, updateTrackingLine)
+			else:
+				updateTrackingFileWriter.writeDatabaseUpdateTrackingLine(databaseSymbolName, updateTrackingLine)

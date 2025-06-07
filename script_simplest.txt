@@ -10,6 +10,7 @@ database nexus
 	reset: 'database_reset2.sql';
 }
 
-print symbols;
-reset nexus;
-create nexus;
+//print symbols;
+//reset nexus;
+//create nexus;
+check nexus;
