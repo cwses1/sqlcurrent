@@ -10,7 +10,54 @@ database nexus
 	reset: 'database_reset2.sql';
 }
 
-//print symbols;
-//reset nexus;
-//create nexus;
+version 1.1.1
+{
+	apply: 'apply1.sql';
+	apply: 'apply2.sql';
+	check: 'check3.sql';
+	check: 'check4.sql';
+	revert: 'revert1.sql';
+	revert: 'revert2.sql';
+}
+
+configuration dev
+{
+	name: 'dev';
+	desc: 'Flashes the DEV database with specific users.';
+	environment: dev;
+	version: 1.0.0;
+	precheck: 'precheck1.sql';
+	precheck: 'precheck2.sql';
+	apply: 'apply1.sql';
+	apply: 'apply2.sql';
+	revert: 'revert1.sql';
+	revert: 'revert2.sql';
+	check: 'check1.sql';
+	check: 'check2.sql';
+	//dir: './sqlcurrent_sqlscripts/operational/_configurations';
+}
+
+configuration qa
+{
+	name: 'QA Users';
+	desc: 'Flashes the database with specific users.';
+	environment: dev;
+	version: 1.0.0;
+	precheck: 'precheck1.sql';
+	precheck: 'precheck2.sql';
+	apply: 'apply1.sql';
+	apply: 'apply2.sql';
+	revert: 'revert1.sql';
+	revert: 'revert2.sql';
+	check: 'check1.sql';
+	check: 'check2.sql';
+	//dir: './sqlcurrent_sqlscripts/operational/_configurations';
+}
+
+print symbols;
+init nexus;
+reset nexus;
+create nexus;
+update nexus;
 check nexus;
+//apply configuration qa to nexus;

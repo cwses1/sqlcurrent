@@ -31,17 +31,14 @@ class CreateDatabaseAppService ():
 		symbolTableManager = self.symbolTableManager
 		databaseSymbolName = self.databaseSymbolName
 		databaseSymbol = self.databaseSymbol
-		currentDateTime = self.currentDateTime
-		currentDateTimeFormatted = self.currentDateTimeFormatted
-		batchId = self.batchId
+		databaseClient = self.databaseClient
 		hasBranchSymbol = self.hasBranchSymbol
 		branchSymbol = self.branchSymbol
 		branchSymbolName = self.branchSymbolName
-		databaseClient = self.databaseClient
+		currentDateTime = self.currentDateTime
+		currentDateTimeFormatted = self.currentDateTimeFormatted
+		batchId = self.batchId
 
-		#
-		# TELL THE USER WHAT WE'RE DOING.
-		#
 		print('{}: Creating database.'.format(databaseSymbolName))
 
 		#
@@ -65,3 +62,5 @@ class CreateDatabaseAppService ():
 
 		if databaseHasCreateScripts:
 			scriptRunnerService.runDatabaseCreateScripts()
+
+		print('{}: Create database complete.'.format(databaseSymbolName))

@@ -30,6 +30,7 @@ statement: serverStatement
 	| printSymbolsStatement
 	| checkDatabaseStatement
 	| resetDatabaseStatement
+	| initDatabaseStatement
 	;
 
 serverStatement: 'server' SYMBOL_ID '{' serverPropList '}';
@@ -94,3 +95,5 @@ applyConfigurationToDatabaseStatement: 'apply' 'configuration'? SYMBOL_ID 'to' '
 applyConfigurationToDatabaseListStatement: 'apply' 'configuration'? SYMBOL_ID 'to' 'databases' whereClause? orderByClause? ';';
 
 printSymbolsStatement: 'print' 'symbols' ';';
+
+initDatabaseStatement: 'init' ('standalone' | 'branched')? 'database'? SYMBOL_ID ('in'? 'branch' expr)? ';';

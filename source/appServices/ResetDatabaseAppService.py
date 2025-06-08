@@ -101,3 +101,5 @@ class ResetDatabaseAppService ():
 			# DELETE THE UPDATE TRACKING FILE FOR THE STANDALONE DATABASE.
 			#
 			updateTrackingFileWriter.deleteDatabaseFile(databaseSymbolName)
+
+		print('{}: Reset database complete.'.format(databaseSymbolName))

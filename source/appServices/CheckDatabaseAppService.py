@@ -48,6 +48,8 @@ class CheckDatabaseAppService ():
 		specifiedVersionNumber = self.specifiedVersionNumber
 		databaseClient = self.databaseClient
 
+		print('{}: Checking database.'.format(databaseSymbolName))
+
 		#
 		# GET THE CURRENT DATABASE VERSION.
 		#
@@ -94,15 +96,20 @@ class CheckDatabaseAppService ():
 			lastSuccessfulVersionSymbolName = VersionSymbolNamer.createName(branchSymbolName, lastSuccessfulVersionNumber)
 		else:
 			lastSuccessfulVersionNumber = updateTrackingFileReader.readLastSuccessfulVersionNumberForDatabase(databaseSymbolName)
-			lastSuccessfulVersionSymbolName = VersionSymbolNamer.createName(databaseSymbolName, lastSuccessfulVersionNumber)
+			lastSuccessfulVersionSymbolName = VersionSymbolNamer.createName('default', lastSuccessfulVersionNumber)
 
 		#
 		# IF WE CANNOT FIND THE LAST SUCCESSFUL VERSION SYMBOL IN THE UPDATE TRACKING FILE THEN WE CANNOT PROCEED.
 		#
 		if not self.symbolTableManager.hasSymbolByName(lastSuccessfulVersionSymbolName):
-			print('{}: Version \'{}\' for branch \'{}\' not defined.'.format(databaseSymbolName, lastSuccessfulVersionNumber, branchSymbolName))
-			print('{0}: Check \'{1}\' canceled for database \'{0}\'.'.format(databaseSymbolName))
-			return
+			if hasBranchSymbol:
+				print('{}: Version \'{}\' for branch \'{}\' not defined.'.format(databaseSymbolName, lastSuccessfulVersionNumber, branchSymbolName))
+				print('{0}: Check \'{1}\' canceled for database \'{0}\'.'.format(databaseSymbolName))
+				return
+			else:
+				print('{0}: Version {1} not defined.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
+				print('{0}: Check canceled.'.format(databaseSymbolName))
+				return
 
 		#
 		# GET THE LAST SUCCESSFUL VERSION SYMBOL.
@@ -139,7 +146,7 @@ class CheckDatabaseAppService ():
 			if hasBranchSymbol:
 				versionSymbols = VersionSymbolLoader.getPreviousVersionSymbolsBeforeVersionNumber(lastSuccessfulVersionNumber, branchSymbolName, symbolTableManager)
 			else:
-				versionSymbols = VersionSymbolLoader.getPreviousVersionSymbolsBeforeVersionNumber(lastSuccessfulVersionNumber, databaseSymbolName, symbolTableManager)
+				versionSymbols = VersionSymbolLoader.getPreviousVersionSymbolsBeforeVersionNumber(lastSuccessfulVersionNumber, 'default', symbolTableManager)
 
 			versionSymbols.append(lastSuccessfulVersionSymbol)
 
@@ -181,16 +188,10 @@ class CheckDatabaseAppService ():
 			checkScriptListLength = len(checkScriptList)
 			checkScriptNumber:int = 0
 
-			if checkScriptListLength == 1:
-				if hasBranchSymbol:
-					print('{0}: Running 1 check script against version \'{1}\' in branch \'{2}\'.'.format(databaseSymbolName, versionNumber, branchSymbolName))
-				else:
-					print('{0}: Running 1 check script against version \'{1}\'.'.format(databaseSymbolName, versionNumber))
+			if hasBranchSymbol:
+				print('{0}: Checking version {1} in branch \'{2}\'.'.format(databaseSymbolName, versionNumber, branchSymbolName))
 			else:
-				if hasBranchSymbol:
-					print('{0}: Running {1} check scripts against version \'{2}\' in branch \'{3}\'.'.format(databaseSymbolName, checkScriptListLength, versionNumber, branchSymbolName))
-				else:
-					print('{0}: Running {1} check scripts against version \'{2}\'.'.format(databaseSymbolName, checkScriptListLength, versionNumber))
+				print('{0}: Checking version {1}.'.format(databaseSymbolName, versionNumber))
 
 			for currentFilePath in checkScriptList:
 				checkScriptNumber += 1
@@ -222,13 +223,10 @@ class CheckDatabaseAppService ():
 				scriptRunnerResultSet = scriptRunner.runScript(checkScriptFilePath)
 
 				if scriptRunnerResultSet.scriptFailed:
-					print('{0}: Check script {1} of {2} failed for version \'{3}\'.'.format(databaseSymbolName, checkScriptNumber, checkScriptListLength, versionNumber))
-					print('{0}: {1}'.format(databaseSymbolName, scriptRunnerResultSet.scriptFailedReason))
+					print('{0}: Failure Reason: {1}'.format(databaseSymbolName, scriptRunnerResultSet.scriptFailedReason))
 					return
-				else:
-					print('{0}: Check script {1} of {2} passed.'.format(databaseSymbolName, checkScriptNumber, checkScriptListLength))
 
 		#
 		# TELL THE USER THAT THE CONFIGURATION WAS SUCCESSFUL.
 		#
-		print('{0}: Successfully checked database \'{0}\'.'.format(databaseSymbolName))
+		print('{0}: Check database complete.'.format(databaseSymbolName))

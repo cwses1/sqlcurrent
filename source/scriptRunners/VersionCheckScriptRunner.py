@@ -84,7 +84,7 @@ class VersionCheckScriptRunner ():
 		if hasBranchSymbol:
 			print('{0}: Running check script {3} of {4}: \'{1}\' in version \'{2}\' for branch \'{5}\'.'.format(databaseSymbolName, scriptFilePath, versionNumber, scriptNumber, scriptListLength, branchName))
 		else:
-			print('{0}: Running check script {3} of {4}: \'{1}\' in version \'{2}\'.'.format(databaseSymbolName, scriptFilePath, versionNumber, scriptNumber, scriptListLength))
+			print('{0}: Running \'{1}\'.'.format(databaseSymbolName, scriptFilePath))
 			
 		#
 		# GET THE SCRIPT TEXT.
@@ -102,12 +102,15 @@ class VersionCheckScriptRunner ():
 
 			if scriptFailed:
 				updateTrackingLine.result = 'failure'
+				print('{0}: Failure.'.format(databaseSymbolName))
 			else:
 				updateTrackingLine.result = 'success'
+				print('{0}: Success.'.format(databaseSymbolName))
 
 			return ScriptRunnerResultSetFactory.createResultSetFromRow(scriptFailed, scriptFailedReason)
 		except Exception as e:
 			updateTrackingLine.result = 'failure'
+			print('{0}: Failure.'.format(databaseSymbolName))
 			return ScriptRunnerResultSetFactory.createFailureResultSet('{0}: Error running check script: \'{1}\' in version \'{2}\' for branch \'{3}\'.'.format(databaseSymbolName, e, versionNumber, branchName))
 		finally:
 			if hasBranchSymbol:

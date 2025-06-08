@@ -410,6 +410,6 @@ class ScriptRunnerAppService ():
 			if hasBranchSymbol:
 				updateTrackingLine.branch = branchSymbolName
 			else:
-				updateTrackingLine.branch = databaseSymbolName
+				updateTrackingLine.branch = 'default'
 
 			updateTrackingFileWriter.writeDatabaseUpdateTrackingLine(databaseSymbolName, updateTrackingLine)

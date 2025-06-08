@@ -1,7 +1,6 @@
 datetime,operation,version,result,script,batchId,name,branch
-2025-06-07T12:56:09,create,1.0.0,success,./sqlcurrent_sqlscripts/standalone/nexus/create/database_create1.sql,acd78a94e4ed4f22a7e35bac728312b0,nexus,nexus
-2025-06-07T12:56:09,create,1.0.0,success,./sqlcurrent_sqlscripts/standalone/nexus/create/database_create2.sql,acd78a94e4ed4f22a7e35bac728312b0,nexus,nexus
-2025-06-07T12:56:09,check,1.0.0,success,./sqlcurrent_sqlscripts/standalone/nexus/versions/1.0.0/database_check1.sql,ab0694b66e044e53856c093c7a15bc90,nexus,nexus
-2025-06-07T12:56:09,check,1.0.0,failure,./sqlcurrent_sqlscripts/standalone/nexus/versions/1.0.0/database_check2.sql,ab0694b66e044e53856c093c7a15bc90,nexus,nexus
-2025-06-07T12:57:13,check,1.0.0,success,./sqlcurrent_sqlscripts/standalone/nexus/versions/1.0.0/database_check1.sql,b49f1a8c65534106b45ab629b9114d03,nexus,nexus
-2025-06-07T12:57:13,check,1.0.0,failure,./sqlcurrent_sqlscripts/standalone/nexus/versions/1.0.0/database_check2.sql,b49f1a8c65534106b45ab629b9114d03,nexus,nexus
+2025-06-07T22:54:47,create,1.0.0,success,./sqlcurrent_sqlscripts/standalone/nexus/create/database_create1.sql,87dc103ed23a4726997c63e972842c30,nexus,default
+2025-06-07T22:54:47,create,1.0.0,success,./sqlcurrent_sqlscripts/standalone/nexus/create/database_create2.sql,87dc103ed23a4726997c63e972842c30,nexus,default
+2025-06-07T22:54:47,update,1.1.1,success,./sqlcurrent_sqlscripts/standalone/nexus/versions/1.1.1/apply1.sql,ecbb916489554d4c8af46dacb39b3584,nexus,default
+2025-06-07T22:54:48,update,1.1.1,success,./sqlcurrent_sqlscripts/standalone/nexus/versions/1.1.1/apply2.sql,ecbb916489554d4c8af46dacb39b3584,nexus,default
+2025-06-07T22:54:48,check,1.0.0,failure,./sqlcurrent_sqlscripts/standalone/nexus/versions/1.0.0/database_check1.sql,f60121fc4b244441af73a6a9c4a63732,nexus,nexus

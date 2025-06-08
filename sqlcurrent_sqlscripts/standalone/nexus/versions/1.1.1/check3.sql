@@ -1,4 +1,4 @@
-drop function if exists checkfunction ();
+drop function if exists checkfunction();
 
 create or replace function checkfunction () returns table (script_failed integer, script_failed_reason varchar(256)) as $$
 declare

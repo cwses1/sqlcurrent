@@ -79,10 +79,16 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		globalSymbolTable = SymbolTable()
 		globalSymbolTable.name = 'Global'
 
+		#
+		# SET THE UPDATE TRACKING DIRECTORY.
+		#
 		globalUpdateTrackingDirSymbol = Symbol('globalEnvUpdateTrackingDir', SymbolType.String)
 		globalUpdateTrackingDirSymbol.value = StringExprFactory.createExpr('globalEnvUpdateTrackingDir', env.globalEnvUpdateTrackingDir)
 		globalSymbolTable.insertSymbol(globalUpdateTrackingDirSymbol)
 
+		#
+		# SET THE SQL SCRIPTS DIRECTORY.
+		#
 		globalEnvSqlScriptsDirSymbol = Symbol('globalEnvSqlScriptsDir', SymbolType.String)
 		globalEnvSqlScriptsDirSymbol.value = StringExprFactory.createExpr('globalEnvSqlScriptsDir', env.globalEnvSqlScriptsDir)
 		globalSymbolTable.insertSymbol(globalEnvSqlScriptsDirSymbol)
@@ -211,10 +217,10 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		currentSymbolTable.contextSymbol = None
 
 		#
-		# IF THE DATABASE DOES NOT HAVE A BRANCH, THEN JUST USE STRING databaseSymbolName.
+		# IF THE DATABASE DOES NOT HAVE A BRANCH, THEN JUST USE STRING default.
 		# ELSEWHERE - WE CHECK IF THE BRANCH VALUE IS A REFERENCE TO A SYMBOL OR JUST A STRING WHEN VERSIONING.
 		#
-		branchName = databaseSymbolName
+		branchName = 'default'
 
 		if createdSymbol.hasProp('branch'):
 			branchPropExpr = createdSymbol.getProp('branch')
@@ -228,7 +234,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		else:
 			branchExpr = Expr()
 			branchExpr.type = SymbolType.String
-			branchExpr.value = databaseSymbolName
+			branchExpr.value = 'default'
 			createdSymbol.setProp('branch', branchExpr)
 
 		#
@@ -307,7 +313,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			environmentExpr = Expr()
 			environmentExpr.name = 'environment'
 			environmentExpr.type = SymbolType.String
-			environmentExpr.value = databaseSymbolName
+			environmentExpr.value = 'default'
 			createdSymbol.setProp('environment', environmentExpr)
 
 	def visitDatabaseProp(self, ctx:SqlCurrentParser.DatabasePropContext):
@@ -997,7 +1003,49 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# updateDatabaseStatement: 'update' 'database'? SYMBOL_ID toVersionClause? ';';
 		#
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+		currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
 
+		#
+		# CREATE A BATCH ID.
+		#
+		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+
+		#
+		# GET THE DATABASE SYMBOL NAME AND SYMBOL.
+		#
+		databaseSymbolName = ctx.SYMBOL_ID().getText()
+
+		if not self._symbolTableManager.hasSymbolByName(databaseSymbolName):
+			print('{}: Database not found.'.format(databaseSymbolName))
+			return
+		
+		databaseSymbol = self._symbolTableManager.getSymbolByName(databaseSymbolName)
+
+		#
+		# GET THE DATABASE CLIENT.
+		#
+		driverValue = databaseSymbol.getProp('driver').value
+		connStringValue = databaseSymbol.getProp('connString').value
+		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
+		databaseClient.connString = connStringValue
+
+		#
+		# GET THE BRANCH NAME AND SYMBOL FOR THIS DATABASE.
+		#
+		hasBranchSymbol = False
+		branchSymbol = None
+		branchSymbolName = None
+
+		if databaseSymbol.hasProp('branch'):
+			branchPropExpr = databaseSymbol.getProp('branch')
+			hasBranchSymbol = branchPropExpr.type == SymbolType.ReferenceToSymbol
+			if hasBranchSymbol:
+				branchSymbol = ExprReader.readSymbol(branchPropExpr)
+				branchSymbolName = branchSymbol.name
 		#
 		# GET THE SPECIFIED VERSION NUMBER.
 		# A SPECIFIED VERSION NUMBER OF NONE MEANS GO ALL THE WAY TO THE LAST VERSION IN THE SCRIPT, WHATEVER THAT MAY BE - THE USER MIGHT NOT KNOW WHAT THAT IS.
@@ -1008,10 +1056,18 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			specifiedVersionNumber = self.visitToVersionClause(ctx.toVersionClause())
 
 		appService = UpdateDatabaseAppService()
-		appService.databaseSymbolName = ctx.SYMBOL_ID().getText()
+		appService.databaseSymbolName = databaseSymbolName
+		appService.databaseSymbol = databaseSymbol
+		appService.databaseClient = databaseClient
+		appService.hasBranchSymbol = hasBranchSymbol
+		appService.branchSymbol = branchSymbol
+		appService.branchSymbolName = branchSymbolName
 		appService.symbolTableManager = self._symbolTableManager
 		appService.versionWasSpecified = ctx.toVersionClause() != None
 		appService.specifiedVersionNumber = specifiedVersionNumber
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = currentDateTimeFormatted
+		appService.batchId = batchId
 		appService.run()
 
 	def visitToVersionClause(self, ctx:SqlCurrentParser.ToVersionClauseContext):
@@ -1238,9 +1294,65 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# revertDatabaseStatement: 'revert' 'database'? SYMBOL_ID toVersionClause ';';
 		#
+		
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+		currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+
+		#
+		# CREATE A BATCH ID.
+		#
+		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+
+		#
+		# GET THE DATABASE SYMBOL NAME AND SYMBOL.
+		#
+		databaseSymbolName = ctx.SYMBOL_ID().getText()
+
+		if not self._symbolTableManager.hasSymbolByName(databaseSymbolName):
+			print('{}: Database not found.'.format(databaseSymbolName))
+			return
+		
+		databaseSymbol = self._symbolTableManager.getSymbolByName(databaseSymbolName)
+
+		#
+		# GET THE DATABASE CLIENT.
+		#
+		driverValue = databaseSymbol.getProp('driver').value
+		connStringValue = databaseSymbol.getProp('connString').value
+		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
+		databaseClient.connString = connStringValue
+
+		#
+		# GET THE BRANCH NAME AND SYMBOL FOR THIS DATABASE.
+		#
+		hasBranchSymbol = False
+		branchSymbol = None
+		branchSymbolName = None
+
+		if databaseSymbol.hasProp('branch'):
+			branchPropExpr = databaseSymbol.getProp('branch')
+			hasBranchSymbol = branchPropExpr.type == SymbolType.ReferenceToSymbol
+			if hasBranchSymbol:
+				branchSymbol = ExprReader.readSymbol(branchPropExpr)
+				branchSymbolName = branchSymbol.name
+
+		#
+		# RUN THE DATABASE CHECKS.
+		#
 		appService = RevertDatabaseAppService()
-		appService.databaseSymbolName = ctx.SYMBOL_ID().getText()
+		appService.databaseSymbolName = databaseSymbolName
+		appService.databaseSymbol = databaseSymbol
+		appService.hasBranchSymbol = hasBranchSymbol
+		appService.branchSymbol = branchSymbol
+		appService.branchSymbolName = branchSymbolName
 		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = currentDateTimeFormatted
+		appService.batchId = batchId
+		appService.databaseClient = databaseClient
 		appService.specifiedVersionNumber = self.visitToVersionClause(ctx.toVersionClause())
 		appService.run()
 
@@ -1624,3 +1736,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		appService.batchId = batchId
 		appService.databaseClient = databaseClient
 		appService.run()
+
+	def visitInitDatabaseStatement(self, ctx:SqlCurrentParser.InitDatabaseStatementContext):
+		return self.visitChildren(ctx)

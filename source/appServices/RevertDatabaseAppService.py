@@ -19,18 +19,30 @@ from versionUtils.VersionSymbolSortUtil import *
 class RevertDatabaseAppService ():
 
 	def __init__ (self):
+		self.databaseSymbolName = None
+		self.databaseSymbol = None
+		self.hasBranchSymbol = None
+		self.branchSymbol = None
+		self.branchSymbolName = None
 		self.symbolTableManager = None
-		self.databaseSymbolName:str = None
+		self.currentDateTime = None
+		self.currentDateTimeFormatted = None
+		self.batchId = None
+		self.databaseClient = None
 		self.specifiedVersionNumber:str = None
 
 	def run (self):
-		#
-		# GET THE DATABASE SYMBOL.
-		#
-		symbolTableManager = self.symbolTableManager
 		databaseSymbolName = self.databaseSymbolName
-		databaseSymbol = symbolTableManager.getSymbolByName(databaseSymbolName)
+		databaseSymbol = self.databaseSymbol
+		hasBranchSymbol = self.hasBranchSymbol
+		branchSymbol = self.branchSymbol
+		branchSymbolName = self.branchSymbolName
+		symbolTableManager = self.symbolTableManager
+		currentDateTime = self.currentDateTime
+		currentDateTimeFormatted = self.currentDateTimeFormatted
+		batchId = self.batchId
 		specifiedVersionNumber = self.specifiedVersionNumber
+		databaseClient = self.databaseClient
 
 		#
 		# PREPARE FOR THE DATABASE REVERSIONS BY CREATING OBJECTS WE NEED THAT ALSO CAN BE REUSED.
@@ -42,62 +54,52 @@ class RevertDatabaseAppService ():
 		updateTrackingFileWriter.trackingDir = SymbolReader.readString(symbolTableManager.getSymbolByName('globalEnvUpdateTrackingDir'))
 
 		#
-		# CREATE A BATCH ID.
-		#
-		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
-
-		#
-		# REVERT THE DATABASE.
-		#
-
-		#
-		# GET THE DATABASE CLIENT FOR THIS DATABASE VIA THE driver PROPERTY.
-		#
-		driverValue = databaseSymbol.getProp('driver').value
-		connStringValue = databaseSymbol.getProp('connString').value
-		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
-		databaseClient.connString = connStringValue
-
-		#
-		# GET THE DATABASE BRANCH.
-		#
-		branchSymbol = databaseSymbol.getProp('branch').value
-		branchName = branchSymbol.name
-
-		#
 		# THE DATABASE DETERMINES THE BRANCH.
 		# GET THE VERSION SYMBOL FOR THE BRANCH.
 		#
-		specifiedVersionSymbolName = VersionSymbolNamer.createName(branchName, specifiedVersionNumber)
-		specifiedVersionSymbol = None
-
+		if hasBranchSymbol:
+			specifiedVersionSymbolName = VersionSymbolNamer.createName(branchSymbolName, specifiedVersionNumber)
+		else:
+			specifiedVersionSymbolName = VersionSymbolNamer.createName('default', specifiedVersionNumber)
+		
 		if symbolTableManager.hasSymbolByName(specifiedVersionSymbolName):
 			specifiedVersionSymbol = symbolTableManager.getSymbolByName(specifiedVersionSymbolName)
 		else:
-			print('{}: Version {} for branch {} not defined. Revert canceled for this database.'.format(databaseSymbolName, specifiedVersionNumber, branchName))
+			if hasBranchSymbol:
+				print('{}: Version {} for branch {} not defined. Revert canceled for this database.'.format(databaseSymbolName, specifiedVersionNumber, branchSymbolName))
+			else:
+				print('{}: Version {} not defined. Revert canceled for this database.'.format(databaseSymbolName, specifiedVersionNumber))
 			return
 
 		#
 		# IF THE UPDATE TRACKING DOES NOT EXIST, THEN WE ARE DONE.
 		#
-		if not updateTrackingFileWriter.fileExists(branchName, databaseSymbolName):
+		if hasBranchSymbol and not updateTrackingFileWriter.fileExists(branchSymbolName, databaseSymbolName):
+			print('{}: Database not created. Revert canceled for this database.'.format(databaseSymbolName))
+			return
+		elif not updateTrackingFileWriter.databaseFileExists(databaseSymbolName):
 			print('{}: Database not created. Revert canceled for this database.'.format(databaseSymbolName))
 			return
 
 		#
 		# GET THE DATABASE'S CURRENT VERSION.
 		#
-		lastSuccessfulVersionNumber = updateTrackingFileReader.readLastSuccessfulVersionNumber(branchName, databaseSymbolName)
+		if hasBranchSymbol:
+			lastSuccessfulVersionNumber = updateTrackingFileReader.readLastSuccessfulVersionNumberForBranch(branchSymbolName, databaseSymbolName)
+		else:
+			lastSuccessfulVersionNumber = updateTrackingFileReader.readLastSuccessfulVersionNumberForDatabase(databaseSymbolName)
 
 		#
 		# IF WE CANNOT FIND THE CURRENT VERSION OF THE DATABASE THEN WE CANNOT PROCEED.
 		#
 		if lastSuccessfulVersionNumber == None:
-			print('{}: Could not determine current version. Revert canceled for this database.'.format(databaseSymbolName))
+			print('{}: Could not determine current version of this database in the update tracking file.'.format(databaseSymbolName))
+			print('{}: Stopping.'.format(databaseSymbolName))
 			return
 
 		if specifiedVersionNumber == lastSuccessfulVersionNumber:
-			print('{}: Database already at version {}. Revert canceled for this database.'.format(databaseSymbolName, specifiedVersionNumber))
+			print('{}: Database already has version {}.'.format(databaseSymbolName, specifiedVersionNumber))
+			print('{}: Stopping.'.format(databaseSymbolName))
 			return
 
 		#
@@ -108,11 +110,16 @@ class RevertDatabaseAppService ():
 		#
 		# GET THE LAST SUCCESSFUL VERSION SYMBOL.
 		#
-		lastSuccessfulVersionSymbolName = VersionSymbolNamer.createName(branchName, lastSuccessfulVersionNumber)
-		lastSuccessfulVersionSymbol = None
+		if hasBranchSymbol:
+			lastSuccessfulVersionSymbolName = VersionSymbolNamer.createName(branchSymbolName, lastSuccessfulVersionNumber)
+		else:
+			lastSuccessfulVersionSymbolName = VersionSymbolNamer.createName('default', lastSuccessfulVersionNumber)
 
 		if not symbolTableManager.hasSymbolByName(lastSuccessfulVersionSymbolName):
-			print('{}: Current version {} for branch {} is not defined. Revert canceled for this database.'.format(databaseSymbolName, lastSuccessfulVersionNumber, branchName))
+			if hasBranchSymbol:
+				print('{}: Current version {} for branch {} is not defined. Revert canceled for this database.'.format(databaseSymbolName, lastSuccessfulVersionNumber, branchSymbolName))
+			else:
+				print('{}: Current version {} is not defined. Revert canceled for this database.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
 			return
 
 		lastSuccessfulVersionSymbol = symbolTableManager.getSymbolByName(lastSuccessfulVersionSymbolName)
@@ -138,7 +145,11 @@ class RevertDatabaseAppService ():
 		# THIS IS ALL THE VERSIONS STARTING (AND INCLUDING) THE CURRENT (LAST SUCCESSFUL) VERSION DOWN TO BUT NOT INCLUDING THE SPECIFIED VERSION.
 		# WE THEN HAVE TO RUN A REVERT FOR EVERY VERSION EXCEPT THE SPECIFIED VERSION.
 		#
-		previousVersionSymbols = VersionSymbolLoader.getPreviousVersionSymbolsBeforeVersionNumber(lastSuccessfulVersionNumber, branchName, symbolTableManager)
+		if hasBranchSymbol:
+			previousVersionSymbols = VersionSymbolLoader.getPreviousVersionSymbolsBeforeVersionNumber(lastSuccessfulVersionNumber, branchSymbolName, symbolTableManager)
+		else:
+			previousVersionSymbols = VersionSymbolLoader.getPreviousVersionSymbolsBeforeVersionNumber(lastSuccessfulVersionNumber, 'default', symbolTableManager)
+
 		previousVersionSymbols.append(lastSuccessfulVersionSymbol)
 
 		#
@@ -175,9 +186,21 @@ class RevertDatabaseAppService ():
 			print('{}: {} versions to revert. Reversions are run incrementally.'.format(databaseSymbolName, versionRevertCount))
 
 		#
+		# VERIFY THAT EVERY VERSION HAS AT LEAST 1 REVERT SCRIPT DEFINED.
+		#
+		for previousVersionSymbol in previousVersionSymbols:
+			if not previousVersionSymbol.hasProp('revert'):
+				print('{0}: Version {1} has no revert script defined.'.format(databaseSymbolName, VersionSymbolFormatter.formatVersionString(previousVersionSymbol)))
+				print('{0}: Stopping revert.'.format(databaseSymbolName))
+				return
+
+		#
 		# THE UPDATE TRACKING FILE MUST EXIST.
 		#
-		if not updateTrackingFileWriter.fileExists(branchName, databaseSymbolName):
+		if hasBranchSymbol and not updateTrackingFileWriter.fileExists(branchSymbolName, databaseSymbolName):
+			print('{}: Database not created. Revert canceled for this database.'.format(databaseSymbolName))
+			return
+		elif not updateTrackingFileWriter.databaseFileExists(databaseSymbolName):
 			print('{}: Database not created. Revert canceled for this database.'.format(databaseSymbolName))
 			return
 
@@ -212,16 +235,12 @@ class RevertDatabaseAppService ():
 			# GET THE SCRIPT FILE PATH FACTORY.
 			#
 			scriptFilePathFactory = ScriptFilePathFactory()
-			scriptFilePathFactory.branchSymbolName = branchName
-			scriptFilePathFactory.databaseName = databaseSymbolName
 			scriptFilePathFactory.sqlScriptsDir = SymbolReader.readString(symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
-			
+			scriptFilePathFactory.branchSymbolName = branchSymbolName
+			scriptFilePathFactory.databaseName = databaseSymbolName
+			scriptFilePathFactory.versionNumber = previousVersionStr
 			if previousVersionSymbol.hasProp('dir'):
 				scriptFilePathFactory.versionDir = SymbolReader.readPropAsString(previousVersionSymbol, 'dir')
-
-			#
-			# TO DO: RUN CHECK SCRIPTS.
-			#
 
 			#
 			# RUN REVERT SCRIPTS.
@@ -230,14 +249,21 @@ class RevertDatabaseAppService ():
 				#
 				# GET THE FULL REVERT SCRIPT FILE PATH.
 				#
-				revertScriptFilePath = scriptFilePathFactory.createPath(revertString)
+				if hasBranchSymbol:
+					revertScriptFilePath = scriptFilePathFactory.createRevertPathForBranch(revertString)
+				else:
+					revertScriptFilePath = scriptFilePathFactory.createRevertPathForStandaloneDatabase(revertString)
 
 				#
 				# START THE UPDATE TRACKING FILE.
 				#
 				updateTrackingLine = UpdateTrackingLine()
 				updateTrackingLine.databaseName = databaseSymbolName
-				updateTrackingLine.branch = branchName
+				if hasBranchSymbol:
+					updateTrackingLine.branch = branchSymbolName
+				else:
+					updateTrackingLine.branch = 'default'
+					
 				updateTrackingLine.datetime = DateTimeFormatter.formatForUpdateTrackingFile(DateTimeUtil.getCurrentLocalDateTime())
 				updateTrackingLine.batchId = batchId
 				updateTrackingLine.script = revertScriptFilePath
@@ -266,10 +292,9 @@ class RevertDatabaseAppService ():
 					updateTrackingLine.result = 'failure'
 					return
 				finally:
-					updateTrackingFileWriter.writeUpdateTrackingLine(branchName, databaseSymbolName, updateTrackingLine)
+					if hasBranchSymbol:
+						updateTrackingFileWriter.writeUpdateTrackingLine(branchSymbolName, databaseSymbolName, updateTrackingLine)
+					else:
+						updateTrackingFileWriter.writeDatabaseUpdateTrackingLine(databaseSymbolName, updateTrackingLine)
 
-		print('{}: Revert to version {} successful for this database.'.format(databaseSymbolName, specifiedVersionNumber))
-
-			#
-			# TO DO: RUN PRECHECK SCRIPTS.
-			#
+		print('{}: Revert to version {} complete.'.format(databaseSymbolName, specifiedVersionNumber))
