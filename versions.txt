@@ -1,0 +1,9 @@
+version 1.1.1
+{
+	apply: 'apply1.sql';
+	apply: 'apply2.sql';
+	check: 'check3.sql';
+	check: 'check4.sql';
+	revert: 'revert1.sql';
+	revert: 'revert2.sql';
+}

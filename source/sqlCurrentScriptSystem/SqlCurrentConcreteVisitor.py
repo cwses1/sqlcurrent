@@ -72,30 +72,6 @@ from appServices.ResetDatabaseAppService import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
-	def __init__ (self, env:Env):
-		#
-		# CREATE THE GLOBAL SYMBOL TABLE.
-		#
-		globalSymbolTable = SymbolTable()
-		globalSymbolTable.name = 'Global'
-
-		#
-		# SET THE UPDATE TRACKING DIRECTORY.
-		#
-		globalUpdateTrackingDirSymbol = Symbol('globalEnvUpdateTrackingDir', SymbolType.String)
-		globalUpdateTrackingDirSymbol.value = StringExprFactory.createExpr('globalEnvUpdateTrackingDir', env.globalEnvUpdateTrackingDir)
-		globalSymbolTable.insertSymbol(globalUpdateTrackingDirSymbol)
-
-		#
-		# SET THE SQL SCRIPTS DIRECTORY.
-		#
-		globalEnvSqlScriptsDirSymbol = Symbol('globalEnvSqlScriptsDir', SymbolType.String)
-		globalEnvSqlScriptsDirSymbol.value = StringExprFactory.createExpr('globalEnvSqlScriptsDir', env.globalEnvSqlScriptsDir)
-		globalSymbolTable.insertSymbol(globalEnvSqlScriptsDirSymbol)
-
-		self._symbolTableManager = SymbolTableManager()
-		self._symbolTableManager.pushSymbolTable(globalSymbolTable)
-
 	def visitSqlCurrentScript(self, ctx:SqlCurrentParser.SqlCurrentScriptContext):
 		self.visitChildren(ctx)
 
@@ -1738,4 +1714,21 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		appService.run()
 
 	def visitInitDatabaseStatement(self, ctx:SqlCurrentParser.InitDatabaseStatementContext):
-		return self.visitChildren(ctx)
+		#
+		# initDatabaseStatement: 'init' ('standalone' | 'branched')? 'database'? SYMBOL_ID ('in'? 'branch' expr)? ';';
+		#
+
+		#
+		# DETERMINE IF THIS IS A STANDALONE DATABASE OR IF IT HAS A BRANCH.
+		#
+
+		#
+		# GET THE DATABASE SYMBOL NAME AND SYMBOL.
+		#
+		databaseSymbolName = ctx.SYMBOL_ID().getText()
+
+		if not self._symbolTableManager.hasSymbolByName(databaseSymbolName):
+			print('{}: Database not found.'.format(databaseSymbolName))
+			return
+		
+		databaseSymbol = self._symbolTableManager.getSymbolByName(databaseSymbolName)
