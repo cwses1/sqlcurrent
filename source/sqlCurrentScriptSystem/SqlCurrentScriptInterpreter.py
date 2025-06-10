@@ -31,8 +31,6 @@ class SqlCurrentScriptInterpreter ():
 
 		with open(absoluteScriptFilePath, encoding='utf-8') as scriptFileHandle:
 			for scriptLine in scriptFileHandle.readlines():
-				print(scriptLine)
-
 				if scriptLine.startswith('@include'):
 					#
 					# EXECUTE THE INCLUDED SCRIPT.

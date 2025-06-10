@@ -13,6 +13,7 @@ from .DatabaseNameValueValidator import *
 from .DatabaseDescValueValidator import *
 from .DatabaseCheckValueValidator import *
 from .DatabaseResetValueValidator import *
+from .DatabaseDirValueValidator import *
 
 class DatabaseValueValidator ():
 
@@ -43,5 +44,7 @@ class DatabaseValueValidator ():
 				return DatabaseCheckValueValidator.isNotValid(value)
 			case 'reset':
 				return DatabaseResetValueValidator.isNotValid(value)
+			case 'dir':
+				return DatabaseDirValueValidator.isNotValid(value)
 			case _:
 				raise MatchUnderscoreError('DatabaseValueValidator hit the default case for property name: {}.'.format(name))

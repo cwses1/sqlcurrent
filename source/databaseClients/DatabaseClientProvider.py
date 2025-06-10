@@ -13,6 +13,8 @@ class DatabaseClientProvider ():
 		match driver:
 			case 'postgres':
 				return PostgresClient()
+			case 'postgresql':
+				return PostgresClient()
 			case 'psycopg2':
 				return Psycopg2Client()
 			case 'influx':

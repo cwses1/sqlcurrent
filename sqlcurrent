@@ -1,2 +1,2 @@
 #!/bin/sh
-python source/sqlcurrent.py $@
+python /Users/corywalker/Projects/sqlcurrent/source/sqlcurrent.py $@

@@ -135,9 +135,7 @@ class ScriptRunnerAppService ():
 		scriptFilePathFactory.databaseName = databaseSymbolName
 
 		if databaseSymbol.hasProp('dir'):
-			scriptFilePathFactory.resetDir = SymbolReader.readPropAsString(databaseSymbol, 'dir')
-		else:
-			scriptFilePathFactory.resetDir = 'reset'
+			scriptFilePathFactory.databaseDir = SymbolReader.readPropAsString(databaseSymbol, 'dir')
 
 		#
 		# RUN THE SCRIPTS.
@@ -174,7 +172,7 @@ class ScriptRunnerAppService ():
 			updateTrackingFileWriter.ensureDatabaseFileExists(databaseSymbolName)
 
 			#
-			# TRACK THE UPDATE.
+			# TRACK THE RESET.
 			#
 			updateTrackingLine = UpdateTrackingLine()
 			updateTrackingLine.datetime = currentDateTimeFormatted
@@ -352,10 +350,9 @@ class ScriptRunnerAppService ():
 		scriptFilePathFactory.sqlScriptsDir = SymbolReader.readString(symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
 		scriptFilePathFactory.branchSymbolName = branchSymbolName
 		scriptFilePathFactory.databaseName = databaseSymbolName
-		scriptFilePathFactory.createDir = 'create'
 
 		if databaseSymbol.hasProp('dir'):
-			scriptFilePathFactory.createDir = SymbolReader.readPropAsString(databaseSymbol, 'dir')
+			scriptFilePathFactory.databaseDir = SymbolReader.readPropAsString(databaseSymbol, 'dir')
 
 		#
 		# RUN THE SCRIPTS.

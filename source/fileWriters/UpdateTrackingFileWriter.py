@@ -74,4 +74,6 @@ class UpdateTrackingFileWriter ():
 		os.remove(self.getFilePath(branchName, databaseSymbolName))
 
 	def deleteDatabaseFile (self, databaseSymbolName:str):
-		os.remove(self.getDatabaseFilePath(databaseSymbolName))
+		databaseFilePath = self.getDatabaseFilePath(databaseSymbolName)
+		if os.path.exists(databaseFilePath):
+			os.remove(databaseFilePath)
