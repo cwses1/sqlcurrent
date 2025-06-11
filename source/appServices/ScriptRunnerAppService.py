@@ -54,12 +54,10 @@ class ScriptRunnerAppService ():
 		scriptFilePathFactory = ScriptFilePathFactory()
 		scriptFilePathFactory.sqlScriptsDir = SymbolReader.readString(symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
 		scriptFilePathFactory.branchSymbolName = branchSymbolName
-		scriptFilePathFactory.databaseName = databaseSymbolName
+		scriptFilePathFactory.databaseSymbolName = databaseSymbolName
 
 		if branchSymbol.hasProp('dir'):
-			scriptFilePathFactory.resetDir = SymbolReader.readPropAsString(branchSymbol, 'dir')
-		else:
-			scriptFilePathFactory.resetDir = 'reset'
+			scriptFilePathFactory.specifiedDir = SymbolReader.readPropAsString(branchSymbol, 'dir')
 
 		#
 		# RUN THE SCRIPTS.
@@ -132,10 +130,10 @@ class ScriptRunnerAppService ():
 		#
 		scriptFilePathFactory = ScriptFilePathFactory()
 		scriptFilePathFactory.sqlScriptsDir = SymbolReader.readString(symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
-		scriptFilePathFactory.databaseName = databaseSymbolName
+		scriptFilePathFactory.databaseSymbolName = databaseSymbolName
 
 		if databaseSymbol.hasProp('dir'):
-			scriptFilePathFactory.databaseDir = SymbolReader.readPropAsString(databaseSymbol, 'dir')
+			scriptFilePathFactory.specifiedDir = SymbolReader.readPropAsString(databaseSymbol, 'dir')
 
 		#
 		# RUN THE SCRIPTS.
@@ -235,12 +233,10 @@ class ScriptRunnerAppService ():
 		scriptFilePathFactory = ScriptFilePathFactory()
 		scriptFilePathFactory.sqlScriptsDir = SymbolReader.readString(symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
 		scriptFilePathFactory.branchSymbolName = branchSymbolName
-		scriptFilePathFactory.databaseName = databaseSymbolName
+		scriptFilePathFactory.databaseSymbolName = databaseSymbolName
 
 		if branchSymbol.hasProp('dir'):
-			scriptFilePathFactory.createDir = SymbolReader.readPropAsString(branchSymbol, 'dir')
-		else:
-			scriptFilePathFactory.createDir = 'create'
+			scriptFilePathFactory.specifiedDir = SymbolReader.readPropAsString(branchSymbol, 'dir')
 
 		#
 		# RUN THE SCRIPTS.
@@ -349,10 +345,10 @@ class ScriptRunnerAppService ():
 		scriptFilePathFactory = ScriptFilePathFactory()
 		scriptFilePathFactory.sqlScriptsDir = SymbolReader.readString(symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
 		scriptFilePathFactory.branchSymbolName = branchSymbolName
-		scriptFilePathFactory.databaseName = databaseSymbolName
+		scriptFilePathFactory.databaseSymbolName = databaseSymbolName
 
 		if databaseSymbol.hasProp('dir'):
-			scriptFilePathFactory.databaseDir = SymbolReader.readPropAsString(databaseSymbol, 'dir')
+			scriptFilePathFactory.specifiedDir = SymbolReader.readPropAsString(databaseSymbol, 'dir')
 
 		#
 		# RUN THE SCRIPTS.

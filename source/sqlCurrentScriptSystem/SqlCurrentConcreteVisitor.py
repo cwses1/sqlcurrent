@@ -69,8 +69,12 @@ from validators.ConfigurationValueValidator import *
 from appServices.ApplyConfigurationToDatabaseAppService import *
 from appServices.CheckDatabaseAppService import *
 from appServices.ResetDatabaseAppService import *
+from exceptions.SymbolConflictError import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
+
+	def __init__ (self):
+		self._symbolTableManager:SymbolTableManager = None
 
 	def visitSqlCurrentScript(self, ctx:SqlCurrentParser.SqlCurrentScriptContext):
 		self.visitChildren(ctx)
@@ -84,6 +88,12 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# GET THE SYMBOL NAME.
 		#
 		symbolName = ctx.getChild(1).getText()
+
+		#
+		# IF THE SYMBOL ALREADY EXISTS, THEN THIS IS AN ERROR.
+		#
+		if self._symbolTableManager.hasSymbolByName(symbolName):
+			raise SymbolConflictError(symbolName)
 
 		#
 		# CREATE THE SYMBOL.
@@ -156,31 +166,35 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# GET THE SYMBOL NAME.
 		#
-		symbolName = ctx.getChild(1).getText()
-		databaseSymbolName = symbolName
+		databaseSymbolName = ctx.getChild(1).getText()
+
+		#
+		# IF THE SYMBOL ALREADY EXISTS, THEN THIS IS AN ERROR.
+		#
+		if self._symbolTableManager.hasSymbolByName(databaseSymbolName):
+			raise SymbolConflictError(databaseSymbolName)
 
 		#
 		# CREATE THE SYMBOL.
 		#
-		createdSymbol = Symbol(symbolName, SymbolType.Database)
+		databaseSymbol = Symbol(databaseSymbolName, SymbolType.Database)
 
 		idExpr = Expr()
 		idExpr.name = 'id'
 		idExpr.type = SymbolType.String
-		idExpr.value = symbolName
-
-		createdSymbol.setProp('id', idExpr)
+		idExpr.value = databaseSymbolName
+		databaseSymbol.setProp('id', idExpr)
 
 		#
 		# ADD THE SYMBOL TO THE TABLE.
 		#
 		currentSymbolTable = self._symbolTableManager.getCurrentSymbolTable()
-		currentSymbolTable.insertSymbol(createdSymbol)
+		currentSymbolTable.insertSymbol(databaseSymbol)
 
 		#
 		# PUSH SYMBOL CONTEXT.
 		#
-		currentSymbolTable.contextSymbol = createdSymbol
+		currentSymbolTable.contextSymbol = databaseSymbol
 
 		#
 		# POPULATE SYMBOL PROPERTIES.
@@ -198,8 +212,8 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		branchName = 'default'
 
-		if createdSymbol.hasProp('branch'):
-			branchPropExpr = createdSymbol.getProp('branch')
+		if databaseSymbol.hasProp('branch'):
+			branchPropExpr = databaseSymbol.getProp('branch')
 
 			if branchPropExpr.type == SymbolType.ReferenceToSymbol:
 				branchName = branchPropExpr.value.name
@@ -211,7 +225,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			branchExpr = Expr()
 			branchExpr.type = SymbolType.String
 			branchExpr.value = 'default'
-			createdSymbol.setProp('branch', branchExpr)
+			databaseSymbol.setProp('branch', branchExpr)
 
 		#
 		# ENSURE THE DATABASE HAS A STARTER VERSION.
@@ -219,8 +233,8 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		versionNumber = '1.0.0'
 
-		if createdSymbol.hasProp('version'):
-			versionPropExpr = createdSymbol.getProp('version')
+		if databaseSymbol.hasProp('version'):
+			versionPropExpr = databaseSymbol.getProp('version')
 
 			if versionPropExpr.type == SymbolType.ReferenceToSymbol:
 				starterVersionSymbol = versionPropExpr.value
@@ -236,7 +250,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			versionExpr.name = 'version'
 			versionExpr.type = SymbolType.VersionNumber
 			versionExpr.value = versionNumber
-			createdSymbol.setProp('version', versionExpr)
+			databaseSymbol.setProp('version', versionExpr)
 
 		#
 		# CREATE AN 'ARTIFICIAL' VERSION SYMBOL FOR THE DATABASE STARTER VERSION.
@@ -245,7 +259,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		createdVersionSymbolName = VersionSymbolNamer.createName(branchName, versionNumber)
 		createdVersionSymbol = Symbol(createdVersionSymbolName, SymbolType.Version)
-		createdVersionSymbol.setProp('branch', createdSymbol.getProp('branch'))
+		createdVersionSymbol.setProp('branch', databaseSymbol.getProp('branch'))
 		createdVersionSymbol.setProp('major', VersionNumberParser.parseMajorAsExpr(versionNumber))
 		createdVersionSymbol.setProp('minor', VersionNumberParser.parseMinorAsExpr(versionNumber))
 		createdVersionSymbol.setProp('patch', VersionNumberParser.parsePatchAsExpr(versionNumber))
@@ -254,7 +268,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# ADD THE CHECK SCRIPTS TO THE VERSION.
 		# CHECK SCRIPTS CAN BE DEFINED IN BOTH THE BRANCH AND THE DATABASE DEFINITION, THEY ARE COPIED IN THAT ORDER TO THE VERSION SYMBOL.
 		#
-		branchPropExpr = createdSymbol.getProp('branch')
+		branchPropExpr = databaseSymbol.getProp('branch')
 		checkScriptExprList = []
 
 		#
@@ -269,8 +283,8 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# ADD THE DATABASE CHECK SCRIPTS TO THE VERSION.
 		#
-		if createdSymbol.hasProp('check'):
-			for currentExpr in createdSymbol.getProp('check').value:
+		if databaseSymbol.hasProp('check'):
+			for currentExpr in databaseSymbol.getProp('check').value:
 				checkScriptExprList.append(currentExpr)
 
 		checkExpr = Expr()
@@ -285,12 +299,12 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# ENSURE THE DATABASE HAS A DEFAULT ENVIRONMENT (FOR CONFIGURATIONS DEFINITIONS).
 		# IF THIS DOES NOT EXIST, THEN USE STRING databaseSymbolName.
 		#
-		if not createdSymbol.hasProp('environment'):
+		if not databaseSymbol.hasProp('environment'):
 			environmentExpr = Expr()
 			environmentExpr.name = 'environment'
 			environmentExpr.type = SymbolType.String
 			environmentExpr.value = 'default'
-			createdSymbol.setProp('environment', environmentExpr)
+			databaseSymbol.setProp('environment', environmentExpr)
 
 	def visitDatabaseProp(self, ctx:SqlCurrentParser.DatabasePropContext):
 		#
@@ -390,6 +404,12 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		versionStr = ctx.VERSION_ID().getText()
 		symbolName = branchName + '_' + versionStr
+
+		#
+		# IF THE SYMBOL ALREADY EXISTS, THEN THIS IS AN ERROR.
+		#
+		if self._symbolTableManager.hasSymbolByName(symbolName):
+			raise SymbolConflictError(symbolName)
 
 		#
 		# CREATE THE SYMBOL.
@@ -566,6 +586,12 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		symbolName = ctx.getChild(1).getText()
 
 		#
+		# IF THE SYMBOL ALREADY EXISTS, THEN THIS IS AN ERROR.
+		#
+		if self._symbolTableManager.hasSymbolByName(symbolName):
+			raise SymbolConflictError(symbolName)
+
+		#
 		# CREATE THE SYMBOL.
 		#
 		createdSymbol = Symbol(symbolName, SymbolType.Solution)
@@ -637,6 +663,12 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# GET THE SYMBOL NAME.
 		#
 		symbolName = ctx.getChild(1).getText()
+
+		#
+		# IF THE SYMBOL ALREADY EXISTS, THEN THIS IS AN ERROR.
+		#
+		if self._symbolTableManager.hasSymbolByName(symbolName):
+			raise SymbolConflictError(symbolName)
 
 		#
 		# CREATE THE SYMBOL.
@@ -711,6 +743,12 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# GET THE SYMBOL NAME.
 		#
 		symbolName = ctx.getChild(1).getText()
+
+		#
+		# IF THE SYMBOL ALREADY EXISTS, THEN THIS IS AN ERROR.
+		#
+		if self._symbolTableManager.hasSymbolByName(symbolName):
+			raise SymbolConflictError(symbolName)
 
 		#
 		# CREATE THE SYMBOL.
@@ -1428,6 +1466,12 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# CONSTRUCT THE SYMBOL NAME.
 		#
 		symbolName = ctx.SYMBOL_ID().getText()
+
+		#
+		# IF THE SYMBOL ALREADY EXISTS, THEN THIS IS AN ERROR.
+		#
+		if self._symbolTableManager.hasSymbolByName(symbolName):
+			raise SymbolConflictError(symbolName)
 
 		#
 		# CREATE THE SYMBOL.

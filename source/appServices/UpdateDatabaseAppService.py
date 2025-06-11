@@ -194,7 +194,7 @@ class UpdateDatabaseAppService ():
 		pathFactory = ScriptFilePathFactory()
 		pathFactory.sqlScriptsDir = SymbolReader.readString(symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
 		pathFactory.branchSymbolName = branchSymbolName
-		pathFactory.databaseName = databaseSymbolName
+		pathFactory.databaseSymbolName = databaseSymbolName
 
 		#
 		# UPDATE THE DATABASE TO THE NEXT VERSION.
@@ -204,9 +204,9 @@ class UpdateDatabaseAppService ():
 			pathFactory.versionNumber = nextVersionStr
 
 			if nextVersionSymbol.hasProp('dir'):
-				pathFactory.versionDir = nextVersionSymbol.getProp('dir').value
-			else:
-				pathFactory.versionDir = None
+				pathFactory.specifiedDir = nextVersionSymbol.getProp('dir').value
+			elif databaseSymbol.hasProp('dir'):
+				pathFactory.specifiedDir = SymbolReader.readPropAsString(databaseSymbol, 'dir')
 
 			#
 			# TO DO: RUN PRECHECK SCRIPTS.

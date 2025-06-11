@@ -171,7 +171,7 @@ class CheckDatabaseAppService ():
 		pathFactory = ScriptFilePathFactory()
 		pathFactory.sqlScriptsDir = SymbolReader.readString(self.symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
 		pathFactory.branchSymbolName = branchSymbolName
-		pathFactory.databaseName = databaseSymbolName
+		pathFactory.databaseSymbolName = databaseSymbolName
 
 		if databaseSymbol.hasProp('dir'):
 			pathFactory.versionDir = SymbolReader.readPropAsString(databaseSymbol, 'dir')

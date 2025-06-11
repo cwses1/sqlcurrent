@@ -101,7 +101,7 @@ class ApplyConfigurationToDatabaseAppService ():
 		#
 		pathFactory = ScriptFilePathFactory()
 		pathFactory.branchName = branchName
-		pathFactory.databaseName = databaseSymbolName
+		pathFactory.databaseSymbolName = databaseSymbolName
 		pathFactory.configurationName = configurationSymbolName
 		pathFactory.sqlScriptsDir = SymbolReader.readString(self.symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
 

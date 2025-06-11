@@ -1,8 +1,7 @@
-from .PostgresClient import *
 from .Psycopg2Client import *
-from .SqlServerClient import *
 from .InfluxClient import *
 from .OracleClient import *
+from .PymssqlClient import *
 
 from typing import Any
 
@@ -12,10 +11,18 @@ class DatabaseClientProvider ():
 	def getDatabaseClient (driver:str) -> Any:
 		match driver:
 			case 'postgres':
-				return PostgresClient()
+				return Psycopg2Client()
 			case 'postgresql':
-				return PostgresClient()
+				return Psycopg2Client()
 			case 'psycopg2':
 				return Psycopg2Client()
+			case 'sqlserver':
+				return PymssqlClient()
+			case 'mssqlserver':
+				return PymssqlClient()
+			case 'mssql':
+				return PymssqlClient()
+			case 'pymssql':
+				return PymssqlClient()
 			case 'influx':
 				return InfluxClient()

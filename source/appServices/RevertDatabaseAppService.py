@@ -237,7 +237,7 @@ class RevertDatabaseAppService ():
 			scriptFilePathFactory = ScriptFilePathFactory()
 			scriptFilePathFactory.sqlScriptsDir = SymbolReader.readString(symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
 			scriptFilePathFactory.branchSymbolName = branchSymbolName
-			scriptFilePathFactory.databaseName = databaseSymbolName
+			scriptFilePathFactory.databaseSymbolName = databaseSymbolName
 			scriptFilePathFactory.versionNumber = previousVersionStr
 			if previousVersionSymbol.hasProp('dir'):
 				scriptFilePathFactory.versionDir = SymbolReader.readPropAsString(previousVersionSymbol, 'dir')

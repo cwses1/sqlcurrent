@@ -43,9 +43,12 @@ def main(argv):
 	#
 	# CREATE THE INTERPRETER AND EXECUTE THE SPECIFIED SCRIPT FILE.
 	#
+	#try:
 	interpreter = SqlCurrentScriptInterpreter()
 	interpreter.symbolTableManager = globalSymbolTableManager
 	interpreter.executeScriptFile(absoluteScriptFilePath)
+	#except Exception as e:
+	#	print(e)
 
 if __name__ == '__main__':
 	main(sys.argv)

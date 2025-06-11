@@ -54,7 +54,7 @@ solutionPropList: (solutionProp ';')+;
 solutionProp: SYMBOL_ID ':' expr;
 
 branchStatement: 'branch' SYMBOL_ID '{' branchPropList '}';
-branchPropList: (branchProp ';')+;
+branchPropList: (branchProp ';')*;
 branchProp: (SYMBOL_ID | 'solution' | 'create' | 'version' | 'reset' | 'check') ':' expr;
 
 environmentStatement: 'environment' SYMBOL_ID '{' environmentPropList '}';

@@ -9,6 +9,7 @@ from .BranchCreateValueValidator import *
 from .BranchResetValueValidator import *
 from .BranchVersionValueValidator import *
 from .BranchCheckValueValidator import *
+from .BranchDirValueValidator import *
 
 class BranchValueValidator ():
 
@@ -31,5 +32,7 @@ class BranchValueValidator ():
 				return BranchVersionValueValidator.isNotValid(value)
 			case 'check':
 				return BranchCheckValueValidator.isNotValid(value)
+			case 'dir':
+				return BranchDirValueValidator.isNotValid(value)
 			case _:
 				raise MatchUnderscoreError('BranchValueValidator hit the default case for property name: {}.'.format(name))
