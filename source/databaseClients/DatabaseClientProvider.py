@@ -1,14 +1,14 @@
+from .DatabaseClientBase import *
 from .Psycopg2Client import *
 from .InfluxClient import *
 from .OracleClient import *
 from .PymssqlClient import *
-
 from typing import Any
 
 class DatabaseClientProvider ():
 
 	@staticmethod
-	def getDatabaseClient (driver:str) -> Any:
+	def getDatabaseClient (driver:str) -> DatabaseClientBase:
 		match driver:
 			case 'postgres':
 				return Psycopg2Client()

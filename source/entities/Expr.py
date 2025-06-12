@@ -4,6 +4,7 @@ class Expr ():
 		self.name = None
 		self.type = None
 		self.value = None
+		self.param = None
 
 		#
 		# SymbolType.ReferenceToSymbol ONLY

@@ -15,6 +15,7 @@ class DatabaseReference ():
 	propNames['check'] = True
 	propNames['reset'] = True
 	propNames['dir'] = False
+	propNames['serverConnString'] = False
 
 	@staticmethod
 	def propNameSupported (name:str) -> bool:

@@ -1,5 +1,11 @@
 class DatabaseClientBase ():
 
+	def __init__ (self):
+		self.connString:str = None
+
+	def init (self):
+		pass
+
 	def runCreateScript (self, scriptText:str):
 		self.executeScriptText(scriptText)
 

@@ -37,11 +37,18 @@ class UpdateTrackingFileWriter ():
 		if not self.dirExists(branchName):
 			os.makedirs(self.getDirPath(branchName), exist_ok=True)
 
+	def ensureDatabaseDirExists (self, databaseSymbolName:str) -> None:
+		if not self.databaseDirExists(databaseSymbolName):
+			self.createDatabaseDir(databaseSymbolName)
+
+	def createDatabaseDir (self, databaseSymbolName:str) -> None:
+		os.makedirs(self.getDatabaseDirPath(databaseSymbolName), exist_ok=True)
+
 	def ensureTrackingDirExists (self) -> None:
 		if not os.path.exists(self.trackingDir):
 			os.makedirs(self.trackingDir, exist_ok=True)
 
-	def ensurefileExists (self, branchName:str, databaseSymbolName:str) -> None:
+	def ensureFileExists (self, branchName:str, databaseSymbolName:str) -> None:
 		if not self.fileExists(branchName, databaseSymbolName):
 			self.createFile(branchName, databaseSymbolName)
 
@@ -51,6 +58,12 @@ class UpdateTrackingFileWriter ():
 
 	def dirExists (self, branchName:str) -> bool:
 		return os.path.exists(self.trackingDir + '/' + branchName)
+
+	def databaseDirExists (self, databaseSymbolName:str) -> bool:
+		return os.path.exists(self.getDatabaseDirPath(databaseSymbolName))
+
+	def getDatabaseDirPath (self, databaseSymbolName:str) -> str:
+		return self.trackingDir + '/standalone/' + databaseSymbolName
 
 	def fileExists (self, branchName:str, databaseSymbolName:str) -> bool:
 		return os.path.exists(self.getFilePath(branchName, databaseSymbolName))
@@ -71,7 +84,9 @@ class UpdateTrackingFileWriter ():
 		return databaseSymbolName + '.txt';
 
 	def deleteFile (self, branchName:str, databaseSymbolName:str):
-		os.remove(self.getFilePath(branchName, databaseSymbolName))
+		branchFilePath = self.getFilePath(branchName, databaseSymbolName)
+		if os.path.exists(branchFilePath):
+			os.remove(branchFilePath)
 
 	def deleteDatabaseFile (self, databaseSymbolName:str):
 		databaseFilePath = self.getDatabaseFilePath(databaseSymbolName)

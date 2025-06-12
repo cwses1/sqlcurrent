@@ -14,6 +14,7 @@ from .DatabaseDescValueValidator import *
 from .DatabaseCheckValueValidator import *
 from .DatabaseResetValueValidator import *
 from .DatabaseDirValueValidator import *
+from .DatabaseServerConnStringValueValidator import *
 
 class DatabaseValueValidator ():
 
@@ -26,6 +27,8 @@ class DatabaseValueValidator ():
 				return DatabaseServerValueValidator.isNotValid(value)
 			case 'connString':
 				return DatabaseConnStringValueValidator.isNotValid(value)
+			case 'serverConnString':
+				return DatabaseServerConnStringValueValidator.isNotValid(value)
 			case 'environment':
 				return DatabaseEnvironmentValueValidator.isNotValid(value)
 			case 'tag':

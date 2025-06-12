@@ -41,12 +41,22 @@ class ScriptRunnerAppService ():
 		currentDateTimeFormatted = self.currentDateTimeFormatted
 		batchId = self.batchId
 
+		if not branchSymbol.hasProp('reset') or len(branchSymbol.getProp('reset')) == 0:
+			return
+
 		#
 		# GET THE UPDATE TRACKING FILE WRITER.
 		#
 		updateTrackingFileWriter = UpdateTrackingFileWriter()
 		updateTrackingFileWriter.trackingDir = SymbolReader.readString(self.symbolTableManager.getSymbolByName('globalEnvUpdateTrackingDir'))
-		updateTrackingFileWriter.ensureDirExists(branchSymbolName)
+
+		#
+		# ENSURE THE UPDATE TRACKING DIRECTORY EXISTS.
+		#
+		if hasBranchSymbol:
+			updateTrackingFileWriter.ensureDirExists(branchSymbolName)
+		else:
+			updateTrackingFileWriter.ensureDatabaseDirExists(databaseSymbolName)
 
 		#
 		# GET THE SCRIPT FILE PATH FACTORY AND DETERMINE WHERE THE SCRIPTS SHOULD BE.
@@ -66,9 +76,7 @@ class ScriptRunnerAppService ():
 			scriptFilePath = scriptFilePathFactory.createResetPath(scriptExpr.value)
 
 			if not os.path.exists(scriptFilePath):
-				print('{}: Error: No such file or directory: \'{}\'. Stopping.'.format(databaseSymbolName, scriptFilePath))
-				print('{}: Stopping.'.format(databaseSymbolName))
-				return
+				raise Exception('{}: Error: No such file or directory: \'{}\'.'.format(databaseSymbolName, scriptFilePath))
 
 			createScriptText = StringFileReader.readFile(scriptFilePath)
 
@@ -80,18 +88,14 @@ class ScriptRunnerAppService ():
 			#
 			# RUN THE SCRIPT.
 			#
-			try:
-				databaseClient.runResetScript(createScriptText)
-			except Exception as e:
-				print('{}: Error. {}. Stopping.'.format(databaseSymbolName, str(e)))
-				return
+			databaseClient.runResetScript(createScriptText)
 
 			print('{}: Success.'.format(databaseSymbolName))
 
 			#
 			# ENSURE THE UPDATE TRACKING FILE EXISTS SO WE CAN TRACK THE UPDATE.
 			#
-			updateTrackingFileWriter.ensurefileExists(branchSymbolName, databaseSymbolName)
+			updateTrackingFileWriter.ensureFileExists(branchSymbolName, databaseSymbolName)
 
 			#
 			# TRACK THE UPDATE.
@@ -123,7 +127,14 @@ class ScriptRunnerAppService ():
 		#
 		updateTrackingFileWriter = UpdateTrackingFileWriter()
 		updateTrackingFileWriter.trackingDir = SymbolReader.readString(self.symbolTableManager.getSymbolByName('globalEnvUpdateTrackingDir'))
-		updateTrackingFileWriter.ensureTrackingDirExists()
+
+		#
+		# ENSURE THE UPDATE TRACKING DIRECTORY EXISTS.
+		#
+		if hasBranchSymbol:
+			updateTrackingFileWriter.ensureDirExists(branchSymbolName)
+		else:
+			updateTrackingFileWriter.ensureDatabaseDirExists(databaseSymbolName)
 
 		#
 		# GET THE SCRIPT FILE PATH FACTORY AND DETERMINE WHERE THE SCRIPTS SHOULD BE.
@@ -142,11 +153,29 @@ class ScriptRunnerAppService ():
 			scriptFilePath = scriptFilePathFactory.createResetPathForStandaloneDatabase(scriptExpr.value)
 
 			if not os.path.exists(scriptFilePath):
-				print('{}: Error: No such file or directory: \'{}\'. Stopping.'.format(databaseSymbolName, scriptFilePath))
-				print('{}: Stopping.'.format(databaseSymbolName))
-				return
+				raise Exception('{}: Error: No such file or directory: \'{}\'.'.format(databaseSymbolName, scriptFilePath))
 
-			createScriptText = StringFileReader.readFile(scriptFilePath)
+			scriptText = StringFileReader.readFile(scriptFilePath)
+
+			#
+			# DETERMINE IF WE NEED TO MAKE OUR OWN DATABASE CLIENT FOR THIS SPECIFIC SCRIPT.
+			# THIS IS DONE WITH THIS SYNTAX:
+			# serverConnString: 'Server=192.168.10.170;User ID=sa;Password=sandy';
+			# create: 'create_database_heavywork_demo.sql' (serverConnString);
+			#
+			# THE CREATE EXPRESSION WILL HAVE A PARAM ATTACHED TO IT.
+			#
+			needsCustomDatabaseClient = scriptExpr.param != None
+
+			#
+			# CREATE THE CUSTOM DATABASE CLIENT.
+			#
+			if needsCustomDatabaseClient:
+				driverValue = databaseSymbol.getProp('driver').value
+				connStringValue = scriptExpr.param.value
+				customDatabaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
+				customDatabaseClient.connString = connStringValue
+				customDatabaseClient.init()
 
 			#
 			# TELL THE USER WHICH SCRIPT WE'RE RUNNING.
@@ -156,18 +185,20 @@ class ScriptRunnerAppService ():
 			#
 			# RUN THE SCRIPT.
 			#
-			try:
-				databaseClient.runResetScript(createScriptText)
-			except Exception as e:
-				print('{}: Error. {}. Stopping.'.format(databaseSymbolName, str(e)))
-				return
+			if needsCustomDatabaseClient:
+				customDatabaseClient.runCreateScript(scriptText)
+			else:
+				databaseClient.runCreateScript(scriptText)
 
 			print('{}: Success.'.format(databaseSymbolName))
 
 			#
 			# ENSURE THE UPDATE TRACKING FILE EXISTS SO WE CAN TRACK THE UPDATE.
 			#
-			updateTrackingFileWriter.ensureDatabaseFileExists(databaseSymbolName)
+			if hasBranchSymbol:
+				updateTrackingFileWriter.ensureFileExists(branchSymbolName, databaseSymbolName)
+			else:
+				updateTrackingFileWriter.ensureDatabaseFileExists(databaseSymbolName)
 
 			#
 			# TRACK THE RESET.
@@ -181,7 +212,11 @@ class ScriptRunnerAppService ():
 			updateTrackingLine.batchId = batchId
 			updateTrackingLine.databaseName = databaseSymbolName
 			updateTrackingLine.branch = ''
-			updateTrackingFileWriter.writeDatabaseUpdateTrackingLine(databaseSymbolName, updateTrackingLine)
+
+			if hasBranchSymbol:
+				updateTrackingFileWriter.writeUpdateTrackingLine(branchSymbolName, databaseSymbolName, updateTrackingLine)
+			else:
+				updateTrackingFileWriter.writeDatabaseUpdateTrackingLine(databaseSymbolName, updateTrackingLine)
 
 	def runBranchCreateScripts (self):
 		symbolTableManager = self.symbolTableManager
@@ -194,13 +229,7 @@ class ScriptRunnerAppService ():
 		currentDateTimeFormatted = self.currentDateTimeFormatted
 		batchId = self.batchId
 
-		if not hasBranchSymbol:
-			return
-		
-		if not branchSymbol.hasProp('create'):
-			return
-		
-		if len(branchSymbol.getProp('create').value) == 0:
+		if not hasBranchSymbol or not branchSymbol.hasProp('create') or len(branchSymbol.getProp('create').value) == 0:
 			return
 
 		#
@@ -209,14 +238,6 @@ class ScriptRunnerAppService ():
 		updateTrackingFileWriter = UpdateTrackingFileWriter()
 		updateTrackingFileWriter.trackingDir = SymbolReader.readString(symbolTableManager.getSymbolByName('globalEnvUpdateTrackingDir'))
 		updateTrackingFileWriter.ensureDirExists(branchSymbolName)
-
-		#
-		# IF THE UPDATE TRACKING ALREADY EXISTS, THIS IS AN ERROR.  WE DO NOT TRY TO CREATE A DATABASE TWICE.
-		#
-		if updateTrackingFileWriter.fileExists(branchSymbolName, databaseSymbolName):
-			print('{}: Database already created.'.format(databaseSymbolName))
-			print('{}: Stopping.'.format(databaseSymbolName))
-			return
 
 		#
 		# GET THE STARTING VERSION, WHICH CAN APPEAR ON THE DATABASE OR THE BRANCH.
@@ -245,9 +266,7 @@ class ScriptRunnerAppService ():
 			scriptFilePath = scriptFilePathFactory.createCreatePath(scriptExpr.value)
 
 			if not os.path.exists(scriptFilePath):
-				print('{}: Error: No such file or directory: \'{}\'. Stopping.'.format(databaseSymbolName, scriptFilePath))
-				print('{}: Stopping.'.format(databaseSymbolName))
-				return
+				raise Exception('{}: Error: No such file or directory: \'{}\'.'.format(databaseSymbolName, scriptFilePath))
 
 			createScriptText = StringFileReader.readFile(scriptFilePath)
 
@@ -259,18 +278,17 @@ class ScriptRunnerAppService ():
 			#
 			# RUN THE SCRIPT.
 			#
-			try:
-				databaseClient.runCreateScript(createScriptText)
-			except Exception as e:
-				print('{}: Error. {}. Stopping.'.format(databaseSymbolName, str(e)))
-				return
+			databaseClient.runCreateScript(createScriptText)
 
 			print('{}: Success.'.format(databaseSymbolName))
 
 			#
 			# ENSURE THE UPDATE TRACKING FILE EXISTS SO WE CAN TRACK THE UPDATE.
 			#
-			updateTrackingFileWriter.ensurefileExists(branchSymbolName, databaseSymbolName)
+			if hasBranchSymbol:
+				updateTrackingFileWriter.ensureFileExists(branchSymbolName, databaseSymbolName)
+			else:
+				updateTrackingFileWriter.ensureDatabaseFileExists(databaseSymbolName)
 
 			#
 			# TRACK THE UPDATE.
@@ -306,27 +324,24 @@ class ScriptRunnerAppService ():
 		updateTrackingFileWriter = UpdateTrackingFileWriter()
 		updateTrackingFileWriter.trackingDir = SymbolReader.readString(symbolTableManager.getSymbolByName('globalEnvUpdateTrackingDir'))
 
-		if hasBranchSymbol:
-			updateTrackingFileWriter.ensureDirExists(branchSymbolName)
-		else:
-			updateTrackingFileWriter.ensureTrackingDirExists()
-
 		#
 		# IF THE UPDATE TRACKING ALREADY EXISTS, THIS IS AN ERROR.
 		# WE DO NOT TRY TO CREATE A DATABASE TWICE.
 		#
 		if hasBranchSymbol:
 			if updateTrackingFileWriter.fileExists(branchSymbolName, databaseSymbolName):
-				print('{0}: Database already created using branch {1}.'.format(databaseSymbolName, branchSymbolName))
-				print('{}: Stopping.'.format(databaseSymbolName))
-				return
+				raise Exception('{0}: Database already created in branch {1}.'.format(databaseSymbolName, branchSymbolName))
 		else:
 			if updateTrackingFileWriter.databaseFileExists(databaseSymbolName):
-				print('{}: Standalone database already created.'.format(databaseSymbolName))
-				print('{}: Stopping.'.format(databaseSymbolName))
-				return
+				raise Exception('{}: Standalone database already created.'.format(databaseSymbolName))
 
-		#updateTrackingFileWriter.ensureDatabaseDirExists(databaseSymbolName)
+		#
+		# ENSURE THE UPDATE TRACKING DIRECTORY EXISTS.
+		#
+		if hasBranchSymbol:
+			updateTrackingFileWriter.ensureDirExists(branchSymbolName)
+		else:
+			updateTrackingFileWriter.ensureDatabaseDirExists(databaseSymbolName)
 
 		#
 		# GET THE STARTING VERSION, WHICH CAN APPEAR ON THE DATABASE OR THE BRANCH.
@@ -357,11 +372,29 @@ class ScriptRunnerAppService ():
 			scriptFilePath = scriptFilePathFactory.createCreatePathForStandaloneDatabase(scriptExpr.value)
 
 			if not os.path.exists(scriptFilePath):
-				print('{}: Error: No such file or directory: \'{}\'.'.format(databaseSymbolName, scriptFilePath))
-				print('{}: Stopping.'.format(databaseSymbolName))
-				return
+				raise Exception('{}: Error: No such file or directory: \'{}\'.'.format(databaseSymbolName, scriptFilePath))
 
 			scriptText = StringFileReader.readFile(scriptFilePath)
+
+			#
+			# DETERMINE IF WE NEED TO MAKE OUR OWN DATABASE CLIENT FOR THIS SPECIFIC SCRIPT.
+			# THIS IS DONE WITH THIS SYNTAX:
+			# serverConnString: 'Server=192.168.10.170;User ID=sa;Password=sandy';
+			# create: 'create_database_heavywork_demo.sql' (serverConnString);
+			#
+			# THE CREATE EXPRESSION WILL HAVE A PARAM ATTACHED TO IT.
+			#
+			needsCustomDatabaseClient = scriptExpr.param != None
+
+			#
+			# CREATE THE CUSTOM DATABASE CLIENT.
+			#
+			if needsCustomDatabaseClient:
+				driverValue = databaseSymbol.getProp('driver').value
+				connStringValue = scriptExpr.param.value
+				customDatabaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
+				customDatabaseClient.connString = connStringValue
+				customDatabaseClient.init()
 
 			#
 			# TELL THE USER WHICH SCRIPT WE'RE RUNNING.
@@ -371,12 +404,10 @@ class ScriptRunnerAppService ():
 			#
 			# RUN THE SCRIPT.
 			#
-			try:
+			if needsCustomDatabaseClient:
+				customDatabaseClient.runCreateScript(scriptText)
+			else:
 				databaseClient.runCreateScript(scriptText)
-			except Exception as e:
-				print('{}: Error. {}.'.format(databaseSymbolName, str(e)))
-				print('{}: Stopping.'.format(databaseSymbolName))
-				return
 
 			print('{}: Success.'.format(databaseSymbolName))
 
@@ -384,7 +415,7 @@ class ScriptRunnerAppService ():
 			# ENSURE THE UPDATE TRACKING FILE EXISTS SO WE CAN TRACK THE UPDATE.
 			#
 			if hasBranchSymbol:
-				updateTrackingFileWriter.ensurefileExists(branchSymbolName, databaseSymbolName)
+				updateTrackingFileWriter.ensureFileExists(branchSymbolName, databaseSymbolName)
 			else:
 				updateTrackingFileWriter.ensureDatabaseFileExists(databaseSymbolName)
 
@@ -405,4 +436,7 @@ class ScriptRunnerAppService ():
 			else:
 				updateTrackingLine.branch = 'default'
 
+		if hasBranchSymbol:
+			updateTrackingFileWriter.writeUpdateTrackingLine(branchSymbolName, databaseSymbolName, updateTrackingLine)
+		else:
 			updateTrackingFileWriter.writeDatabaseUpdateTrackingLine(databaseSymbolName, updateTrackingLine)

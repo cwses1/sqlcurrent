@@ -4,7 +4,7 @@ import psycopg2
 class Psycopg2Client (DatabaseClientBase):
 
 	def __init__ (self):
-		pass
+		super().__init__()
 
 	def executeScriptText (self, scriptText:str):
 		with psycopg2.connect(self.connString) as conn:

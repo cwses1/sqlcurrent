@@ -70,6 +70,7 @@ from appServices.ApplyConfigurationToDatabaseAppService import *
 from appServices.CheckDatabaseAppService import *
 from appServices.ResetDatabaseAppService import *
 from exceptions.SymbolConflictError import *
+from exceptions.PropValueNotValidError import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -308,7 +309,10 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 	def visitDatabaseProp(self, ctx:SqlCurrentParser.DatabasePropContext):
 		#
-		# databaseProp: (SYMBOL_ID | 'solution' | 'branch' | 'server' | 'create' | 'environment' | 'version') ':' expr;
+		# databaseProp: (SYMBOL_ID | 'solution' | 'branch' | 'server' | 'environment' | 'version' | 'check' | 'reset') ':' expr
+		# | 'create' ':' expr ('(' SYMBOL_ID ')')?
+		# | 'reset' ':' expr ('(' SYMBOL_ID ')')?
+		# ;
 		#
 
 		#
@@ -328,7 +332,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		propExpr = self.visitExpr(ctx.expr())
 
 		if propExpr.type == SymbolType.String:
-
 			propValue = propExpr.value
 
 			#
@@ -338,18 +341,31 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 				raise PropValueNotValidError(SymbolTypeFormatter.format(SymbolType.Database), propName, propValue)
 
 		#
-		# APPLY TEMPLATES TO THIS PROPERTY.
+		# GET THE CONTEXT SYMBOL (A DATABASE SYMBOL)
+		#
+		databaseSymbol:Symbol = self._symbolTableManager.getCurrentSymbolTable().contextSymbol
+
+		#
+		# IF THIS IS A CREATE PROPERTY THEN CHECK FOR CONNECTION STRING HINTS.
+		#
+		if (propName == 'create' or propName == 'reset') and ctx.SYMBOL_ID() != None:
+			hintPropName = ctx.SYMBOL_ID().getText()
+			if databaseSymbol.hasProp(hintPropName):
+				propExpr.param = databaseSymbol.getProp(hintPropName)
+			else:
+				print('{0}: Error. No property named: {1}.'.format(databaseSymbol.name, hintPropName))
+
+		#
+		# TO DO SOMEDAY: APPLY INTERPOLATIONS TO THIS PROPERTY.
 		#
 
 		#
-		# SET THE PROPERTY ON THE SYMBOL.
+		# SET OR APPEND THE PROPERTY TO THE SYMBOL.
 		#
-		contextSymbol = self._symbolTableManager.getCurrentSymbolTable().contextSymbol
-
 		if not DatabaseReference.propCanHaveMultipleValues(propName):
-			contextSymbol.setProp(propName, propExpr)
+			databaseSymbol.setProp(propName, propExpr)
 		else:
-			contextSymbol.appendProp(propName, propExpr)
+			databaseSymbol.appendProp(propName, propExpr)
 
 	def visitExpr(self, ctx:SqlCurrentParser.ExprContext):
 		#
@@ -544,6 +560,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		connStringValue = databaseSymbol.getProp('connString').value
 		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
 		databaseClient.connString = connStringValue
+		databaseClient.init()
 
 		#
 		# GET THE BRANCH NAME AND SYMBOL FOR THIS DATABASE.
@@ -573,7 +590,11 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		appService.currentDateTimeFormatted = currentDateTimeFormatted
 		appService.batchId = batchId
 		appService.databaseClient = databaseClient
-		appService.run()
+
+		try:
+			appService.run()
+		except Exception as e:
+			print('{0}: Error. {1}'.format(databaseSymbolName, e))
 
 	def visitSolutionStatement(self, ctx:SqlCurrentParser.SolutionStatementContext):
 		#
@@ -1046,6 +1067,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		connStringValue = databaseSymbol.getProp('connString').value
 		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
 		databaseClient.connString = connStringValue
+		databaseClient.init()
 
 		#
 		# GET THE BRANCH NAME AND SYMBOL FOR THIS DATABASE.
@@ -1209,6 +1231,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			connStringValue = databaseSymbol.getProp('connString').value
 			databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
 			databaseClient.connString = connStringValue
+			databaseClient.init()
 
 			#
 			# GET THE DATABASE BRANCH.  WHEN THE DATABASE IS CREATED THEN WE STORE THE BRANCH NAME WITH IT.
@@ -1338,6 +1361,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		connStringValue = databaseSymbol.getProp('connString').value
 		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
 		databaseClient.connString = connStringValue
+		databaseClient.init()
 
 		#
 		# GET THE BRANCH NAME AND SYMBOL FOR THIS DATABASE.
@@ -1404,6 +1428,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		connStringValue = databaseSymbol.getProp('connString').value
 		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
 		databaseClient.connString = connStringValue
+		databaseClient.init()
 
 		#
 		# GET THE BRANCH NAME AND SYMBOL FOR THIS DATABASE.
@@ -1726,13 +1751,14 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		connStringValue = databaseSymbol.getProp('connString').value
 		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
 		databaseClient.connString = connStringValue
+		databaseClient.init()
 
 		#
 		# GET THE BRANCH NAME AND SYMBOL FOR THIS DATABASE.
 		#
-		hasBranchSymbol = False
-		branchSymbol = None
-		branchSymbolName = None
+		hasBranchSymbol:bool = False
+		branchSymbol:Symbol = None
+		branchSymbolName:str = None
 
 		if databaseSymbol.hasProp('branch'):
 			branchPropExpr = databaseSymbol.getProp('branch')
@@ -1755,7 +1781,11 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		appService.currentDateTimeFormatted = currentDateTimeFormatted
 		appService.batchId = batchId
 		appService.databaseClient = databaseClient
-		appService.run()
+
+		try:
+			appService.run()
+		except Exception as e:
+			print('{0}: Error. {1}'.format(databaseSymbolName, e))
 
 	def visitInitDatabaseStatement(self, ctx:SqlCurrentParser.InitDatabaseStatementContext):
 		#
