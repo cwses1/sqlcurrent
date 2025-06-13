@@ -6,7 +6,7 @@ It has its own language called **Current Script**.  You use Current Script to de
 Current Script looks like a combination of CSS and SQL.  Here's an example:
 
 	//
-	// THIS IS THE PART OF CURRENT SCRIPT THAT LOOKS LIKE CSS.
+	// THIS IS THE PART OF CURRENT SCRIPT THAT LOOKS LIKE CSS - WHERE YOU DEFINE YOUR TOPOLOGY.
 	// THESE ARE COMMENTS.
 	// YOU CAN ALSO USE /* */ FOR COMMENTS.
 	//
@@ -35,7 +35,7 @@ Current Script looks like a combination of CSS and SQL.  Here's an example:
 	}
 
 	//
-	// THIS IS THE PART OF CURRENT SCRIPT THAT LOOKS LIKE SQL.
+	// THIS IS THE PART OF CURRENT SCRIPT THAT LOOKS LIKE SQL - WHERE YOU EXECUTE COMMANDS.
 	//
 	create database alpha;
 	create database zappa;
