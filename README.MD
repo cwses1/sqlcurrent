@@ -5,6 +5,11 @@ It has its own language called **Current Script**.  You use Current Script to de
 
 Current Script looks like a combination of CSS and SQL.  Here's an example:
 
+	//
+	// THIS IS THE PART OF CURRENT SCRIPT THAT LOOKS LIKE CSS.
+	// THESE ARE COMMENTS.
+	// YOU CAN ALSO USE /* */ FOR COMMENTS.
+	//
 	database alpha
 	{
 		driver: 'postgres';
@@ -30,14 +35,14 @@ Current Script looks like a combination of CSS and SQL.  Here's an example:
 	}
 
 	//
-	// THESE ARE COMMENTS.  THIS IS THE PART OF CURRENT SCRIPT THAT LOOKS LIKE SQL.  YOU CAN ALSO USE /* */ FOR COMMENTS.
+	// THIS IS THE PART OF CURRENT SCRIPT THAT LOOKS LIKE SQL.
 	//
 	create database alpha;
 	create database zappa;
 	update databases to version 1.1.0 where id in (alpha, zappa);
 	select databases;
 
-SQL Current is designed to solve everything from the simplest to the most difficult database setup, versioning, and migration problems that dadta and software teams face in the industry today.
+SQL Current is designed to solve everything from the simplest to the most difficult database setup, versioning, and migration problems that data and software teams face in the industry today.
 
 SQL Current is currently in an experiemental alpha stage.  The following databases have been tested against it:
 * PostgreSQL
