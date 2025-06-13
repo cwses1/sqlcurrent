@@ -72,6 +72,8 @@ from appServices.ResetDatabaseAppService import *
 from exceptions.SymbolConflictError import *
 from exceptions.PropValueNotValidError import *
 from appServices.ResetDatabaseListAppService import *
+from appServices.CreateDatabaseListAppService import *
+from appServices.UpdateDatabaseListAppService import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -855,14 +857,14 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# IF THERE ARE NO DATABASES TO UPDATE AFTER THE WHERE CLAUSE IS APPLIED, THEN LET THE USER KNOW.
 		#
-		if len(databaseSymbolList) == 0:
-			print(MessageBuilder.createNoDatabasesAfterWhereClauseMessage())
-			return
+		#if len(databaseSymbolList) == 0:
+		#	print(MessageBuilder.createNoDatabasesAfterWhereClauseMessage())
+		#	return
 
 		#
 		# LET THE USER KNOW HOW MANY DATABASES WE'RE DEALING WITH.
 		#
-		print(MessageBuilder.createDatabaseCreateCountAfterWhereClauseMessage(databaseSymbolList))
+		#print(MessageBuilder.createDatabaseCreateCountAfterWhereClauseMessage(databaseSymbolList))
 
 		#
 		# ORDER THE LIST OF DATABASES.
@@ -872,17 +874,17 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			databaseSymbolList = orderByConstraint.applyConstraint(databaseSymbolList)
 
 		#
-		# TO DO: VALIDATE THE DATABASES AND STOP IF THERE IS A PROBLEM?
+		# GET THE CURRENT TIME.
 		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
 
-		#
-		# CREATE THE DATABASES.
-		#
-		for databaseSymbol in databaseSymbolList:
-			appService = CreateDatabaseAppService()
-			appService.databaseSymbolName = databaseSymbol.name
-			appService.symbolTableManager = self._symbolTableManager
-			appService.run()
+		appService = CreateDatabaseListAppService()
+		appService.databaseSymbolList = databaseSymbolList
+		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+		appService.batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+		appService.run()
 
 	def visitWhereClause(self, ctx:SqlCurrentParser.WhereClauseContext):
 		#
@@ -1140,50 +1142,48 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# IF THERE ARE NO DATABASES DEFINED THEN WE ARE DONE.
 		#
-		if len(databaseSymbolList) == 0:
-			print(MessageBuilder.createNoDatabasesDefinedMessage())
-			return
+		#if len(databaseSymbolList) == 0:
+		#	print(MessageBuilder.createNoDatabasesDefinedMessage())
+		#	return
 
 		#
 		# APPLY THE CONSTRAINT TO THE LIST OF DATABASES.
 		#
-		whereConstraint = None
-
 		if ctx.whereClause() != None:
-			whereConstraint = self.visitWhereClause(ctx.whereClause())
-			databaseSymbolList = whereConstraint.applyConstraint(databaseSymbolList)
+			databaseSymbolList = self.visitWhereClause(ctx.whereClause()).applyConstraint(databaseSymbolList)
 
 		#
 		# IF THERE ARE NO DATABASES TO UPDATE AFTER THE WHERE CLAUSE IS APPLIED, THEN LET THE USER KNOW.
 		#
-		if len(databaseSymbolList) == 0:
-			print(MessageBuilder.createNoDatabasesAfterWhereClauseMessage())
-			return
+		#if len(databaseSymbolList) == 0:
+		#	print(MessageBuilder.createNoDatabasesAfterWhereClauseMessage())
+		#	return
 
 		#
 		# LET THE USER KNOW HOW MANY DATABASES WE'RE DEALING WITH.
 		#
-		print(MessageBuilder.createDatabaseUpdateCountAfterWhereClauseMessage(len(databaseSymbolList)))
+		#print(MessageBuilder.createDatabaseUpdateCountAfterWhereClauseMessage(len(databaseSymbolList)))
 
 		#
 		# ORDER THE DATABASES.
 		#
-		orderByConstraint = None
-
 		if ctx.orderByClause() != None:
-			orderByConstraint = self.visitOrderByClause(ctx.orderByClause())
-			databaseSymbolList = orderByConstraint.applyConstraint(databaseSymbolList)
+			databaseSymbolList = self.visitOrderByClause(ctx.orderByClause()).applyConstraint(databaseSymbolList)
 
 		#
-		# UPDATE EACH DATABASE.
+		# GET THE CURRENT TIME.
 		#
-		for databaseSymbol in databaseSymbolList:
-			appService = UpdateDatabaseAppService()
-			appService.databaseSymbolName = databaseSymbol.name
-			appService.symbolTableManager = self._symbolTableManager
-			appService.versionWasSpecified = ctx.toVersionClause() != None
-			appService.specifiedVersionNumber = specifiedVersionNumber
-			appService.run()
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+
+		appService = UpdateDatabaseListAppService()
+		appService.databaseSymbolList = databaseSymbolList
+		appService.versionWasSpecified = specifiedVersionNumber != None
+		appService.specifiedVersionNumber = specifiedVersionNumber
+		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+		appService.batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+		appService.run()
 
 	def visitSelectDatabaseListStatement(self, ctx:SqlCurrentParser.SelectDatabaseListStatementContext):
 		#
@@ -1198,20 +1198,14 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# APPLY THE CONSTRAINT TO THE LIST OF DATABASES.
 		#
-		whereConstraint = None
-
 		if ctx.whereClause() != None:
-			whereConstraint = self.visitWhereClause(ctx.whereClause())
-			databaseSymbolList = whereConstraint.applyConstraint(databaseSymbolList)
+			databaseSymbolList = self.visitWhereClause(ctx.whereClause()).applyConstraint(databaseSymbolList)
 
 		#
 		# ORDER THE DATABASES.
 		#
-		orderByConstraint = None
-
 		if ctx.orderByClause() != None:
-			orderByConstraint = self.visitOrderByClause(ctx.orderByClause())
-			databaseSymbolList = orderByConstraint.applyConstraint(databaseSymbolList)
+			databaseSymbolList = self.visitOrderByClause(ctx.orderByClause()).applyConstraint(databaseSymbolList)
 
 		#
 		# PREPARE FOR THE DATABASE UPDATES BY CREATING OBJECTS WE NEED THAT ALSO CAN BE REUSED.
@@ -1226,41 +1220,45 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			databaseSymbolName = databaseSymbol.name
 
 			#
-			# GET THE DATABASE CLIENT FOR THIS DATABASE VIA THE driver PROPERTY.
+			# GET THE BRANCH NAME AND SYMBOL FOR THIS DATABASE, IF ANY.
 			#
-			driverValue = databaseSymbol.getProp('driver').value
-			connStringValue = databaseSymbol.getProp('connString').value
-			databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
-			databaseClient.connString = connStringValue
-			databaseClient.init()
+			hasBranchSymbol:bool = False
+			branchSymbol:Symbol = None
+			branchSymbolName:str = None
 
-			#
-			# GET THE DATABASE BRANCH.  WHEN THE DATABASE IS CREATED THEN WE STORE THE BRANCH NAME WITH IT.
-			#
-			branchSymbol = databaseSymbol.getProp('branch').value
-			branchName = branchSymbol.name
+			if databaseSymbol.hasProp('branch'):
+				branchPropExpr = databaseSymbol.getProp('branch')
+				hasBranchSymbol = branchPropExpr.type == SymbolType.ReferenceToSymbol
+				if hasBranchSymbol:
+					branchSymbol = ExprReader.readSymbol(branchPropExpr)
+					branchSymbolName = branchSymbol.name
 
 			#
 			# GET THE DATABASE'S CURRENT VERSION.
 			#
-			lastSuccessfulVersionNumber = 'not created'
+			lastSuccessfulVersionNumber = None
 
-			if updateTrackingFileReader.fileExists(branchName, databaseSymbolName):
-				lastSuccessfulVersionNumber = updateTrackingFileReader.readLastSuccessfulVersionNumber(branchName, databaseSymbolName)
+			if hasBranchSymbol:
+				if updateTrackingFileReader.fileExists(branchSymbolName, databaseSymbolName):
+					lastSuccessfulVersionNumber = updateTrackingFileReader.readLastSuccessfulVersionNumberForBranch(branchSymbolName, databaseSymbolName)
+			elif updateTrackingFileReader.databaseFileExists(databaseSymbolName):
+					lastSuccessfulVersionNumber = updateTrackingFileReader.readLastSuccessfulVersionNumberForDatabase(databaseSymbolName)
 
-				#
-				# GET THE LAST SUCCESSFUL VERSION SYMBOL.
-				#
-				lastSuccessfulVersionSymbolName = VersionSymbolNamer.createName(branchName, lastSuccessfulVersionNumber)
-				lastSuccessfulVersionSymbol = None
-
-				if not self._symbolTableManager.hasSymbolByName(lastSuccessfulVersionSymbolName):
-					print(MessageBuilder.createLastVersionSymbolNotFoundMessage(branchName, lastSuccessfulVersionNumber))
-					continue
-
-				lastSuccessfulVersionSymbol = self._symbolTableManager.getSymbolByName(lastSuccessfulVersionSymbolName)
-
-			print('{}: {}: {}'.format(databaseSymbolName, branchName, lastSuccessfulVersionNumber))
+			#
+			# GET THE LAST SUCCESSFUL VERSION SYMBOL.
+			#
+			if lastSuccessfulVersionNumber != None:
+				#lastSuccessfulVersionSymbolName = VersionSymbolNamer.createName(branchSymbolName, lastSuccessfulVersionNumber)
+				#lastSuccessfulVersionSymbol = self._symbolTableManager.getSymbolByName(lastSuccessfulVersionSymbolName)
+				if hasBranchSymbol:
+					print('{}: {}: {}'.format(databaseSymbolName, branchSymbolName, lastSuccessfulVersionNumber))
+				else:
+					print('{}: {}: {}'.format(databaseSymbolName, 'default', lastSuccessfulVersionNumber))
+			else:
+				if hasBranchSymbol:
+					print('{}: {}: {}'.format(databaseSymbolName, branchSymbolName, 'not created'))
+				else:
+					print('{}: {}: {}'.format(databaseSymbolName, 'default', 'not created'))
 
 	def visitRevertDatabaseListStatement(self, ctx:SqlCurrentParser.RevertDatabaseListStatementContext):
 		#
@@ -1853,7 +1851,3 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		appService.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
 		appService.batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
 		appService.run()
-
-		#try:
-		#except Exception as e:
-		#	print('{0}: Error. {1}'.format(databaseSymbolName, e))

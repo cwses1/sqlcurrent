@@ -20,27 +20,32 @@ from formatters.UUID4Formatter import *
 class UpdateDatabaseAppService ():
 
 	def __init__ (self):
-		self.databaseSymbolName:str = None
 		self.databaseSymbol:Symbol = None
+		self.databaseSymbolName:str = None
 		self.databaseClient = None
 		self.hasBranchSymbol = None
 		self.branchSymbol = None
 		self.branchSymbolName = None
 		self.symbolTableManager = None
+		self.currentDateTime:str = None
+		self.currentDateTimeFormatted:str = None
 		self.versionWasSpecified:bool = None
 		self.specifiedVersionNumber:str = None
+		self.batchId:str = None
 
 	def run (self):
-		databaseSymbolName = self.databaseSymbolName
 		databaseSymbol = self.databaseSymbol
+		databaseSymbolName = self.databaseSymbolName
 		databaseClient = self.databaseClient
 		hasBranchSymbol = self.hasBranchSymbol
 		branchSymbol = self.branchSymbol
 		branchSymbolName = self.branchSymbolName
+		symbolTableManager = self.symbolTableManager
 		currentDateTime = self.currentDateTime
 		currentDateTimeFormatted = self.currentDateTimeFormatted
+		versionWasSpecified = self.versionWasSpecified
+		specifiedVersionNumber = self.specifiedVersionNumber
 		batchId = self.batchId
-		symbolTableManager = self.symbolTableManager
 
 		#
 		# GET THE CURRENT DATABASE VERSION.
@@ -52,22 +57,18 @@ class UpdateDatabaseAppService ():
 		# IF THE UPDATE TRACKING FILE DOES NOT EXIST THEN WE CANNOT UPDATE.
 		#
 		if hasBranchSymbol and not updateTrackingFileWriter.fileExists(branchSymbolName, databaseSymbolName):
-			print('{}: Database not created. Update canceled for this database.'.format(databaseSymbolName))
-			return
+			raise Exception('{}: Database not created.'.format(databaseSymbolName))
 		elif not updateTrackingFileWriter.databaseFileExists(databaseSymbolName):
-			print('{}: Database not created. Update canceled for this database.'.format(databaseSymbolName))
-			return
+			raise Exception('{}: Database not created. Update canceled for this database.'.format(databaseSymbolName))
 	
 		#
 		# GET THE SPECIFIED VERSION NUMBER.
 		# A SPECIFIED VERSION NUMBER OF NONE MEANS GO ALL THE WAY TO THE LAST VERSION IN THE SCRIPT, WHATEVER THAT MAY BE - THE USER MIGHT NOT KNOW WHAT THAT IS.
 		#
-		specifiedVersionNumber = None
 		specifiedVersionSymbolName = None
 		specifiedVersionSymbol = None
 
 		if self.versionWasSpecified:
-			specifiedVersionNumber = self.specifiedVersionNumber
 
 			if hasBranchSymbol:
 				specifiedVersionSymbolName = VersionSymbolNamer.createName(branchSymbolName, specifiedVersionNumber)
@@ -78,10 +79,9 @@ class UpdateDatabaseAppService ():
 				specifiedVersionSymbol = self.symbolTableManager.getSymbolByName(specifiedVersionSymbolName)
 			else:
 				if hasBranchSymbol:
-					print('{}: Version {} for branch {} not defined. Stopping update for this database.'.format(databaseSymbolName, specifiedVersionNumber, branchSymbolName))
+					raise Exception('{}: Version {} for branch {} not defined.'.format(databaseSymbolName, specifiedVersionNumber, branchSymbolName))
 				else:
-					print('{0}: Version {1} not defined. Stopping update for this database.'.format(databaseSymbolName, specifiedVersionNumber))
-				return
+					raise Exception('{0}: Version {1} not defined. Stopping update for this database.'.format(databaseSymbolName, specifiedVersionNumber))
 
 		#
 		# GET THE LAST SUCCESSFUL VERSION NUMBER FROM THE UPDATE TRACKING FILE.

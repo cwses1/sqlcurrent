@@ -78,12 +78,20 @@ class UpdateTrackingFileReader ():
 			if updateTrackingLine.result == 'success' and (updateTrackingLine.operation == 'create' or updateTrackingLine.operation == 'update' or updateTrackingLine.operation == 'revert'):
 				return updateTrackingLine.version
 
-
 	def dirExists (self, branchName:str) -> bool:
 		return os.path.exists(self.trackingDir + '/' + branchName)
 
+	def databaseDirExists (self, databaseSymbolName:str) -> bool:
+		return os.path.exists(self.getDatabaseDirPath(databaseSymbolName))
+
+	def getDatabaseDirPath (self, databaseSymbolName:str) -> str:
+		return self.trackingDir + '/standalone/' + databaseSymbolName
+
 	def fileExists (self, branchName:str, databaseSymbolName:str) -> bool:
 		return os.path.exists(self.getFilePath(branchName, databaseSymbolName))
+
+	def databaseFileExists (self, databaseSymbolName:str) -> bool:
+		return os.path.exists(self.getDatabaseFilePath(databaseSymbolName))
 
 	def getFilePath (self, branchName:str, databaseSymbolName:str) -> str:
 		return self.getDirPath(branchName) + '/' + self.getFileName(databaseSymbolName)
@@ -92,7 +100,7 @@ class UpdateTrackingFileReader ():
 		return self.trackingDir + '/standalone/' + self.getFileName(databaseSymbolName)
 
 	def getDirPath (self, branchName:str) -> str:
-		return self.trackingDir + '/' + branchName
+		return self.trackingDir + '/branches/' + branchName
 
 	def getFileName (self, databaseSymbolName:str) -> str:
 		return databaseSymbolName + '.txt';
