@@ -1,4 +1,51 @@
-SQL Current is database migrations scripting engine written in Python.  It works with any database that has a Python driver.  A very simple script looks like this:
+# SQL Current
+SQL Current is database migrations scripting engine written in Python.  It works with any database that has a Python driver.
+
+It has its own language called **Current Script**.  You use Current Script to define your database topology (where stuff is - servers, databases, branches, environments, versions, configurations) and run commands (create, update, revert, check, apply configuration, reset etc.) against the topology so you can manage your entire database infrastructure easily.  When we say "topology," we mean 
+
+Current Script looks like a combination of CSS and SQL.  Here's an example:
+
+	database alpha
+	{
+		driver: 'postgres';
+		connString: 'host=127.0.0.1 port=5432 dbname=alpha user=postgres password=postgres';
+		create: './create.sql';
+	}
+
+	database zappa
+	{
+		driver: 'postgres';
+		connString: 'host=127.0.0.1 port=5432 dbname=zappa user=postgres password=postgres';
+		create: './create.sql';
+	}
+
+	version 1.0.1
+	{
+		apply: './create_new_table.sql';
+	}
+
+	version 1.1.0
+	{
+		apply: './create_another_table.sql';
+	}
+
+	//
+	// THESE ARE COMMENTS.  THIS IS THE PART OF CURRENT SCRIPT THAT LOOKS LIKE SQL.  YOU CAN ALSO USE /* */ FOR COMMENTS.
+	//
+	create database alpha;
+	create database zappa;
+	update databases to version 1.1.0 where id in (alpha, zappa);
+	select databases;
+
+SQL Current is designed to solve everything from the simplest to the most difficult database setup, versioning, and migration problems that dadta and software teams face in the industry today.
+
+SQL Current is currently in an experiemental alpha stage.  The following databases have been tested against it:
+* PostgreSQL
+* SQL Server
+
+## Getting Started
+
+One of the simplest, shortest scripts you can write is this:
 
 	database mydb
 	{
@@ -7,9 +54,9 @@ SQL Current is database migrations scripting engine written in Python.  It works
 		create: './create.sql';
 	}
 
-	create mydb;
+	create database mydb;
 
-The above script creates the database and keeps track of that fact.  This is how you would run the script from the command line:
+The above script defines a database, creates that database, and keeps track of that fact in an **update tracking file**.  This is how you would run the script from the command line:
 
 	> sqlcurrent script.txt
 
@@ -21,7 +68,7 @@ If you ran the script twice in a row you would get this error:
 
 	mydb: This database already exists.
 
-SQL Current will not attempt to create a database that already exists.
+SQL Current will not attempt to create a database that already exists.  Versions always start at 1.0.0.
 
 ## Setup
 
@@ -38,6 +85,7 @@ https://www.python.org
 ### Python Database Drivers
 
 	pip install psycopg
+	pip install pymssql
 
 ## Usage
 
@@ -77,12 +125,6 @@ or if a DBA wanted to update only the QA environment databases to a specific ver
 
 If you want to work with databases this way, then this is the tool for you.  SQL Current is a database migrations scripting engine that lets you manage the changes in multiple databases across several servers using a SQL-like language.
 
-## Summary
-
-SQL Current is a database migrations tool.  To perform a migration (a change to the database schema) you do the following:
-* Describe your database topology by defining servers and databases.
-* Define your versions by binding them to your SQL change scripts.  You write the check, apply and revert scripts.
-
 ## Use Cases
 
 * Developer setting up a local environment.
@@ -90,6 +132,13 @@ SQL Current is a database migrations tool.  To perform a migration (a change to 
 * Topology database and customer data scenario.
 * Operational database and analytical database scenario.
 * Some applications use multiple databases for different purposes, these are called branches.
+
+## Summary
+
+SQL Current is a database migrations tool.  To perform a migration (a change to the database schema) you do the following:
+* Describe your database topology by defining servers and databases.
+* Define your versions by binding them to your SQL change scripts.  You write the check, apply and revert scripts.
+
 
 ## Scripting Language Guide
 
