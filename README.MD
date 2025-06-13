@@ -1,14 +1,26 @@
 # SQL Current
-SQL Current is database migrations scripting engine written in Python.  It works with any database that has a Python driver.
+SQL Current is a database migrations tool and scripting engine written in Python.  It can work with any database that has a Python driver.
 
-It has its own language called **Current Script**.  You use Current Script to define your database topology (servers, databases, branches, environments, versions, configurations) and execute commands against the topology (create, update, revert, check, apply configuration, reset etc.) so you can manage changes to your entire database infrastructure easily.
+SQL Current defines its own proprietary language called **Current Script**.  You use Current Script to define your database topoloy (servers, databases, branches, environments, versions, configurations).  You then execute commands against the topology (create, update, revert, check, apply configuration, reset etc.) th to your entire database infrastructure easily.
 
-Current Script looks like a combination of CSS and SQL.  Here's an example:
+Current Script looks like a combination of CSS and SQL.  Here's an example of a script that shows some of the language elements you might use:
 
 	//
-	// THIS IS THE PART OF CURRENT SCRIPT THAT LOOKS LIKE CSS - WHERE YOU DEFINE YOUR TOPOLOGY.
+	// WELCOME TO CURRENT SCRIPT!
 	// THESE ARE COMMENTS.
 	// YOU CAN ALSO USE /* */ FOR COMMENTS.
+	//
+
+	//
+	// OUR TOPOLOGY CAN GET BIG.
+	// LET'S INCLUDE OTHER SCRIPTS HERE.
+	//
+	@include 'servers.txt';
+	@include 'databases.txt';
+
+	//
+	// FIRST, DEFINE YOUR TOPOLOGY.
+	// THIS IS THE PART OF CURRENT SCRIPT THAT LOOKS LIKE CSS.
 	//
 	database alpha
 	{
