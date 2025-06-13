@@ -55,9 +55,9 @@ class CreateDatabaseAppService ():
 		# WE DO NOT TRY TO CREATE A DATABASE TWICE.
 		#
 		if hasBranchSymbol and updateTrackingFileWriter.fileExists(branchSymbolName, databaseSymbolName):
-			raise Exception('{}: Database already created.'.format(databaseSymbolName))
+			raise Exception('Database already created.')
 		elif updateTrackingFileWriter.databaseFileExists(databaseSymbolName):
-			raise Exception('{}: Database already created.'.format(databaseSymbolName))
+			raise Exception('Database already created.')
 
 		#
 		# CREATE AND CONFIGURE THE SCRIPT RUNNER APP SERVICE.

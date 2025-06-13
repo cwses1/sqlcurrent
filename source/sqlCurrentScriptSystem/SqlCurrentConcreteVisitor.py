@@ -71,6 +71,7 @@ from appServices.CheckDatabaseAppService import *
 from appServices.ResetDatabaseAppService import *
 from exceptions.SymbolConflictError import *
 from exceptions.PropValueNotValidError import *
+from appServices.ResetDatabaseListAppService import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -1767,9 +1768,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 				branchSymbol = ExprReader.readSymbol(branchPropExpr)
 				branchSymbolName = branchSymbol.name
 
-		#
-		# RUN THE DATABASE CHECKS.
-		#
 		appService = ResetDatabaseAppService()
 		appService.databaseSymbolName = databaseSymbolName
 		appService.databaseSymbol = databaseSymbol
@@ -1806,3 +1804,56 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			return
 		
 		databaseSymbol = self._symbolTableManager.getSymbolByName(databaseSymbolName)
+
+	def visitResetDatabaseListStatement(self, ctx:SqlCurrentParser.ResetDatabaseListStatementContext):
+		#
+		# resetDatabaseListStatement: 'reset' 'databases' whereClause? orderByClause? ';';
+		#
+
+		#
+		# GET THE ENTIRE LIST OF DATABASES.
+		#
+		databaseSymbolList = self._symbolTableManager.getAllDatabaseSymbols()
+
+		#
+		# APPLY THE CONSTRAINT TO THE LIST OF DATABASES.
+		#
+		if ctx.whereClause() != None:
+			whereConstraint = self.visitWhereClause(ctx.whereClause())
+			databaseSymbolList = whereConstraint.applyConstraint(databaseSymbolList)
+
+		#
+		# IF THERE ARE NO DATABASES TO UPDATE AFTER THE WHERE CLAUSE IS APPLIED, THEN LET THE USER KNOW.
+		#
+		#if len(databaseSymbolList) == 0:
+		#	print(MessageBuilder.createNoDatabasesAfterWhereClauseMessage())
+		#	return
+
+		#
+		# LET THE USER KNOW HOW MANY DATABASES WE'RE DEALING WITH.
+		#
+		#print(MessageBuilder.createDatabaseCreateCountAfterWhereClauseMessage(databaseSymbolList))
+
+		#
+		# ORDER THE LIST OF DATABASES.
+		#
+		if ctx.orderByClause() != None:
+			orderByConstraint = self.visitOrderByClause(ctx.orderByClause())
+			databaseSymbolList = orderByConstraint.applyConstraint(databaseSymbolList)
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+
+		appService = ResetDatabaseListAppService()
+		appService.databaseSymbolList = databaseSymbolList
+		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+		appService.batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+		appService.run()
+
+		#try:
+		#except Exception as e:
+		#	print('{0}: Error. {1}'.format(databaseSymbolName, e))

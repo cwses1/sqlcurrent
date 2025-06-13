@@ -31,7 +31,7 @@ class PymssqlClient (DatabaseClientBase):
 			elif componentNameLower == 'autocommit':
 				self.autocommit = componentPair[1] == '1'
 			else:
-				print('Warning, SQL Server connection string parameter string {0} not currently supported.'.format())
+				print('Warning, SQL Server connection string parameter string {0} not currently supported.'.format(componentName))
 
 	def executeScriptText (self, scriptText:str):
 		with pymssql.connect(server = self.server, user = self.userId, password = self.password, database = self.database, autocommit = self.autocommit) as conn:

@@ -31,6 +31,7 @@ statement: serverStatement
 	| checkDatabaseStatement
 	| resetDatabaseStatement
 	| initDatabaseStatement
+	| resetDatabaseListStatement
 	;
 
 serverStatement: 'server' SYMBOL_ID '{' serverPropList '}';
@@ -100,3 +101,5 @@ applyConfigurationToDatabaseListStatement: 'apply' 'configuration'? SYMBOL_ID 't
 printSymbolsStatement: 'print' 'symbols' ';';
 
 initDatabaseStatement: 'init' ('standalone' | 'branched')? 'database'? SYMBOL_ID ('in'? 'branch' expr)? ';';
+
+resetDatabaseListStatement: 'reset' 'databases' whereClause? orderByClause? ';';

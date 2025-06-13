@@ -413,5 +413,14 @@ class SqlCurrentListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SqlCurrentParser#resetDatabaseListStatement.
+    def enterResetDatabaseListStatement(self, ctx:SqlCurrentParser.ResetDatabaseListStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#resetDatabaseListStatement.
+    def exitResetDatabaseListStatement(self, ctx:SqlCurrentParser.ResetDatabaseListStatementContext):
+        pass
+
+
 
 del SqlCurrentParser
