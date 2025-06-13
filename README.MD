@@ -63,15 +63,19 @@ One of the simplest, shortest scripts you can write is this:
 
 The above script defines a database, creates that database, and keeps track of that fact in an **update tracking file**.  This is how you would run the script from the command line:
 
-	> sqlcurrent script.txt
+	% sqlcurrent script.txt
 
-If the script is successful you would get a message similar to this:
+If the script is successful you would get a set of messages similar to this:
 
-	mydb: Database created with version '1.0.0'.
+	mydb: Creating database.
+	mydb: Running '/Users/corywalker/Projects/Database_Migrations/create.sql'.
+	mydb: Success.
+	mydb: Create database complete.
 
-If you ran the script twice in a row you would get this error:
+If you ran this create script twice in a row you would get this error:
 
-	mydb: This database already exists.
+	mydb: Creating database.
+	mydb: Error. heavywork_demo: Database already created.
 
 SQL Current will not attempt to create a database that already exists.  Versions always start at 1.0.0.
 
