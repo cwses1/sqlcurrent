@@ -74,6 +74,7 @@ from exceptions.PropValueNotValidError import *
 from appServices.ResetDatabaseListAppService import *
 from appServices.CreateDatabaseListAppService import *
 from appServices.UpdateDatabaseListAppService import *
+from appServices.RevertDatabaseListAppService import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -1264,6 +1265,12 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# revertDatabaseListStatement: 'revert' 'databases' toVersionClause whereClause? orderByClause? ';';
 		#
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+
 		specifiedVersionNumber = self.visitToVersionClause(ctx.toVersionClause())
 
 		#
@@ -1274,54 +1281,50 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# IF THERE ARE NO DATABASES DEFINED THEN WE ARE DONE.
 		#
-		if len(databaseSymbolList) == 0:
-			print('No databases defined.')
-			return
+		#if len(databaseSymbolList) == 0:
+		#	print('No databases defined.')
+		#	return
 
 		#
 		# APPLY THE CONSTRAINT TO THE LIST OF DATABASES.
 		#
-		whereConstraint = None
-
 		if ctx.whereClause() != None:
-			whereConstraint = self.visitWhereClause(ctx.whereClause())
-			databaseSymbolList = whereConstraint.applyConstraint(databaseSymbolList)
+			databaseSymbolList = self.visitWhereClause(ctx.whereClause()).applyConstraint(databaseSymbolList)
 
 		#
 		# IF THERE ARE NO DATABASES TO UPDATE AFTER THE WHERE CLAUSE IS APPLIED, THEN LET THE USER KNOW.
 		#
 		databaseSymbolListLength = len(databaseSymbolList)
 
-		if databaseSymbolListLength == 0:
-			print('No databases remaining after where constraints applied.')
-			return
+		#if databaseSymbolListLength == 0:
+		#	print('No databases remaining after where constraints applied.')
+		#	return
 
 		#
 		# LET THE USER KNOW HOW MANY DATABASES WE'RE DEALING WITH.
 		#
-		if databaseSymbolListLength == 1:
-			print('Reverting 1 database.')
-		else:
-			print('Reverting {} databases.'.format(databaseSymbolListLength))
+		#if databaseSymbolListLength == 1:
+		#	print('Reverting 1 database.')
+		#else:
+		#	print('Reverting {} databases.'.format(databaseSymbolListLength))
 
 		#
 		# ORDER THE DATABASES.
 		#
-		orderByConstraint = None
-
 		if ctx.orderByClause() != None:
-			orderByConstraint = self.visitOrderByClause(ctx.orderByClause())
-			databaseSymbolList = orderByConstraint.applyConstraint(databaseSymbolList)
+			databaseSymbolList = self.visitOrderByClause(ctx.orderByClause()).applyConstraint(databaseSymbolList)
 
 		#
 		# REVERT EACH DATABASE.
 		#
-		for databaseSymbol in databaseSymbolList:
-			appService = RevertDatabaseAppService()
-			appService.databaseSymbolName = databaseSymbol.name
-			appService.symbolTableManager = self._symbolTableManager
-			appService.specifiedVersionNumber = specifiedVersionNumber
-			appService.run()
+		appService = RevertDatabaseListAppService()
+		appService.specifiedVersionNumber = specifiedVersionNumber
+		appService.databaseSymbolList = databaseSymbolList
+		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+		appService.batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+		appService.run()
 
 	def visitCheckDatabaseListStatement(self, ctx:SqlCurrentParser.CheckDatabaseListStatementContext):
 		return self.visitChildren(ctx)

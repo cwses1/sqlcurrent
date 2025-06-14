@@ -81,9 +81,10 @@ class UpdateDatabaseAppService ():
 				specifiedVersionSymbol = self.symbolTableManager.getSymbolByName(specifiedVersionSymbolName)
 			else:
 				if hasBranchSymbol:
-					raise Exception('{}: Version {} for branch {} not defined.'.format(databaseSymbolName, specifiedVersionNumber, branchSymbolName))
+					print('{}: Version {} for branch {} not defined.'.format(databaseSymbolName, specifiedVersionNumber, branchSymbolName))
 				else:
-					raise Exception('{0}: Version {1} not defined. Stopping update for this database.'.format(databaseSymbolName, specifiedVersionNumber))
+					print('{0}: Version {1} not defined.'.format(databaseSymbolName, specifiedVersionNumber))
+				return
 
 		#
 		# GET THE LAST SUCCESSFUL VERSION NUMBER FROM THE UPDATE TRACKING FILE.
@@ -115,7 +116,7 @@ class UpdateDatabaseAppService ():
 			versionCompareResult = VersionSymbolComparator.compare(specifiedVersionSymbol, lastSuccessfulVersionSymbol)
 
 			if versionCompareResult == 0:
-				print('{0}: Database current version is already at {1}.  No update needed.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
+				print('{0}: Version already at {1}.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
 				return
 
 			#
@@ -141,7 +142,7 @@ class UpdateDatabaseAppService ():
 		# WE WILL ONLY PRINT THIS MESSAGE IF SOMEONE HAS NOT SPECIFIED A VERSION (IF THE USER SPECIFIED A VERSION, THEN THIS WOULD BE DETECTED ABOVE).
 		#
 		if len(nextVersionSymbols) == 0:
-			print('{}: Current version is already at {}.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
+			print('{}: Version already at {}.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
 			return
 
 		#
@@ -154,7 +155,7 @@ class UpdateDatabaseAppService ():
 		nextVersionSymbolsLength = len(nextVersionSymbols)
 
 		if nextVersionSymbolsLength == 0:
-			print('{}: Current version is already at {}.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
+			print('{}: Version already at {}.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
 			return
 
 		#
@@ -170,10 +171,10 @@ class UpdateDatabaseAppService ():
 
 		print('{0}: Updating database to version {1} from {2}.'.format(databaseSymbolName, targetVersionNumber, lastSuccessfulVersionNumber))
 
-		if nextVersionSymbolsLength == 1:
-			print('{}: 1 update to apply to get to version {}.'.format(databaseSymbolName, targetVersionNumber))
-		else:
-			print('{}: {} updates to apply to get to version {}. Updates are run incrementally.'.format(databaseSymbolName, nextVersionSymbolsLength, targetVersionNumber))
+		#if nextVersionSymbolsLength == 1:
+		#	print('{}: 1 update to apply to get to version {}.'.format(databaseSymbolName, targetVersionNumber))
+		#else:
+		#	print('{}: {} updates to apply to get to version {}. Updates are run incrementally.'.format(databaseSymbolName, nextVersionSymbolsLength, targetVersionNumber))
 
 		#
 		# IF THE UPDATE TRACKING DOES NOT EXIST, THEN WE ARE DONE.
@@ -214,7 +215,7 @@ class UpdateDatabaseAppService ():
 			#
 			# TELL THE USER WHICH VERSION WE ARE UPDATING THIS DATABASE TO.
 			#
-			print('{0}: Updating database to version {1}.'.format(databaseSymbolName, nextVersionStr))
+			#print('{0}: Updating database to version {1}.'.format(databaseSymbolName, nextVersionStr))
 
 			#
 			# RUN APPLY SCRIPTS.
@@ -275,6 +276,6 @@ class UpdateDatabaseAppService ():
 			#
 			# TELL THE USER THAT THE UPDATE WAS SUCCESSFUL.
 			#
-			print('{}: Updated database to version {}.'.format(databaseSymbolName, nextVersionStr))
+			#print('{}: Updated database to version {}.'.format(databaseSymbolName, nextVersionStr))
 
-		print('{}: Update to version {} successful.'.format(databaseSymbolName, targetVersionNumber))
+		#print('{}: Update to version {} successful.'.format(databaseSymbolName, targetVersionNumber))

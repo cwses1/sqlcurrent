@@ -79,13 +79,13 @@ class UpdateTrackingFileReader ():
 				return updateTrackingLine.version
 
 	def dirExists (self, branchName:str) -> bool:
-		return os.path.exists(self.trackingDir + '/' + branchName)
+		return os.path.exists(self.trackingDir + os.sep + branchName)
 
 	def databaseDirExists (self, databaseSymbolName:str) -> bool:
 		return os.path.exists(self.getDatabaseDirPath(databaseSymbolName))
 
 	def getDatabaseDirPath (self, databaseSymbolName:str) -> str:
-		return self.trackingDir + '/standalone/' + databaseSymbolName
+		return self.trackingDir + os.sep + 'standalone' + os.sep + databaseSymbolName
 
 	def fileExists (self, branchName:str, databaseSymbolName:str) -> bool:
 		return os.path.exists(self.getFilePath(branchName, databaseSymbolName))
@@ -94,13 +94,13 @@ class UpdateTrackingFileReader ():
 		return os.path.exists(self.getDatabaseFilePath(databaseSymbolName))
 
 	def getFilePath (self, branchName:str, databaseSymbolName:str) -> str:
-		return self.getDirPath(branchName) + '/' + self.getFileName(databaseSymbolName)
+		return self.getDirPath(branchName) + os.sep + self.getFileName(databaseSymbolName)
 
 	def getDatabaseFilePath (self, databaseSymbolName:str) -> str:
-		return self.trackingDir + '/standalone/' + self.getFileName(databaseSymbolName)
+		return self.trackingDir + os.sep + 'standalone' + os.sep + self.getFileName(databaseSymbolName)
 
 	def getDirPath (self, branchName:str) -> str:
-		return self.trackingDir + '/branches/' + branchName
+		return self.trackingDir + os.sep + 'branches' + os.sep + branchName
 
 	def getFileName (self, databaseSymbolName:str) -> str:
 		return databaseSymbolName + '.txt';
