@@ -56,10 +56,12 @@ class UpdateDatabaseAppService ():
 		#
 		# IF THE UPDATE TRACKING FILE DOES NOT EXIST THEN WE CANNOT UPDATE.
 		#
-		if hasBranchSymbol and not updateTrackingFileWriter.fileExists(branchSymbolName, databaseSymbolName):
-			raise Exception('{}: Database not created.'.format(databaseSymbolName))
-		elif not updateTrackingFileWriter.databaseFileExists(databaseSymbolName):
-			raise Exception('{}: Database not created. Update canceled for this database.'.format(databaseSymbolName))
+		if hasBranchSymbol:
+			if not updateTrackingFileWriter.fileExists(branchSymbolName, databaseSymbolName):
+				raise Exception('{0}: Database not created in branch {1}.  Update tracking file not found.'.format(databaseSymbolName, branchSymbolName))
+		else:
+			if not updateTrackingFileWriter.databaseFileExists(databaseSymbolName):
+				raise Exception('{}: Database not created.  Update tracking file not found.'.format(databaseSymbolName))
 	
 		#
 		# GET THE SPECIFIED VERSION NUMBER.
@@ -98,7 +100,7 @@ class UpdateDatabaseAppService ():
 
 		if not self.symbolTableManager.hasSymbolByName(lastSuccessfulVersionSymbolName):
 			if hasBranchSymbol:
-				print('{}: Version {} for branch {} not defined.'.format(databaseSymbolName, lastSuccessfulVersionNumber, branchName))
+				print('{}: Version {} for branch {} not defined.'.format(databaseSymbolName, lastSuccessfulVersionNumber, branchSymbolName))
 				return
 			else:
 				print('{}: Version {} not defined.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
@@ -113,14 +115,14 @@ class UpdateDatabaseAppService ():
 			versionCompareResult = VersionSymbolComparator.compare(specifiedVersionSymbol, lastSuccessfulVersionSymbol)
 
 			if versionCompareResult == 0:
-				print('{}: Current version is {}. Update canceled for this database.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
+				print('{0}: Database current version is already at {1}.  No update needed.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
 				return
 
 			#
 			# CHECK IF THE SPECIFIED VERSION SYMBOL IS LESS THAN THE CURRENT VERSION SYMBOL.
 			#
 			if versionCompareResult < 0:
-				print('{}: Specified version {} is lower than current version {}. Update canceled for this database.'.format(databaseSymbolName, specifiedVersionNumber, lastSuccessfulVersionNumber))
+				print('{0}: Specified version {1} is lower than database current version {2}.  Use the revert command if you intend to go to a lower version.'.format(databaseSymbolName, specifiedVersionNumber, lastSuccessfulVersionNumber))
 				return
 
 		#
@@ -139,7 +141,7 @@ class UpdateDatabaseAppService ():
 		# WE WILL ONLY PRINT THIS MESSAGE IF SOMEONE HAS NOT SPECIFIED A VERSION (IF THE USER SPECIFIED A VERSION, THEN THIS WOULD BE DETECTED ABOVE).
 		#
 		if len(nextVersionSymbols) == 0:
-			print('{}: Current version is {}. Update canceled for this database.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
+			print('{}: Current version is already at {}.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
 			return
 
 		#
@@ -152,7 +154,7 @@ class UpdateDatabaseAppService ():
 		nextVersionSymbolsLength = len(nextVersionSymbols)
 
 		if nextVersionSymbolsLength == 0:
-			print('{}: Current version is {}. Update canceled for this database.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
+			print('{}: Current version is already at {}.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
 			return
 
 		#
@@ -176,17 +178,14 @@ class UpdateDatabaseAppService ():
 		#
 		# IF THE UPDATE TRACKING DOES NOT EXIST, THEN WE ARE DONE.
 		#
-		if hasBranchSymbol and not updateTrackingFileWriter.fileExists(branchSymbolName, databaseSymbolName):
-			print('{}: Database not created. Update canceled for this database.'.format(databaseSymbolName))
-			return
-		elif not updateTrackingFileWriter.databaseFileExists(databaseSymbolName):
-			print('{}: Database not created. Update canceled for this database.'.format(databaseSymbolName))
-			return
-
-		#
-		# CREATE A BATCH ID.
-		#
-		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+		if hasBranchSymbol:
+			if not updateTrackingFileWriter.fileExists(branchSymbolName, databaseSymbolName):
+				print('{0}: Database not created in branch {1}. You must create this database before running updates against it.'.format(databaseSymbolName, branchSymbolName))
+				return
+		else:
+			if not updateTrackingFileWriter.databaseFileExists(databaseSymbolName):
+				print('{0}: Database not created. You must create this database before running updates against it.'.format(databaseSymbolName))
+				return
 
 		#
 		# CREATE THE PATH FACTORY SO WE CAN FIND SCRIPTS.
@@ -265,8 +264,8 @@ class UpdateDatabaseAppService ():
 					updateTrackingLine.result = 'success'
 				except Exception as e:
 					updateTrackingLine.result = 'failure'
-					print('{}: Error: \'{}\'. Update canceled for this database.'.format(databaseSymbolName, e))
-					return
+					print('{0}: Error: \'{1}\'.'.format(databaseSymbolName, e))
+					raise
 				finally:
 					if hasBranchSymbol:
 						updateTrackingFileWriter.writeUpdateTrackingLine(branchSymbolName, databaseSymbolName, updateTrackingLine)
