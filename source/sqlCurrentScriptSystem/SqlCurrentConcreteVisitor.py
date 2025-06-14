@@ -75,6 +75,7 @@ from appServices.ResetDatabaseListAppService import *
 from appServices.CreateDatabaseListAppService import *
 from appServices.UpdateDatabaseListAppService import *
 from appServices.RevertDatabaseListAppService import *
+from appServices.CheckDatabaseListAppService import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -1327,7 +1328,51 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		appService.run()
 
 	def visitCheckDatabaseListStatement(self, ctx:SqlCurrentParser.CheckDatabaseListStatementContext):
-		return self.visitChildren(ctx)
+		#
+		# checkDatabaseListStatement: 'check' 'databases' whereClause? orderByClause? ';';
+		#
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+
+		#
+		# GET THE ENTIRE LIST OF DATABASES.
+		#
+		databaseSymbolList = self._symbolTableManager.getAllDatabaseSymbols()
+
+		#
+		# APPLY THE CONSTRAINT TO THE LIST OF DATABASES.
+		#
+		if ctx.whereClause() != None:
+			databaseSymbolList = self.visitWhereClause(ctx.whereClause()).applyConstraint(databaseSymbolList)
+
+		#
+		# IF THERE ARE NO DATABASES TO UPDATE AFTER THE WHERE CLAUSE IS APPLIED, THEN LET THE USER KNOW.
+		#
+		#if len(databaseSymbolList) == 0:
+		#	print(MessageBuilder.createNoDatabasesAfterWhereClauseMessage())
+		#	return
+
+		#
+		# LET THE USER KNOW HOW MANY DATABASES WE'RE DEALING WITH.
+		#
+		#print(MessageBuilder.createDatabaseCreateCountAfterWhereClauseMessage(databaseSymbolList))
+
+		#
+		# ORDER THE LIST OF DATABASES.
+		#
+		if ctx.orderByClause() != None:
+			databaseSymbolList = self.visitOrderByClause(ctx.orderByClause()).applyConstraint(databaseSymbolList)
+
+		appService = CheckDatabaseListAppService()
+		appService.databaseSymbolList = databaseSymbolList
+		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+		appService.batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+		appService.run()
 
 	def visitRevertDatabaseStatement(self, ctx:SqlCurrentParser.RevertDatabaseStatementContext):
 		#

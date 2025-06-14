@@ -70,20 +70,18 @@ class CheckDatabaseAppService ():
 			if self.symbolTableManager.hasSymbolByName(specifiedVersionSymbolName):
 				specifiedVersionSymbol = self.symbolTableManager.getSymbolByName(specifiedVersionSymbolName)
 			else:
-				print('{}: Version {} for branch {} not defined. Update canceled for this database.'.format(databaseSymbolName, specifiedVersionNumber, branchName))
+				print('{}: Version {} for branch {} not defined.'.format(databaseSymbolName, specifiedVersionNumber, branchSymbolName))
 				return
 
 		#
 		# IF THE UPDATE TRACKING FILE DOES NOT EXIST THEN WE CANNOT PROCEED.
 		#
-		if hasBranchSymbol and not updateTrackingFileWriter.fileExists(branchSymbolName, databaseSymbolName):
-			print('{}: Could not find update tracking file for branch.'.format(databaseSymbolName))
-			print('{0}: Stopping.'.format(databaseSymbolName))
-			return
-		elif not updateTrackingFileWriter.databaseFileExists(databaseSymbolName):
-			print('{}: Could not find update tracking file for standalone database.'.format(databaseSymbolName))
-			print('{0}: Stopping.'.format(databaseSymbolName))
-			return
+		if hasBranchSymbol:
+			if not updateTrackingFileWriter.fileExists(branchSymbolName, databaseSymbolName):
+				raise Exception('{}: Could not find update tracking file for branch.'.format(databaseSymbolName))
+		else:
+			if not updateTrackingFileWriter.databaseFileExists(databaseSymbolName):
+				raise Exception('{}: Could not find update tracking file for standalone database.'.format(databaseSymbolName))
 
 		#
 		# GET THE LAST SUCCESSFUL VERSION NUMBER FROM THE UPDATE TRACKING FILE.
@@ -104,12 +102,9 @@ class CheckDatabaseAppService ():
 		if not self.symbolTableManager.hasSymbolByName(lastSuccessfulVersionSymbolName):
 			if hasBranchSymbol:
 				print('{}: Version \'{}\' for branch \'{}\' not defined.'.format(databaseSymbolName, lastSuccessfulVersionNumber, branchSymbolName))
-				print('{0}: Check \'{1}\' canceled for database \'{0}\'.'.format(databaseSymbolName))
-				return
 			else:
 				print('{0}: Version {1} not defined.'.format(databaseSymbolName, lastSuccessfulVersionNumber))
-				print('{0}: Check canceled.'.format(databaseSymbolName))
-				return
+			return
 
 		#
 		# GET THE LAST SUCCESSFUL VERSION SYMBOL.
@@ -172,9 +167,7 @@ class CheckDatabaseAppService ():
 		pathFactory.sqlScriptsDir = SymbolReader.readString(self.symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
 		pathFactory.branchSymbolName = branchSymbolName
 		pathFactory.databaseSymbolName = databaseSymbolName
-
-		if databaseSymbol.hasProp('dir'):
-			pathFactory.versionDir = SymbolReader.readPropAsString(databaseSymbol, 'dir')
+		pathFactory.specifiedDir = SymbolReader.readPropAsString(databaseSymbol, 'dir') if databaseSymbol.hasProp('dir') else None
 
 		#
 		# RUN CHECK SCRIPTS FOR EACH VERSION.
@@ -184,8 +177,23 @@ class CheckDatabaseAppService ():
 			versionNumber = VersionSymbolFormatter.formatVersionString(versionSymbol)
 			pathFactory.versionNumber = versionNumber
 
+			if not versionSymbol.hasProp('check'):
+				if hasBranchSymbol:
+					print('{0}: No check scripts in version {1} in branch {2}.'.format(databaseSymbolName, versionNumber, branchSymbolName))
+				else:
+					print('{0}: No check scripts in version {1} in standalone database.'.format(databaseSymbolName, versionNumber))
+				continue
+
 			checkScriptList:List[str] = SymbolReader.readPropAsStringList(versionSymbol, 'check')
 			checkScriptListLength = len(checkScriptList)
+
+			if checkScriptListLength == 0:
+				if hasBranchSymbol:
+					print('{0}: No check scripts in version {1} in branch {2}.'.format(databaseSymbolName, versionNumber, branchSymbolName))
+				else:
+					print('{0}: No check scripts in version {1} in standalone database.'.format(databaseSymbolName, versionNumber))
+				continue
+
 			checkScriptNumber:int = 0
 
 			if hasBranchSymbol:
@@ -229,4 +237,4 @@ class CheckDatabaseAppService ():
 		#
 		# TELL THE USER THAT THE CONFIGURATION WAS SUCCESSFUL.
 		#
-		print('{0}: Check database complete.'.format(databaseSymbolName))
+		print('{0}: Check complete.'.format(databaseSymbolName))
