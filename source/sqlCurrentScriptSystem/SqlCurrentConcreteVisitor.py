@@ -81,6 +81,7 @@ from appServices.RecreateDatabaseListAppService import *
 from appServices.CreateServerAppService import *
 from appServices.ResetServerAppService import *
 from appServices.RecreateServerAppService import *
+from appServices.CheckServerAppService import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -2094,7 +2095,49 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		return self.visitChildren(ctx)
 
 	def visitCheckServerStatement(self, ctx:SqlCurrentParser.CheckServerStatementContext):
-		return self.visitChildren(ctx)
+		#
+		# checkServerStatement: 'check' 'server' SYMBOL_ID ';';
+		#
+		#
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+
+		#
+		# GET THE SERVER SYMBOL NAME AND SYMBOL.
+		#
+		serverSymbolName = ctx.SYMBOL_ID().getText()
+
+		if not self._symbolTableManager.hasSymbolByName(serverSymbolName):
+			print('{0}: Server symbol not found.'.format(serverSymbolName))
+			return
+		
+		serverSymbol = self._symbolTableManager.getSymbolByName(serverSymbolName)
+
+		#
+		# GET THE DATABASE CLIENT FOR THE SERVER.
+		#
+		driverValue = serverSymbol.getProp('driver').value
+		connStringValue = serverSymbol.getProp('connString').value
+		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
+		databaseClient.connString = connStringValue
+		databaseClient.init()
+
+		appService = CheckServerAppService()
+		appService.serverSymbolName = serverSymbolName
+		appService.serverSymbol = serverSymbol
+		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+		appService.batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+		appService.databaseClient = databaseClient
+
+		try:
+			appService.run()
+		except Exception as e:
+			print('{0}: Error. {1}'.format(serverSymbolName, e))
 
 	def visitCheckServerListStatement(self, ctx:SqlCurrentParser.CheckServerListStatementContext):
 		return self.visitChildren(ctx)

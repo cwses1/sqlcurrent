@@ -16,6 +16,7 @@ from datetimeUtils.DateTimeUtil import *
 from versionUtils.VersionSymbolFilterUtil import *
 from versionUtils.VersionSymbolSortUtil import *
 from formatters.UUID4Formatter import *
+from entityFactories.ScriptRunnerResultSetFactory import *
 
 class ScriptRunnerAppService ():
 
@@ -522,3 +523,55 @@ class ScriptRunnerAppService ():
 			print('{0}: Running \'{1}\'.'.format(serverSymbolName, scriptFilePath))
 			databaseClient.runResetScript(scriptText)
 			print('{0}: Success.'.format(serverSymbolName))
+
+	def runServerCheckScripts (self):
+		symbolTableManager = self.symbolTableManager
+		databaseClient = self.databaseClient
+		currentDateTimeFormatted = self.currentDateTimeFormatted
+		batchId = self.batchId
+		serverSymbolName = self.serverSymbolName
+		serverSymbol = self.serverSymbol
+		scriptPropName = 'check'
+
+		if not serverSymbol.hasProp(scriptPropName):
+			return
+
+		scriptProp = serverSymbol.getProp(scriptPropName)
+		scriptExprList = scriptProp.value
+
+		if len(scriptExprList) == 0:
+			return
+
+		#
+		# GET THE SCRIPT FILE PATH FACTORY AND DETERMINE WHERE THE SCRIPTS SHOULD BE.
+		#
+		scriptFilePathFactory = ScriptFilePathFactory()
+		scriptFilePathFactory.sqlScriptsDir = SymbolReader.readString(symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
+		scriptFilePathFactory.serverSymbolName = serverSymbolName
+		scriptFilePathFactory.specifiedDir = SymbolReader.readPropAsString(serverSymbol, 'dir') if serverSymbol.hasProp('dir') else None
+
+		#
+		# RUN THE SCRIPTS.
+		#
+		for scriptExpr in scriptExprList:
+			scriptFilePath = scriptFilePathFactory.createCheckPathForServer(scriptExpr.value)
+
+			if not os.path.exists(scriptFilePath):
+				raise Exception('{0}: Error: No such file or directory: \'{}\'.'.format(serverSymbolName, scriptFilePath))
+
+			scriptText = StringFileReader.readFile(scriptFilePath)
+
+			print('{0}: Running \'{1}\'.'.format(serverSymbolName, scriptFilePath))
+			checkResultSet = databaseClient.runCheckScript(scriptText)
+			errorCode:int = checkResultSet[0]
+			errorReason:str = checkResultSet[1]
+
+			if errorCode > 0:
+				#updateTrackingLine.result = 'failure'
+				print('{0}: Failure. Error Code: {1}. Error Reason: {2}'.format(serverSymbolName, errorCode, errorReason))
+				return ScriptRunnerResultSetFactory.createResultSetFromRow(errorCode, errorReason)
+			else:
+				#updateTrackingLine.result = 'success'
+				print('{0}: Success.'.format(serverSymbolName))
+
+		return ScriptRunnerResultSetFactory.createSuccessResultSet()
