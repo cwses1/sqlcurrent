@@ -32,11 +32,25 @@ statement: serverStatement
 	| resetDatabaseStatement
 	| initDatabaseStatement
 	| resetDatabaseListStatement
+	| recreateDatabaseListStatement
+	| recreateDatabaseStatement
+	| createServerStatement
+	| createServerListStatement
+	| recreateServerStatement
+	| recreateServerListStatement
+	| checkServerStatement
+	| checkServerListStatement
+	| resetServerStatement
+	| resetServerListStatement
+	| removeConfigurationStatement
+	| removeConfigurationListStatement
+	| checkConfigurationStatement
+	| checkConfigurationListStatement
 	;
 
 serverStatement: 'server' SYMBOL_ID '{' serverPropList '}';
 serverPropList: (serverProp ';')*;
-serverProp: (SYMBOL_ID | 'solution' | 'environment' | 'branch') ':' expr;
+serverProp: (SYMBOL_ID | 'solution' | 'environment' | 'branch' | 'create' | 'reset' | 'check' | 'recreate') ':' expr;
 
 databaseStatement: 'database' SYMBOL_ID '{' databasePropList '}';
 databasePropList: (databaseProp ';')*;
@@ -80,16 +94,16 @@ simpleWhereExprList: '(' ')'
 orderByClause: 'order' 'by' orderBySegment (',' orderBySegment)?;
 orderBySegment: SYMBOL_ID ('asc' | 'descending')?;
 
-updateDatabaseStatement: 'update' 'database'? SYMBOL_ID toVersionClause? ';';
+updateDatabaseStatement: 'update' 'database' SYMBOL_ID toVersionClause? ';';
 toVersionClause: 'to' 'version'? VERSION_ID;
 
 updateDatabaseListStatement: 'update' 'databases' toVersionClause? whereClause? orderByClause? ';';
 selectDatabaseListStatement: 'select' 'databases' whereClause? orderByClause? ';';
 revertDatabaseListStatement: 'revert' 'databases' toVersionClause whereClause? orderByClause? ';';
 checkDatabaseListStatement: 'check' 'databases' whereClause? orderByClause? ';';
-revertDatabaseStatement: 'revert' 'database'? SYMBOL_ID toVersionClause ';';
-checkDatabaseStatement: 'check' 'database'? SYMBOL_ID ('version' VERSION_ID)? ';';
-resetDatabaseStatement: 'reset' 'database'? SYMBOL_ID ';';
+revertDatabaseStatement: 'revert' 'database' SYMBOL_ID toVersionClause ';';
+checkDatabaseStatement: 'check' 'database' SYMBOL_ID ('version' VERSION_ID)? ';';
+resetDatabaseStatement: 'reset' 'database' SYMBOL_ID ';';
 
 configurationStatement: 'configuration' SYMBOL_ID 'in' 'branch' expr? '{' configurationPropList '}';
 configurationPropList: (configurationProp ';')*;
@@ -103,3 +117,24 @@ printSymbolsStatement: 'print' 'symbols' ';';
 initDatabaseStatement: 'init' ('standalone' | 'branched')? 'database'? SYMBOL_ID ('in'? 'branch' expr)? ';';
 
 resetDatabaseListStatement: 'reset' 'databases' whereClause? orderByClause? ';';
+
+recreateDatabaseStatement: 'recreate' 'database'? SYMBOL_ID ';';
+recreateDatabaseListStatement: 'recreate' 'databases' whereClause? orderByClause? ';';
+
+createServerStatement: 'create' 'server' SYMBOL_ID ';';
+createServerListStatement: 'create' 'servers' whereClause? orderByClause? ';';
+
+recreateServerStatement: 'recreate' 'server' SYMBOL_ID ';';
+recreateServerListStatement: 'recreate' 'servers' whereClause? orderByClause? ';';
+
+checkServerStatement: 'check' 'server' SYMBOL_ID ';';
+checkServerListStatement: 'check' 'servers' whereClause? orderByClause? ';';
+
+resetServerStatement: 'reset' 'server' SYMBOL_ID ';';
+resetServerListStatement: 'reset' 'servers' whereClause? orderByClause? ';';
+
+removeConfigurationStatement: 'remove' 'configuration' SYMBOL_ID 'from' 'database'? SYMBOL_ID ';';
+removeConfigurationListStatement: 'remove' 'configuration' SYMBOL_ID 'from' 'databases' whereClause? orderByClause? ';';
+
+checkConfigurationStatement: 'check' 'configuration' SYMBOL_ID 'for' 'database' SYMBOL_ID ';';
+checkConfigurationListStatement: 'check' 'configuration' SYMBOL_ID 'for' 'databases' whereClause? orderByClause? ';';

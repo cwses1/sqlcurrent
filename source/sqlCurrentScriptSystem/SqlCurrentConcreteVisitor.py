@@ -76,6 +76,10 @@ from appServices.CreateDatabaseListAppService import *
 from appServices.UpdateDatabaseListAppService import *
 from appServices.RevertDatabaseListAppService import *
 from appServices.CheckDatabaseListAppService import *
+from appServices.RecreateDatabaseAppService import *
+from appServices.RecreateDatabaseListAppService import *
+from appServices.CreateServerAppService import *
+from appServices.ResetServerAppService import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -1773,12 +1777,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# GET THE CURRENT TIME.
 		#
 		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
-		currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
-
-		#
-		# CREATE A BATCH ID.
-		#
-		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
 
 		#
 		# GET THE DATABASE SYMBOL NAME AND SYMBOL.
@@ -1822,8 +1820,8 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		appService.branchSymbolName = branchSymbolName
 		appService.symbolTableManager = self._symbolTableManager
 		appService.currentDateTime = currentDateTime
-		appService.currentDateTimeFormatted = currentDateTimeFormatted
-		appService.batchId = batchId
+		appService.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+		appService.batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
 		appService.databaseClient = databaseClient
 
 		try:
@@ -1865,8 +1863,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# APPLY THE CONSTRAINT TO THE LIST OF DATABASES.
 		#
 		if ctx.whereClause() != None:
-			whereConstraint = self.visitWhereClause(ctx.whereClause())
-			databaseSymbolList = whereConstraint.applyConstraint(databaseSymbolList)
+			databaseSymbolList = self.visitWhereClause(ctx.whereClause()).applyConstraint(databaseSymbolList)
 
 		#
 		# IF THERE ARE NO DATABASES TO UPDATE AFTER THE WHERE CLAUSE IS APPLIED, THEN LET THE USER KNOW.
@@ -1884,8 +1881,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# ORDER THE LIST OF DATABASES.
 		#
 		if ctx.orderByClause() != None:
-			orderByConstraint = self.visitOrderByClause(ctx.orderByClause())
-			databaseSymbolList = orderByConstraint.applyConstraint(databaseSymbolList)
+			databaseSymbolList = self.visitOrderByClause(ctx.orderByClause()).applyConstraint(databaseSymbolList)
 
 		#
 		# GET THE CURRENT TIME.
@@ -1899,3 +1895,223 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		appService.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
 		appService.batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
 		appService.run()
+
+	def visitRecreateDatabaseStatement(self, ctx:SqlCurrentParser.RecreateDatabaseStatementContext):
+		#
+		# recreateDatabaseStatement: 'recreate' 'database'? SYMBOL_ID ';';
+		#
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+		currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+
+		#
+		# CREATE A BATCH ID.
+		#
+		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+
+		#
+		# GET THE DATABASE SYMBOL NAME AND SYMBOL.
+		#
+		databaseSymbolName = ctx.SYMBOL_ID().getText()
+
+		if not self._symbolTableManager.hasSymbolByName(databaseSymbolName):
+			print('{}: Database not found.'.format(databaseSymbolName))
+			return
+		
+		databaseSymbol = self._symbolTableManager.getSymbolByName(databaseSymbolName)
+
+		#
+		# GET THE DATABASE CLIENT.
+		#
+		driverValue = databaseSymbol.getProp('driver').value
+		connStringValue = databaseSymbol.getProp('connString').value
+		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
+		databaseClient.connString = connStringValue
+		databaseClient.init()
+
+		#
+		# GET THE BRANCH NAME AND SYMBOL FOR THIS DATABASE.
+		#
+		hasBranchSymbol:bool = False
+		branchSymbol:Symbol = None
+		branchSymbolName:str = None
+
+		if databaseSymbol.hasProp('branch'):
+			branchPropExpr = databaseSymbol.getProp('branch')
+			hasBranchSymbol = branchPropExpr.type == SymbolType.ReferenceToSymbol
+			if hasBranchSymbol:
+				branchSymbol = ExprReader.readSymbol(branchPropExpr)
+				branchSymbolName = branchSymbol.name
+
+		appService = RecreateDatabaseAppService()
+		appService.databaseSymbolName = databaseSymbolName
+		appService.databaseSymbol = databaseSymbol
+		appService.hasBranchSymbol = hasBranchSymbol
+		appService.branchSymbol = branchSymbol
+		appService.branchSymbolName = branchSymbolName
+		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = currentDateTimeFormatted
+		appService.batchId = batchId
+		appService.databaseClient = databaseClient
+
+		try:
+			appService.run()
+		except Exception as e:
+			print('{0}: Error. {1}'.format(databaseSymbolName, e))
+
+	def visitRecreateDatabaseListStatement(self, ctx:SqlCurrentParser.RecreateDatabaseListStatementContext):
+		#
+		# recreateDatabaseListStatement: 'recreate' 'databases' whereClause? orderByClause? ';';
+		#
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+
+		#
+		# GET THE ENTIRE LIST OF DATABASES.
+		#
+		databaseSymbolList = self._symbolTableManager.getAllDatabaseSymbols()
+
+		#
+		# APPLY THE CONSTRAINT TO THE LIST OF DATABASES.
+		#
+		if ctx.whereClause() != None:
+			databaseSymbolList = self.visitWhereClause(ctx.whereClause()).applyConstraint(databaseSymbolList)
+
+		#
+		# ORDER THE LIST OF DATABASES.
+		#
+		if ctx.orderByClause() != None:
+			databaseSymbolList = self.visitOrderByClause(ctx.orderByClause()).applyConstraint(databaseSymbolList)
+
+		appService = RecreateDatabaseListAppService()
+		appService.databaseSymbolList = databaseSymbolList
+		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+		appService.batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+		appService.run()
+
+	def visitCreateServerStatement(self, ctx:SqlCurrentParser.CreateServerStatementContext):
+		#
+		# createServerStatement: 'create' 'server' SYMBOL_ID ';';
+		#
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+
+		#
+		# GET THE SERVER SYMBOL NAME AND SYMBOL.
+		#
+		serverSymbolName = ctx.SYMBOL_ID().getText()
+
+		if not self._symbolTableManager.hasSymbolByName(serverSymbolName):
+			print('{0}: Server symbol not found.'.format(serverSymbolName))
+			return
+		
+		serverSymbol = self._symbolTableManager.getSymbolByName(serverSymbolName)
+
+		#
+		# GET THE DATABASE CLIENT FOR THE SERVER.
+		#
+		driverValue = serverSymbol.getProp('driver').value
+		connStringValue = serverSymbol.getProp('connString').value
+		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
+		databaseClient.connString = connStringValue
+		databaseClient.init()
+
+		appService = CreateServerAppService()
+		appService.serverSymbolName = serverSymbolName
+		appService.serverSymbol = serverSymbol
+		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+		appService.batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+		appService.databaseClient = databaseClient
+
+		try:
+			appService.run()
+		except Exception as e:
+			print('{0}: Error. {1}'.format(serverSymbolName, e))
+
+	def visitCreateServerListStatement(self, ctx:SqlCurrentParser.CreateServerListStatementContext):
+		return self.visitChildren(ctx)
+
+	def visitRecreateServerStatement(self, ctx:SqlCurrentParser.RecreateServerStatementContext):
+		return self.visitChildren(ctx)
+
+	def visitRecreateServerListStatement(self, ctx:SqlCurrentParser.RecreateServerListStatementContext):
+		return self.visitChildren(ctx)
+
+	def visitCheckServerStatement(self, ctx:SqlCurrentParser.CheckServerStatementContext):
+		return self.visitChildren(ctx)
+
+	def visitCheckServerListStatement(self, ctx:SqlCurrentParser.CheckServerListStatementContext):
+		return self.visitChildren(ctx)
+
+	def visitResetServerStatement(self, ctx:SqlCurrentParser.ResetServerStatementContext):
+		#
+		# resetServerStatement: 'reset' 'server' SYMBOL_ID ';';
+		#
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+
+		#
+		# GET THE SERVER SYMBOL NAME AND SYMBOL.
+		#
+		serverSymbolName = ctx.SYMBOL_ID().getText()
+
+		if not self._symbolTableManager.hasSymbolByName(serverSymbolName):
+			print('{0}: Server symbol not found.'.format(serverSymbolName))
+			return
+		
+		serverSymbol = self._symbolTableManager.getSymbolByName(serverSymbolName)
+
+		#
+		# GET THE DATABASE CLIENT FOR THE SERVER.
+		#
+		driverValue = serverSymbol.getProp('driver').value
+		connStringValue = serverSymbol.getProp('connString').value
+		databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
+		databaseClient.connString = connStringValue
+		databaseClient.init()
+
+		appService = ResetServerAppService()
+		appService.serverSymbolName = serverSymbolName
+		appService.serverSymbol = serverSymbol
+		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+		appService.batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+		appService.databaseClient = databaseClient
+
+		try:
+			appService.run()
+		except Exception as e:
+			print('{0}: Error. {1}'.format(serverSymbolName, e))
+
+	def visitResetServerListStatement(self, ctx:SqlCurrentParser.ResetServerListStatementContext):
+		return self.visitChildren(ctx)
+
+	def visitRemoveConfigurationStatement(self, ctx:SqlCurrentParser.RemoveConfigurationStatementContext):
+		return self.visitChildren(ctx)
+
+	def visitRemoveConfigurationListStatement(self, ctx:SqlCurrentParser.RemoveConfigurationListStatementContext):
+		return self.visitChildren(ctx)
+
+	def visitCheckConfigurationStatement(self, ctx:SqlCurrentParser.CheckConfigurationStatementContext):
+		return self.visitChildren(ctx)
+
+	def visitCheckConfigurationListStatement(self, ctx:SqlCurrentParser.CheckConfigurationListStatementContext):
+		return self.visitChildren(ctx)

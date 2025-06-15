@@ -422,5 +422,131 @@ class SqlCurrentListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SqlCurrentParser#recreateDatabaseStatement.
+    def enterRecreateDatabaseStatement(self, ctx:SqlCurrentParser.RecreateDatabaseStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#recreateDatabaseStatement.
+    def exitRecreateDatabaseStatement(self, ctx:SqlCurrentParser.RecreateDatabaseStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#recreateDatabaseListStatement.
+    def enterRecreateDatabaseListStatement(self, ctx:SqlCurrentParser.RecreateDatabaseListStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#recreateDatabaseListStatement.
+    def exitRecreateDatabaseListStatement(self, ctx:SqlCurrentParser.RecreateDatabaseListStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#createServerStatement.
+    def enterCreateServerStatement(self, ctx:SqlCurrentParser.CreateServerStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#createServerStatement.
+    def exitCreateServerStatement(self, ctx:SqlCurrentParser.CreateServerStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#createServerListStatement.
+    def enterCreateServerListStatement(self, ctx:SqlCurrentParser.CreateServerListStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#createServerListStatement.
+    def exitCreateServerListStatement(self, ctx:SqlCurrentParser.CreateServerListStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#recreateServerStatement.
+    def enterRecreateServerStatement(self, ctx:SqlCurrentParser.RecreateServerStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#recreateServerStatement.
+    def exitRecreateServerStatement(self, ctx:SqlCurrentParser.RecreateServerStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#recreateServerListStatement.
+    def enterRecreateServerListStatement(self, ctx:SqlCurrentParser.RecreateServerListStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#recreateServerListStatement.
+    def exitRecreateServerListStatement(self, ctx:SqlCurrentParser.RecreateServerListStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#checkServerStatement.
+    def enterCheckServerStatement(self, ctx:SqlCurrentParser.CheckServerStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#checkServerStatement.
+    def exitCheckServerStatement(self, ctx:SqlCurrentParser.CheckServerStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#checkServerListStatement.
+    def enterCheckServerListStatement(self, ctx:SqlCurrentParser.CheckServerListStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#checkServerListStatement.
+    def exitCheckServerListStatement(self, ctx:SqlCurrentParser.CheckServerListStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#resetServerStatement.
+    def enterResetServerStatement(self, ctx:SqlCurrentParser.ResetServerStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#resetServerStatement.
+    def exitResetServerStatement(self, ctx:SqlCurrentParser.ResetServerStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#resetServerListStatement.
+    def enterResetServerListStatement(self, ctx:SqlCurrentParser.ResetServerListStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#resetServerListStatement.
+    def exitResetServerListStatement(self, ctx:SqlCurrentParser.ResetServerListStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#removeConfigurationStatement.
+    def enterRemoveConfigurationStatement(self, ctx:SqlCurrentParser.RemoveConfigurationStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#removeConfigurationStatement.
+    def exitRemoveConfigurationStatement(self, ctx:SqlCurrentParser.RemoveConfigurationStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#removeConfigurationListStatement.
+    def enterRemoveConfigurationListStatement(self, ctx:SqlCurrentParser.RemoveConfigurationListStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#removeConfigurationListStatement.
+    def exitRemoveConfigurationListStatement(self, ctx:SqlCurrentParser.RemoveConfigurationListStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#checkConfigurationStatement.
+    def enterCheckConfigurationStatement(self, ctx:SqlCurrentParser.CheckConfigurationStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#checkConfigurationStatement.
+    def exitCheckConfigurationStatement(self, ctx:SqlCurrentParser.CheckConfigurationStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#checkConfigurationListStatement.
+    def enterCheckConfigurationListStatement(self, ctx:SqlCurrentParser.CheckConfigurationListStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#checkConfigurationListStatement.
+    def exitCheckConfigurationListStatement(self, ctx:SqlCurrentParser.CheckConfigurationListStatementContext):
+        pass
+
+
 
 del SqlCurrentParser

@@ -8,6 +8,7 @@ class ScriptFilePathFactory ():
 		self.databaseSymbolName:str = None
 		self.versionNumber:str = None
 		self.specifiedDir:str = None
+		self.serverSymbolName:str = None
 
 	def createResetPath (self, pathParam:str) -> str:
 		#
@@ -269,3 +270,51 @@ class ScriptFilePathFactory ():
 				return os.getcwd() + os.sep + self.stripRelativePath(self.specifiedDir) + os.sep + pathParam
 			else:
 				return os.getcwd() + os.sep + self.specifiedDir + os.sep + pathParam
+
+	def createCreatePathForServer (self, pathParam:str) -> str:
+		#
+		# ABSOLUTE PATH: / OR C:\
+		#
+		if os.path.isabs(pathParam):
+			return pathParam
+
+		#
+		# RELATIVE PATH: ./script_is_here/apply_version.sql
+		#
+		if pathParam.startswith('.'):
+			return os.getcwd() + os.sep + self.stripRelativePath(pathParam)
+
+		#
+		# SPECIFIED DIRECTORY PATH.
+		#
+		if self.specifiedDir != None:
+			return self.getPathUsingSpecifiedDir(pathParam)
+
+		#
+		# OPINIONATED PATH.
+		#
+		return self.sqlScriptsDir + os.sep + 'server' + os.sep + self.serverSymbolName + os.sep + 'create' + os.sep + pathParam
+
+	def createResetPathForServer (self, pathParam:str) -> str:
+		#
+		# ABSOLUTE PATH: / OR C:\
+		#
+		if os.path.isabs(pathParam):
+			return pathParam
+
+		#
+		# RELATIVE PATH: ./script_is_here/apply_version.sql
+		#
+		if pathParam.startswith('.'):
+			return os.getcwd() + os.sep + self.stripRelativePath(pathParam)
+
+		#
+		# SPECIFIED DIRECTORY PATH.
+		#
+		if self.specifiedDir != None:
+			return self.getPathUsingSpecifiedDir(pathParam)
+
+		#
+		# OPINIONATED PATH.
+		#
+		return self.sqlScriptsDir + os.sep + 'server' + os.sep + self.serverSymbolName + os.sep + 'reset' + os.sep + pathParam

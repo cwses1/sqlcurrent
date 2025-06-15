@@ -239,5 +239,75 @@ class SqlCurrentVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SqlCurrentParser#recreateDatabaseStatement.
+    def visitRecreateDatabaseStatement(self, ctx:SqlCurrentParser.RecreateDatabaseStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#recreateDatabaseListStatement.
+    def visitRecreateDatabaseListStatement(self, ctx:SqlCurrentParser.RecreateDatabaseListStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#createServerStatement.
+    def visitCreateServerStatement(self, ctx:SqlCurrentParser.CreateServerStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#createServerListStatement.
+    def visitCreateServerListStatement(self, ctx:SqlCurrentParser.CreateServerListStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#recreateServerStatement.
+    def visitRecreateServerStatement(self, ctx:SqlCurrentParser.RecreateServerStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#recreateServerListStatement.
+    def visitRecreateServerListStatement(self, ctx:SqlCurrentParser.RecreateServerListStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#checkServerStatement.
+    def visitCheckServerStatement(self, ctx:SqlCurrentParser.CheckServerStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#checkServerListStatement.
+    def visitCheckServerListStatement(self, ctx:SqlCurrentParser.CheckServerListStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#resetServerStatement.
+    def visitResetServerStatement(self, ctx:SqlCurrentParser.ResetServerStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#resetServerListStatement.
+    def visitResetServerListStatement(self, ctx:SqlCurrentParser.ResetServerListStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#removeConfigurationStatement.
+    def visitRemoveConfigurationStatement(self, ctx:SqlCurrentParser.RemoveConfigurationStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#removeConfigurationListStatement.
+    def visitRemoveConfigurationListStatement(self, ctx:SqlCurrentParser.RemoveConfigurationListStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#checkConfigurationStatement.
+    def visitCheckConfigurationStatement(self, ctx:SqlCurrentParser.CheckConfigurationStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#checkConfigurationListStatement.
+    def visitCheckConfigurationListStatement(self, ctx:SqlCurrentParser.CheckConfigurationListStatementContext):
+        return self.visitChildren(ctx)
+
+
 
 del SqlCurrentParser

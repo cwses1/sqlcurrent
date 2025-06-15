@@ -29,6 +29,8 @@ class ScriptRunnerAppService ():
 		self.databaseClient:str = None
 		self.currentDateTimeFormatted:str = None
 		self.batchId:str = None
+		self.serverSymbolName:str = None
+		self.serverSymbol:Symbol = None
 
 	def runBranchResetScripts (self):
 		symbolTableManager = self.symbolTableManager
@@ -440,3 +442,83 @@ class ScriptRunnerAppService ():
 			updateTrackingFileWriter.writeUpdateTrackingLine(branchSymbolName, databaseSymbolName, updateTrackingLine)
 		else:
 			updateTrackingFileWriter.writeDatabaseUpdateTrackingLine(databaseSymbolName, updateTrackingLine)
+
+	def runServerCreateScripts (self):
+		symbolTableManager = self.symbolTableManager
+		databaseClient = self.databaseClient
+		currentDateTimeFormatted = self.currentDateTimeFormatted
+		batchId = self.batchId
+		serverSymbolName = self.serverSymbolName
+		serverSymbol = self.serverSymbol
+
+		if not serverSymbol.hasProp('create'):
+			return
+
+		createProp = serverSymbol.getProp('create')
+		createExprList = createProp.value
+
+		if len(createExprList) == 0:
+			return
+
+		#
+		# GET THE SCRIPT FILE PATH FACTORY AND DETERMINE WHERE THE SCRIPTS SHOULD BE.
+		#
+		scriptFilePathFactory = ScriptFilePathFactory()
+		scriptFilePathFactory.sqlScriptsDir = SymbolReader.readString(symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
+		scriptFilePathFactory.serverSymbolName = serverSymbolName
+		scriptFilePathFactory.specifiedDir = SymbolReader.readPropAsString(serverSymbol, 'dir') if serverSymbol.hasProp('dir') else None
+
+		#
+		# RUN THE SCRIPTS.
+		#
+		for scriptExpr in createExprList:
+			scriptFilePath = scriptFilePathFactory.createCreatePathForServer(scriptExpr.value)
+
+			if not os.path.exists(scriptFilePath):
+				raise Exception('{0}: Error: No such file or directory: \'{}\'.'.format(serverSymbolName, scriptFilePath))
+
+			scriptText = StringFileReader.readFile(scriptFilePath)
+
+			print('{0}: Running \'{1}\'.'.format(serverSymbolName, scriptFilePath))
+			databaseClient.runCreateScript(scriptText)
+			print('{0}: Success.'.format(serverSymbolName))
+
+	def runServerResetScripts (self):
+		symbolTableManager = self.symbolTableManager
+		databaseClient = self.databaseClient
+		currentDateTimeFormatted = self.currentDateTimeFormatted
+		batchId = self.batchId
+		serverSymbolName = self.serverSymbolName
+		serverSymbol = self.serverSymbol
+
+		if not serverSymbol.hasProp('reset'):
+			return
+
+		createProp = serverSymbol.getProp('reset')
+		createExprList = createProp.value
+
+		if len(createExprList) == 0:
+			return
+
+		#
+		# GET THE SCRIPT FILE PATH FACTORY AND DETERMINE WHERE THE SCRIPTS SHOULD BE.
+		#
+		scriptFilePathFactory = ScriptFilePathFactory()
+		scriptFilePathFactory.sqlScriptsDir = SymbolReader.readString(symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
+		scriptFilePathFactory.serverSymbolName = serverSymbolName
+		scriptFilePathFactory.specifiedDir = SymbolReader.readPropAsString(serverSymbol, 'dir') if serverSymbol.hasProp('dir') else None
+
+		#
+		# RUN THE SCRIPTS.
+		#
+		for scriptExpr in createExprList:
+			scriptFilePath = scriptFilePathFactory.createResetPathForServer(scriptExpr.value)
+
+			if not os.path.exists(scriptFilePath):
+				raise Exception('{0}: Error: No such file or directory: \'{}\'.'.format(serverSymbolName, scriptFilePath))
+
+			scriptText = StringFileReader.readFile(scriptFilePath)
+
+			print('{0}: Running \'{1}\'.'.format(serverSymbolName, scriptFilePath))
+			databaseClient.runResetScript(scriptText)
+			print('{0}: Success.'.format(serverSymbolName))
