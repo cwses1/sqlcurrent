@@ -103,29 +103,38 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# GET THE SYMBOL NAME.
 		#
-		symbolName = ctx.getChild(1).getText()
+		serverSymbolName = ctx.getChild(1).getText()
 
 		#
 		# IF THE SYMBOL ALREADY EXISTS, THEN THIS IS AN ERROR.
 		#
-		if self._symbolTableManager.hasSymbolByName(symbolName):
-			raise SymbolConflictError(symbolName)
+		if self._symbolTableManager.hasSymbolByName(serverSymbolName):
+			raise SymbolConflictError(serverSymbolName)
 
 		#
 		# CREATE THE SYMBOL.
 		#
-		createdSymbol = Symbol(symbolName, SymbolType.Server)
+		serverSymbol = Symbol(serverSymbolName, SymbolType.Server)
+
+		#
+		# ENSURE THE SYMBOL HAS AN ID.
+		#
+		idExpr = Expr()
+		idExpr.name = 'id'
+		idExpr.type = SymbolType.String
+		idExpr.value = serverSymbolName
+		serverSymbol.setProp('id', idExpr)
 
 		#
 		# ADD THE SYMBOL TO THE TABLE.
 		#
 		currentSymbolTable = self._symbolTableManager.getCurrentSymbolTable()
-		currentSymbolTable.insertSymbol(createdSymbol)
+		currentSymbolTable.insertSymbol(serverSymbol)
 
 		#
 		# PUSH SYMBOL CONTEXT.
 		#
-		currentSymbolTable.contextSymbol = createdSymbol
+		currentSymbolTable.contextSymbol = serverSymbol
 
 		#
 		# POPULATE SYMBOL PROPERTIES.
@@ -195,6 +204,9 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		databaseSymbol = Symbol(databaseSymbolName, SymbolType.Database)
 
+		#
+		# ENSURE THE SYMBOL HAS AN ID.
+		#
 		idExpr = Expr()
 		idExpr.name = 'id'
 		idExpr.type = SymbolType.String

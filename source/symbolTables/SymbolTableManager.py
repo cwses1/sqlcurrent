@@ -58,6 +58,9 @@ class SymbolTableManager ():
 	def getAllDatabaseSymbols (self) -> List[Symbol]:
 		return self.getAllSymbolsByType(SymbolType.Database)
 
+	def getAllServerSymbols (self) -> List[Symbol]:
+		return self.getAllSymbolsByType(SymbolType.Server)
+
 	def getAllVersionSymbols (self) -> List[Symbol]:
 		return self.getAllSymbolsByType(SymbolType.Version)
 

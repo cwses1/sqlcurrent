@@ -111,8 +111,8 @@ class RevertConfigListAppService ():
 			#
 			# GET THE DATABASE CLIENT.
 			#
-			driverValue = serverSymbolName.getProp('driver').value
-			connStringValue = serverSymbolName.getProp('connString').value
+			driverValue = serverSymbol.getProp('driver').value
+			connStringValue = serverSymbol.getProp('connString').value
 			databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
 			databaseClient.connString = connStringValue
 			databaseClient.init()
