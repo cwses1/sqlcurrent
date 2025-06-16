@@ -82,6 +82,8 @@ from appServices.CreateServerAppService import *
 from appServices.ResetServerAppService import *
 from appServices.RecreateServerAppService import *
 from appServices.CheckServerAppService import *
+from appServices.RevertConfigAppService import *
+from appServices.CheckConfigAppService import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -2226,13 +2228,205 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			appService.run()
 
 	def visitCheckConfigStatement(self, ctx:SqlCurrentParser.CheckConfigStatementContext):
-		return self.visitChildren(ctx)
+		#
+		# checkConfigStatement: 'check' 'config' SYMBOL_ID 'against' ('database' | 'server') SYMBOL_ID ';';
+		#
+
+		#
+		# GET THE CONFIG SYMBOL NAME AND SYMBOL.
+		#
+		configSymbolName = ctx.SYMBOL_ID(0).getText()
+
+		if not self._symbolTableManager.hasSymbolByName(configSymbolName):
+			print('{}: Config not found.'.format(configSymbolName))
+			return
+
+		configSymbol = self._symbolTableManager.getSymbolByName(configSymbolName)
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+		currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+
+		#
+		# CREATE A BATCH ID.
+		#
+		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+
+		#
+		# GET THE SYMBOL TARGET TYPE: EITHER DATABASE OR SERVER.
+		#
+		targetSymbolTypeStr:str = ctx.getChild(4).getText()
+		targetSymbolType:SymbolType = SymbolType.Database if targetSymbolTypeStr == 'database' else 'server'
+		targetSymbolName = ctx.SYMBOL_ID(1).getText()
+		databaseSymbol:Symbol = None
+		databaseSymbolName:str = None
+		serverSymbol:Symbol = NotImplementedError
+		serverSymbolName:str = None
+
+		hasBranchSymbol:bool = None
+		branchSymbol:Symbol = None
+		branchSymbolName:str = None
+
+		if targetSymbolType == SymbolType.Database:
+			if not self._symbolTableManager.hasSymbolByName(targetSymbolName):
+				raise Exception('{}: Database symbol not found.'.format(targetSymbolName))
+			
+			databaseSymbol = self._symbolTableManager.getSymbolByName(targetSymbolName)
+			databaseSymbolName = targetSymbolName
+
+			if databaseSymbol.hasProp('branch'):
+				branchPropExpr = databaseSymbol.getProp('branch')
+				hasBranchSymbol = branchPropExpr.type == SymbolType.ReferenceToSymbol
+				if hasBranchSymbol:
+					branchSymbol = ExprReader.readSymbol(branchPropExpr)
+					branchSymbolName = branchSymbol.name
+		else:
+			if not self._symbolTableManager.hasSymbolByName(targetSymbolName):
+				raise Exception('{}: Server symbol not found.'.format(targetSymbolName))
+			
+			serverSymbol = self._symbolTableManager.getSymbolByName(targetSymbolName)
+			serverSymbolName = targetSymbolName
+
+		#
+		# GET THE DATABASE CLIENT.
+		#
+		if targetSymbolType == SymbolType.Database:
+			driverValue = databaseSymbol.getProp('driver').value
+			connStringValue = databaseSymbol.getProp('connString').value
+			databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
+			databaseClient.connString = connStringValue
+			databaseClient.init()
+		else:
+			driverValue = serverSymbol.getProp('driver').value
+			connStringValue = serverSymbol.getProp('connString').value
+			databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
+			databaseClient.connString = connStringValue
+			databaseClient.init()
+
+		#
+		# RUN THE APPLICATION SERVICE.
+		#
+		appService = CheckConfigAppService()
+		appService.configSymbolName = configSymbolName
+		appService.configSymbol = configSymbol
+		appService.targetSymbolType = targetSymbolType
+		appService.databaseSymbolName = databaseSymbolName
+		appService.databaseSymbol = databaseSymbol
+		appService.databaseClient = databaseClient
+		appService.serverSymbolName = serverSymbolName
+		appService.serverSymbol = serverSymbol
+		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = currentDateTimeFormatted
+		appService.batchId = batchId
+		appService.hasBranchSymbol = hasBranchSymbol
+		appService.branchSymbol = branchSymbol
+		appService.branchSymbolName = branchSymbolName
+		appService.run()
 
 	def visitCheckConfigListStatement(self, ctx:SqlCurrentParser.CheckConfigListStatementContext):
 		return self.visitChildren(ctx)
 
 	def visitRevertConfigStatement(self, ctx:SqlCurrentParser.RevertConfigStatementContext):
-		return self.visitChildren(ctx)
+		#
+		# revertConfigStatement: 'revert' 'config' SYMBOL_ID 'from' ('database' | 'server') SYMBOL_ID ';';
+		#
+
+		#
+		# GET THE CONFIG SYMBOL NAME AND SYMBOL.
+		#
+		configSymbolName = ctx.SYMBOL_ID(0).getText()
+
+		if not self._symbolTableManager.hasSymbolByName(configSymbolName):
+			print('{}: Config not found.'.format(configSymbolName))
+			return
+
+		configSymbol = self._symbolTableManager.getSymbolByName(configSymbolName)
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+		currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+
+		#
+		# CREATE A BATCH ID.
+		#
+		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+
+		#
+		# GET THE SYMBOL TARGET TYPE: EITHER DATABASE OR SERVER.
+		#
+		targetSymbolTypeStr:str = ctx.getChild(4).getText()
+		targetSymbolType:SymbolType = SymbolType.Database if targetSymbolTypeStr == 'database' else 'server'
+		targetSymbolName = ctx.SYMBOL_ID(1).getText()
+		databaseSymbol:Symbol = None
+		databaseSymbolName:str = None
+		serverSymbol:Symbol = NotImplementedError
+		serverSymbolName:str = None
+
+		hasBranchSymbol:bool = None
+		branchSymbol:Symbol = None
+		branchSymbolName:str = None
+
+		if targetSymbolType == SymbolType.Database:
+			if not self._symbolTableManager.hasSymbolByName(targetSymbolName):
+				raise Exception('{}: Database symbol not found.'.format(targetSymbolName))
+			
+			databaseSymbol = self._symbolTableManager.getSymbolByName(targetSymbolName)
+			databaseSymbolName = targetSymbolName
+
+			if databaseSymbol.hasProp('branch'):
+				branchPropExpr = databaseSymbol.getProp('branch')
+				hasBranchSymbol = branchPropExpr.type == SymbolType.ReferenceToSymbol
+				if hasBranchSymbol:
+					branchSymbol = ExprReader.readSymbol(branchPropExpr)
+					branchSymbolName = branchSymbol.name
+		else:
+			if not self._symbolTableManager.hasSymbolByName(targetSymbolName):
+				raise Exception('{}: Server symbol not found.'.format(targetSymbolName))
+			
+			serverSymbol = self._symbolTableManager.getSymbolByName(targetSymbolName)
+			serverSymbolName = targetSymbolName
+
+		#
+		# GET THE DATABASE CLIENT.
+		#
+		if targetSymbolType == SymbolType.Database:
+			driverValue = databaseSymbol.getProp('driver').value
+			connStringValue = databaseSymbol.getProp('connString').value
+			databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
+			databaseClient.connString = connStringValue
+			databaseClient.init()
+		else:
+			driverValue = serverSymbol.getProp('driver').value
+			connStringValue = serverSymbol.getProp('connString').value
+			databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
+			databaseClient.connString = connStringValue
+			databaseClient.init()
+
+		#
+		# APPLY THE CONFIGURATION.
+		#
+		appService = RevertConfigAppService()
+		appService.configSymbolName = configSymbolName
+		appService.configSymbol = configSymbol
+		appService.targetSymbolType = targetSymbolType
+		appService.databaseSymbolName = databaseSymbolName
+		appService.databaseSymbol = databaseSymbol
+		appService.databaseClient = databaseClient
+		appService.serverSymbolName = serverSymbolName
+		appService.serverSymbol = serverSymbol
+		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = currentDateTimeFormatted
+		appService.batchId = batchId
+		appService.hasBranchSymbol = hasBranchSymbol
+		appService.branchSymbol = branchSymbol
+		appService.branchSymbolName = branchSymbolName
+		appService.run()
 
 	def visitRevertConfigListStatement(self, ctx:SqlCurrentParser.RevertConfigListStatementContext):
 		return self.visitChildren(ctx)

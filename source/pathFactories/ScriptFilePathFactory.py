@@ -367,3 +367,27 @@ class ScriptFilePathFactory ():
 		# OPINIONATED PATH.
 		#
 		return self.sqlScriptsDir + os.sep + 'config' + os.sep + self.configSymbolName + os.sep + 'apply' + os.sep + pathParam
+
+	def createCheckPathForConfig (self, pathParam:str) -> str:
+		#
+		# ABSOLUTE PATH: / OR C:\
+		#
+		if os.path.isabs(pathParam):
+			return pathParam
+
+		#
+		# RELATIVE PATH: ./script_is_here/apply_version.sql
+		#
+		if pathParam.startswith('.'):
+			return os.getcwd() + os.sep + self.stripRelativePath(pathParam)
+
+		#
+		# SPECIFIED DIRECTORY PATH.
+		#
+		if self.specifiedDir != None:
+			return self.getPathUsingSpecifiedDir(pathParam)
+
+		#
+		# OPINIONATED PATH.
+		#
+		return self.sqlScriptsDir + os.sep + 'config' + os.sep + self.configSymbolName + os.sep + 'check' + os.sep + pathParam

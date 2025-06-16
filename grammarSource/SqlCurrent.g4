@@ -132,14 +132,14 @@ configStatement: 'config' SYMBOL_ID '{' configPropList '}';
 configPropList: (configProp ';')*;
 configProp: (SYMBOL_ID | 'solution' | 'environment' | 'version' | 'apply' | 'precheck' | 'check' | 'revert' | 'database' | 'branch' | 'server') ':' expr;
 
-precheckConfigStatement: 'precheck' 'config' SYMBOL_ID 'for' ('database' | 'server') SYMBOL_ID ';';
-precheckConfigListStatement: 'precheck' 'config' SYMBOL_ID 'for' ('databases' | 'servers') whereClause? orderByClause? ';';
+precheckConfigStatement: 'precheck' 'config' SYMBOL_ID 'against' ('database' | 'server') SYMBOL_ID ';';
+precheckConfigListStatement: 'precheck' 'config' SYMBOL_ID 'against' ('databases' | 'servers') whereClause? orderByClause? ';';
 
 applyConfigStatement: 'apply' 'config' SYMBOL_ID 'to' ('database' | 'server') SYMBOL_ID ';';
 applyConfigListStatement: 'apply' 'config' SYMBOL_ID 'to' ('databases' | 'servers') whereClause? orderByClause? ';';
 
-checkConfigStatement: 'check' 'config' SYMBOL_ID 'for' ('database' | 'server') SYMBOL_ID ';';
-checkConfigListStatement: 'check' 'config' SYMBOL_ID 'for' ('databases' | 'servers') whereClause? orderByClause? ';';
+checkConfigStatement: 'check' 'config' SYMBOL_ID 'against' ('database' | 'server') SYMBOL_ID ';';
+checkConfigListStatement: 'check' 'config' SYMBOL_ID 'against' ('databases' | 'servers') whereClause? orderByClause? ';';
 
 revertConfigStatement: 'revert' 'config' SYMBOL_ID 'from' ('database' | 'server') SYMBOL_ID ';';
 revertConfigListStatement: 'revert' 'config' SYMBOL_ID 'from' ('databases' | 'servers') whereClause? orderByClause? ';';
