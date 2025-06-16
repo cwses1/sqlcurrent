@@ -85,6 +85,7 @@ from appServices.CheckServerAppService import *
 from appServices.RevertConfigAppService import *
 from appServices.CheckConfigAppService import *
 from appServices.PrecheckConfigAppService import *
+from appServices.RevertConfigListAppService import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -2526,4 +2527,79 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		appService.run()
 
 	def visitRevertConfigListStatement(self, ctx:SqlCurrentParser.RevertConfigListStatementContext):
-		return self.visitChildren(ctx)
+		#
+		# revertConfigListStatement: 'revert' 'config' SYMBOL_ID 'from' ('databases' | 'servers') whereClause? orderByClause? ';';
+		#
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+		currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+
+		#
+		# CREATE A BATCH ID.
+		#
+		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+
+		#
+		# GET THE CONFIGURATION SYMBOL NAME AND SYMBOL.
+		#
+		configSymbolName = ctx.SYMBOL_ID().getText()
+
+		if not self._symbolTableManager.hasSymbolByName(configSymbolName):
+			print('{}: Config not found.'.format(configSymbolName))
+			return
+
+		configSymbol = self._symbolTableManager.getSymbolByName(configSymbolName)
+
+		#
+		# GET THE SYMBOL TARGET TYPE: EITHER DATABASE OR SERVER.
+		#
+		targetSymbolTypeStr:str = ctx.getChild(4).getText()
+		targetSymbolType:SymbolType = SymbolType.Database if targetSymbolTypeStr == 'databases' else 'servers'
+
+		#
+		# GET THE ENTIRE LIST OF DATABASES OR SERVERS.
+		#
+		if targetSymbolType == SymbolType.Database:
+			databaseSymbolList = self._symbolTableManager.getAllDatabaseSymbols()
+
+			#
+			# WHERE
+			#
+			if ctx.whereClause() != None:
+				databaseSymbolList = self.visitWhereClause(ctx.whereClause()).applyConstraint(databaseSymbolList)
+
+			#
+			# ORDER BY
+			#
+			if ctx.orderByClause() != None:
+				databaseSymbolList = self.visitOrderByClause(ctx.orderByClause()).applyConstraint(databaseSymbolList)
+		else:
+			serverSymbolList = self._symbolTableManager.getAllServerSymbols()
+
+			#
+			# WHERE
+			#
+			if ctx.whereClause() != None:
+				serverSymbolList = self.visitWhereClause(ctx.whereClause()).applyConstraint(serverSymbolList)
+
+			#
+			# ORDER BY
+			#
+			if ctx.orderByClause() != None:
+				serverSymbolList = self.visitOrderByClause(ctx.orderByClause()).applyConstraint(serverSymbolList)
+
+		symbolList = databaseSymbolList if targetSymbolType == SymbolType.Database else serverSymbolList
+
+		appService = RevertConfigListAppService()
+		appService.configSymbolName = configSymbolName
+		appService.configSymbol = configSymbol
+		appService.targetSymbolType = targetSymbolType
+		appService.symbolList = symbolList
+		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = currentDateTimeFormatted
+		appService.batchId = batchId
+		appService.run()

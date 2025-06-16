@@ -61,43 +61,9 @@ class RevertConfigAppService ():
 		pathFactory.configSymbolName = configSymbolName
 
 		if targetSymbolType == SymbolType.Database:
-			#
-			# DATABASE
-			#
 			pathFactory.branchSymbolName = branchSymbolName
 			pathFactory.databaseSymbolName = databaseSymbolName
-
-			#
-			# ENFORCE ENVIRONMENT RESTRICTIONS.
-			#
-			hasEnvironmentSymbol:bool = None
-			environmentSymbol:Symbol = None
-			environmentSymbolName:str = None
-			environmentName:str = None
-
-			if databaseSymbol.hasProp('environment'):
-				environmentPropExpr = databaseSymbol.getProp('environment')
-
-				if environmentPropExpr.type == SymbolType.ReferenceToSymbol:
-					hasEnvironmentSymbol = True
-					environmentSymbol = environmentPropExpr.value
-					environmentSymbolName = environmentSymbol.name
-				else:
-					hasEnvironmentSymbol = False
-					environmentName = environmentPropExpr.value
-
-			validEnvironmentNames = SymbolReader.readPropAsBitMap(configSymbol, 'environment')
-
-			if hasEnvironmentSymbol:
-				if not environmentSymbolName in validEnvironmentNames:
-					raise Exception('{0}: Cannot apply config {1} to database. Environment {2} not permitted by the config.'.format(databaseSymbolName, configSymbolName, databaseEnvironmentName))
-			else:
-				if not environmentName in validEnvironmentNames:
-					raise Exception('{0}: Cannot apply config {1} to database. Environment {2} not permitted by the config.'.format(databaseSymbolName, configSymbolName, databaseEnvironmentName))
 		else:
-			#
-			# SERVER
-			#
 			pathFactory.serverSymbolName = serverSymbolName
 
 		#
