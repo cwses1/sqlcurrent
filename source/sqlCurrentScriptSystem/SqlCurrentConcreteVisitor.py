@@ -89,6 +89,7 @@ from appServices.RevertConfigListAppService import *
 from appServices.CheckConfigListAppService import *
 from appServices.PrecheckConfigListAppService import *
 from appServices.CreateServerListAppService import *
+from appServices.RecreateServerListAppService import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -1897,7 +1898,39 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			print('{0}: Error. {1}'.format(serverSymbolName, e))
 
 	def visitRecreateServerListStatement(self, ctx:SqlCurrentParser.RecreateServerListStatementContext):
-		return self.visitChildren(ctx)
+		#
+		# recreateServerListStatement: 'recreate' 'servers' whereClause? orderByClause? ';';
+		#
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+
+		#
+		# SERVERS.
+		#
+		serverSymbolList = self._symbolTableManager.getAllServerSymbols()
+
+		#
+		# WHERE
+		#
+		if ctx.whereClause() != None:
+			serverSymbolList = self.visitWhereClause(ctx.whereClause()).applyConstraint(serverSymbolList)
+
+		#
+		# ORDER BY
+		#
+		if ctx.orderByClause() != None:
+			serverSymbolList = self.visitOrderByClause(ctx.orderByClause()).applyConstraint(serverSymbolList)
+
+		appService = RecreateServerListAppService()
+		appService.serverSymbolList = serverSymbolList
+		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+		appService.batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+		appService.run()
 
 	def visitCheckServerStatement(self, ctx:SqlCurrentParser.CheckServerStatementContext):
 		#
