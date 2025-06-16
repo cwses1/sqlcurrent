@@ -66,7 +66,7 @@ from appServices.UpdateDatabaseAppService import *
 from appServices.RevertDatabaseAppService import *
 from validators.ConfigurationPropNameValidator import *
 from validators.ConfigurationValueValidator import *
-from appServices.ApplyConfigurationToDatabaseAppService import *
+from appServices.ApplyConfigAppService import *
 from appServices.CheckDatabaseAppService import *
 from appServices.ResetDatabaseAppService import *
 from exceptions.SymbolConflictError import *
@@ -1522,248 +1522,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		appService.databaseClient = databaseClient
 		appService.run()
 
-	def visitConfigurationStatement(self, ctx:SqlCurrentParser.ConfigurationStatementContext):
-		#
-		# configurationStatement: 'configuration' SYMBOL_ID 'for' 'branch' expr? '{' configurationPropList '}';
-		#
-
-		#
-		# GET THE BRANCH NAME.
-		# IF NO NAME IS GIVEN THEN WE USE 'default'.
-		#
-		branchExpr = self.visitExpr(ctx.expr())
-
-		if branchExpr.type == SymbolType.String:
-			branchName = branchExpr.value
-		elif branchExpr.type == SymbolType.ReferenceToSymbol:
-			branchName = branchExpr.name
-		else:
-			branchName = 'default'
-
-		#
-		# CONSTRUCT THE SYMBOL NAME.
-		#
-		symbolName = ctx.SYMBOL_ID().getText()
-
-		#
-		# IF THE SYMBOL ALREADY EXISTS, THEN THIS IS AN ERROR.
-		#
-		if self._symbolTableManager.hasSymbolByName(symbolName):
-			raise SymbolConflictError(symbolName)
-
-		#
-		# CREATE THE SYMBOL.
-		#
-		createdSymbol = Symbol(symbolName, SymbolType.Configuration)
-		createdSymbol.setProp(branchName, branchExpr)
-
-		#
-		# ADD THE SYMBOL TO THE TABLE.
-		#
-		currentSymbolTable = self._symbolTableManager.getCurrentSymbolTable()
-		currentSymbolTable.insertSymbol(createdSymbol)
-
-		#
-		# PUSH SYMBOL CONTEXT.
-		#
-		currentSymbolTable.contextSymbol = createdSymbol
-
-		#
-		# POPULATE SYMBOL PROPERTIES.
-		#
-		self.visitChildren(ctx)
-
-		#
-		# POP SYMBOL CONTEXT.
-		#
-		currentSymbolTable.contextSymbol = None
-
-	def visitConfigurationProp(self, ctx:SqlCurrentParser.ConfigurationPropContext):
-		#
-		# configurationProp: (SYMBOL_ID | 'environment') ':' expr;
-		#
-
-		#
-		# GET THE PROPERTY NAME.
-		#
-		propName = ctx.getChild(0).getText()
-
-		#
-		# VALIDATE THE PROPERTY NAME.
-		#
-		if ConfigurationPropNameValidator.isNotValid(propName):
-			raise PropNameNotValidError(SymbolTypeFormatter.format(SymbolType.Configuration), propName)
-
-		#
-		# GET THE PROPERTY EXPRESSION VALUE.
-		#
-		propExpr = self.visitExpr(ctx.expr())
-
-		#
-		# VALIDATE THE PROPERTY EXPRESSION VALUE.
-		#
-		if ConfigurationValueValidator.isNotValid(propName, propExpr):
-			raise PropValueNotValidError(SymbolTypeFormatter.format(SymbolType.Solution), propName, propExpr)
-
-		#
-		# SET THE PROPERTY ON THE SYMBOL.
-		#
-		contextSymbol = self._symbolTableManager.getCurrentSymbolTable().contextSymbol
-
-		if not ConfigurationReference.propCanHaveMultipleValues(propName):
-			contextSymbol.setProp(propName, propExpr)
-		else:
-			contextSymbol.appendProp(propName, propExpr)
-
-	def visitApplyConfigurationToDatabaseStatement(self, ctx:SqlCurrentParser.ApplyConfigurationToDatabaseStatementContext):
-		#
-		# applyConfigurationToDatabaseStatement: 'apply' 'configuration'? SYMBOL_ID 'to' 'database'? SYMBOL_ID ';';
-		#
-
-		#
-		# GET THE CURRENT TIME.
-		#
-		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
-		currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
-
-		#
-		# CREATE A BATCH ID.
-		#
-		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
-
-		#
-		# GET THE CONFIGURATION SYMBOL NAME AND SYMBOL.
-		#
-		configurationSymbolName = ctx.SYMBOL_ID(0).getText()
-
-		if not self._symbolTableManager.hasSymbolByName(configurationSymbolName):
-			print('{}: Configuration definition not found.'.format(configurationSymbolName))
-			return
-
-		configurationSymbol = self._symbolTableManager.getSymbolByName(configurationSymbolName)
-
-		#
-		# GET THE DATABASE SYMBOL NAME AND SYMBOL.
-		#
-		databaseSymbolName = ctx.SYMBOL_ID(1).getText()
-
-		if not self._symbolTableManager.hasSymbolByName(databaseSymbolName):
-			print('{}: Database definition not found.'.format(databaseSymbolName))
-			return
-		
-		databaseSymbol = self._symbolTableManager.getSymbolByName(databaseSymbolName)
-
-		#
-		# APPLY THE CONFIGURATION.
-		#
-		appService = ApplyConfigurationToDatabaseAppService()
-		appService.configurationSymbolName = configurationSymbolName
-		appService.configurationSymbol = configurationSymbol
-		appService.databaseSymbolName = databaseSymbolName
-		appService.databaseSymbol = databaseSymbol
-		appService.symbolTableManager = self._symbolTableManager
-		appService.currentDateTime = currentDateTime
-		appService.currentDateTimeFormatted = currentDateTimeFormatted
-		appService.batchId = batchId
-		appService.run()
-
-	def visitApplyConfigurationToDatabaseListStatement(self, ctx:SqlCurrentParser.ApplyConfigurationToDatabaseListStatementContext):
-		#
-		# applyConfigurationToDatabaseListStatement: 'apply' 'configuration'? SYMBOL_ID 'to' 'databases' whereClause? orderByClause? ';';
-		#
-
-		#
-		# GET THE CURRENT TIME.
-		#
-		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
-		currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
-
-		#
-		# CREATE A BATCH ID.
-		#
-		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
-
-		#
-		# GET THE CONFIGURATION SYMBOL NAME AND SYMBOL.
-		#
-		configurationSymbolName = ctx.SYMBOL_ID().getText()
-
-		if not self._symbolTableManager.hasSymbolByName(configurationSymbolName):
-			print('{}: Configuration definition not found.'.format(configurationSymbolName))
-			return
-
-		configurationSymbol = self._symbolTableManager.getSymbolByName(configurationSymbolName)
-
-		#
-		# GET THE ENTIRE LIST OF DATABASES.
-		#
-		databaseSymbolList = self._symbolTableManager.getAllDatabaseSymbols()
-		databaseSymbolListLength = len(databaseSymbolList)
-
-		#
-		# IF THERE ARE NO DATABASES DEFINED THEN WE ARE DONE.
-		#
-		if databaseSymbolListLength == 0:
-			print('No databases defined.')
-			return
-
-		#
-		# APPLY THE CONSTRAINT TO THE LIST OF DATABASES.
-		#
-		whereConstraint = None
-
-		if ctx.whereClause() != None:
-			whereConstraint = self.visitWhereClause(ctx.whereClause())
-			databaseSymbolList = whereConstraint.applyConstraint(databaseSymbolList)
-
-		#
-		# IF THERE ARE NO DATABASES TO UPDATE AFTER THE WHERE CLAUSE IS APPLIED, THEN LET THE USER KNOW.
-		#
-		databaseSymbolListLength = len(databaseSymbolList)
-
-		if databaseSymbolListLength == 0:
-			print('No databases remaining after where constraints applied.')
-			return
-
-		#
-		# LET THE USER KNOW HOW MANY DATABASES WE'RE DEALING WITH.
-		#
-		if databaseSymbolListLength == 1:
-			print('Configuring 1 database.')
-		else:
-			print('Configuring {} databases.'.format(databaseSymbolListLength))
-
-		#
-		# ORDER THE DATABASES.
-		#
-		orderByConstraint = None
-
-		if ctx.orderByClause() != None:
-			orderByConstraint = self.visitOrderByClause(ctx.orderByClause())
-			databaseSymbolList = orderByConstraint.applyConstraint(databaseSymbolList)
-
-		#
-		# CONFIGURE EACH DATABASE.
-		#
-		databaseNumber = 0
-
-		for databaseSymbol in databaseSymbolList:
-			databaseSymbolName = databaseSymbol.name
-			databaseNumber += 1
-
-			print('{0}: Configuring database {1} of {2}.'.format(databaseSymbolName, databaseNumber, databaseSymbolListLength))
-
-			appService = ApplyConfigurationToDatabaseAppService()
-			appService.configurationSymbolName = configurationSymbolName
-			appService.configurationSymbol = configurationSymbol
-			appService.databaseSymbolName = databaseSymbolName
-			appService.databaseSymbol = databaseSymbol
-			appService.symbolTableManager = self._symbolTableManager
-			appService.currentDateTime = currentDateTime
-			appService.currentDateTimeFormatted = currentDateTimeFormatted
-			appService.batchId = batchId
-			appService.run()
-
 	def visitPrintSymbolsStatement(self, ctx:SqlCurrentParser.PrintSymbolsStatementContext):
 		#
 		# printSymbolsStatement: 'print' 'symbols';
@@ -2189,14 +1947,292 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 	def visitResetServerListStatement(self, ctx:SqlCurrentParser.ResetServerListStatementContext):
 		return self.visitChildren(ctx)
 
-	def visitRemoveConfigurationStatement(self, ctx:SqlCurrentParser.RemoveConfigurationStatementContext):
+	def visitConfigStatement(self, ctx:SqlCurrentParser.ConfigStatementContext):
+		#
+		# configStatement: 'config' SYMBOL_ID '{' configPropList '}';
+		#
+		configSymbolName = ctx.SYMBOL_ID().getText()
+
+		#
+		# IF THE SYMBOL ALREADY EXISTS, THEN THIS IS AN ERROR.
+		#
+		if self._symbolTableManager.hasSymbolByName(configSymbolName):
+			print('{0}: Configuration symbol already exists.'.format(configSymbolName))
+			return
+
+		#
+		# CREATE THE SYMBOL.
+		#
+		configSymbol = Symbol(configSymbolName, SymbolType.Config)
+
+		#
+		# ADD THE SYMBOL TO THE TABLE.
+		#
+		currentSymbolTable = self._symbolTableManager.getCurrentSymbolTable()
+		currentSymbolTable.insertSymbol(configSymbol)
+
+		#
+		# PUSH SYMBOL CONTEXT.
+		#
+		currentSymbolTable.contextSymbol = configSymbol
+
+		#
+		# POPULATE SYMBOL PROPERTIES.
+		#
+		self.visitChildren(ctx)
+
+		#
+		# POP SYMBOL CONTEXT.
+		#
+		currentSymbolTable.contextSymbol = None
+
+	def visitConfigProp(self, ctx:SqlCurrentParser.ConfigPropContext):
+		#
+		# configProp: (SYMBOL_ID | 'solution' | 'environment' | 'version' | 'apply' | 'precheck' | 'check' | 'revert' | 'database' | 'branch' | 'server') ':' expr;
+		#
+
+		#
+		# SET THE PROPERTY ON THE SYMBOL.
+		#
+		configSymbol = self._symbolTableManager.getCurrentSymbolTable().contextSymbol
+
+		#
+		# GET THE PROPERTY NAME.
+		#
+		propName = ctx.getChild(0).getText()
+
+		#
+		# VALIDATE THE PROPERTY NAME.
+		#
+		if ConfigurationPropNameValidator.isNotValid(propName):
+			raise PropNameNotValidError(SymbolTypeFormatter.format(SymbolType.Configuration), propName)
+
+		#
+		# GET THE PROPERTY EXPRESSION VALUE.
+		#
+		propExpr = self.visitExpr(ctx.expr())
+
+		#
+		# VALIDATE THE PROPERTY EXPRESSION VALUE.
+		#
+		if ConfigurationValueValidator.isNotValid(propName, propExpr):
+			raise PropValueNotValidError(SymbolTypeFormatter.format(SymbolType.Solution), propName, propExpr)
+
+		if not ConfigurationReference.propCanHaveMultipleValues(propName):
+			configSymbol.setProp(propName, propExpr)
+		else:
+			configSymbol.appendProp(propName, propExpr)
+
+	def visitPrecheckConfigStatement(self, ctx:SqlCurrentParser.PrecheckConfigStatementContext):
 		return self.visitChildren(ctx)
 
-	def visitRemoveConfigurationListStatement(self, ctx:SqlCurrentParser.RemoveConfigurationListStatementContext):
+	def visitPrecheckConfigListStatement(self, ctx:SqlCurrentParser.PrecheckConfigListStatementContext):
 		return self.visitChildren(ctx)
 
-	def visitCheckConfigurationStatement(self, ctx:SqlCurrentParser.CheckConfigurationStatementContext):
+	def visitApplyConfigStatement(self, ctx:SqlCurrentParser.ApplyConfigStatementContext):
+		#
+		# applyConfigStatement: 'apply' 'config' SYMBOL_ID 'to' ('database' | 'server') SYMBOL_ID ';';
+		#
+
+		#
+		# GET THE CONFIG SYMBOL NAME AND SYMBOL.
+		#
+		configSymbolName = ctx.SYMBOL_ID(0).getText()
+
+		if not self._symbolTableManager.hasSymbolByName(configSymbolName):
+			print('{}: Config not found.'.format(configSymbolName))
+			return
+
+		configSymbol = self._symbolTableManager.getSymbolByName(configSymbolName)
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+		currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+
+		#
+		# CREATE A BATCH ID.
+		#
+		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+
+		#
+		# GET THE SYMBOL TARGET TYPE: EITHER DATABASE OR SERVER.
+		#
+		targetSymbolTypeStr:str = ctx.getChild(4).getText()
+		targetSymbolType:SymbolType = SymbolType.Database if targetSymbolTypeStr == 'database' else 'server'
+		targetSymbolName = ctx.SYMBOL_ID(1).getText()
+		databaseSymbol:Symbol = None
+		databaseSymbolName:str = None
+		serverSymbol:Symbol = NotImplementedError
+		serverSymbolName:str = None
+
+		hasBranchSymbol:bool = None
+		branchSymbol:Symbol = None
+		branchSymbolName:str = None
+
+		if targetSymbolType == SymbolType.Database:
+			if not self._symbolTableManager.hasSymbolByName(targetSymbolName):
+				raise Exception('{}: Database symbol not found.'.format(targetSymbolName))
+			
+			databaseSymbol = self._symbolTableManager.getSymbolByName(targetSymbolName)
+			databaseSymbolName = targetSymbolName
+
+			if databaseSymbol.hasProp('branch'):
+				branchPropExpr = databaseSymbol.getProp('branch')
+				hasBranchSymbol = branchPropExpr.type == SymbolType.ReferenceToSymbol
+				if hasBranchSymbol:
+					branchSymbol = ExprReader.readSymbol(branchPropExpr)
+					branchSymbolName = branchSymbol.name
+		else:
+			if not self._symbolTableManager.hasSymbolByName(targetSymbolName):
+				raise Exception('{}: Server symbol not found.'.format(targetSymbolName))
+			
+			serverSymbol = self._symbolTableManager.getSymbolByName(targetSymbolName)
+			serverSymbolName = targetSymbolName
+
+		#
+		# GET THE DATABASE CLIENT.
+		#
+		if targetSymbolType == SymbolType.Database:
+			driverValue = databaseSymbol.getProp('driver').value
+			connStringValue = databaseSymbol.getProp('connString').value
+			databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
+			databaseClient.connString = connStringValue
+			databaseClient.init()
+		else:
+			driverValue = serverSymbol.getProp('driver').value
+			connStringValue = serverSymbol.getProp('connString').value
+			databaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
+			databaseClient.connString = connStringValue
+			databaseClient.init()
+
+		#
+		# APPLY THE CONFIGURATION.
+		#
+		appService = ApplyConfigAppService()
+		appService.configSymbolName = configSymbolName
+		appService.configSymbol = configSymbol
+		appService.targetSymbolType = targetSymbolType
+		appService.databaseSymbolName = databaseSymbolName
+		appService.databaseSymbol = databaseSymbol
+		appService.databaseClient = databaseClient
+		appService.serverSymbolName = serverSymbolName
+		appService.serverSymbol = serverSymbol
+		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = currentDateTimeFormatted
+		appService.batchId = batchId
+		appService.hasBranchSymbol = hasBranchSymbol
+		appService.branchSymbol = branchSymbol
+		appService.branchSymbolName = branchSymbolName
+		appService.run()
+
+	def visitApplyConfigListStatement(self, ctx:SqlCurrentParser.ApplyConfigListStatementContext):
+		#
+		# applyConfigurationToDatabaseListStatement: 'apply' 'configuration'? SYMBOL_ID 'to' 'databases' whereClause? orderByClause? ';';
+		#
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+		currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+
+		#
+		# CREATE A BATCH ID.
+		#
+		batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+
+		#
+		# GET THE CONFIGURATION SYMBOL NAME AND SYMBOL.
+		#
+		configurationSymbolName = ctx.SYMBOL_ID().getText()
+
+		if not self._symbolTableManager.hasSymbolByName(configurationSymbolName):
+			print('{}: Configuration definition not found.'.format(configurationSymbolName))
+			return
+
+		configurationSymbol = self._symbolTableManager.getSymbolByName(configurationSymbolName)
+
+		#
+		# GET THE ENTIRE LIST OF DATABASES.
+		#
+		databaseSymbolList = self._symbolTableManager.getAllDatabaseSymbols()
+		databaseSymbolListLength = len(databaseSymbolList)
+
+		#
+		# IF THERE ARE NO DATABASES DEFINED THEN WE ARE DONE.
+		#
+		if databaseSymbolListLength == 0:
+			print('No databases defined.')
+			return
+
+		#
+		# APPLY THE CONSTRAINT TO THE LIST OF DATABASES.
+		#
+		whereConstraint = None
+
+		if ctx.whereClause() != None:
+			whereConstraint = self.visitWhereClause(ctx.whereClause())
+			databaseSymbolList = whereConstraint.applyConstraint(databaseSymbolList)
+
+		#
+		# IF THERE ARE NO DATABASES TO UPDATE AFTER THE WHERE CLAUSE IS APPLIED, THEN LET THE USER KNOW.
+		#
+		databaseSymbolListLength = len(databaseSymbolList)
+
+		if databaseSymbolListLength == 0:
+			print('No databases remaining after where constraints applied.')
+			return
+
+		#
+		# LET THE USER KNOW HOW MANY DATABASES WE'RE DEALING WITH.
+		#
+		if databaseSymbolListLength == 1:
+			print('Configuring 1 database.')
+		else:
+			print('Configuring {} databases.'.format(databaseSymbolListLength))
+
+		#
+		# ORDER THE DATABASES.
+		#
+		orderByConstraint = None
+
+		if ctx.orderByClause() != None:
+			orderByConstraint = self.visitOrderByClause(ctx.orderByClause())
+			databaseSymbolList = orderByConstraint.applyConstraint(databaseSymbolList)
+
+		#
+		# CONFIGURE EACH DATABASE.
+		#
+		databaseNumber = 0
+
+		for databaseSymbol in databaseSymbolList:
+			databaseSymbolName = databaseSymbol.name
+			databaseNumber += 1
+
+			print('{0}: Configuring database {1} of {2}.'.format(databaseSymbolName, databaseNumber, databaseSymbolListLength))
+
+			appService = ApplyConfigurationToDatabaseAppService()
+			appService.configurationSymbolName = configurationSymbolName
+			appService.configurationSymbol = configurationSymbol
+			appService.databaseSymbolName = databaseSymbolName
+			appService.databaseSymbol = databaseSymbol
+			appService.symbolTableManager = self._symbolTableManager
+			appService.currentDateTime = currentDateTime
+			appService.currentDateTimeFormatted = currentDateTimeFormatted
+			appService.batchId = batchId
+			appService.run()
+
+	def visitCheckConfigStatement(self, ctx:SqlCurrentParser.CheckConfigStatementContext):
 		return self.visitChildren(ctx)
 
-	def visitCheckConfigurationListStatement(self, ctx:SqlCurrentParser.CheckConfigurationListStatementContext):
+	def visitCheckConfigListStatement(self, ctx:SqlCurrentParser.CheckConfigListStatementContext):
+		return self.visitChildren(ctx)
+
+	def visitRevertConfigStatement(self, ctx:SqlCurrentParser.RevertConfigStatementContext):
+		return self.visitChildren(ctx)
+
+	def visitRevertConfigListStatement(self, ctx:SqlCurrentParser.RevertConfigListStatementContext):
 		return self.visitChildren(ctx)

@@ -350,51 +350,6 @@ class SqlCurrentListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by SqlCurrentParser#configurationStatement.
-    def enterConfigurationStatement(self, ctx:SqlCurrentParser.ConfigurationStatementContext):
-        pass
-
-    # Exit a parse tree produced by SqlCurrentParser#configurationStatement.
-    def exitConfigurationStatement(self, ctx:SqlCurrentParser.ConfigurationStatementContext):
-        pass
-
-
-    # Enter a parse tree produced by SqlCurrentParser#configurationPropList.
-    def enterConfigurationPropList(self, ctx:SqlCurrentParser.ConfigurationPropListContext):
-        pass
-
-    # Exit a parse tree produced by SqlCurrentParser#configurationPropList.
-    def exitConfigurationPropList(self, ctx:SqlCurrentParser.ConfigurationPropListContext):
-        pass
-
-
-    # Enter a parse tree produced by SqlCurrentParser#configurationProp.
-    def enterConfigurationProp(self, ctx:SqlCurrentParser.ConfigurationPropContext):
-        pass
-
-    # Exit a parse tree produced by SqlCurrentParser#configurationProp.
-    def exitConfigurationProp(self, ctx:SqlCurrentParser.ConfigurationPropContext):
-        pass
-
-
-    # Enter a parse tree produced by SqlCurrentParser#applyConfigurationToDatabaseStatement.
-    def enterApplyConfigurationToDatabaseStatement(self, ctx:SqlCurrentParser.ApplyConfigurationToDatabaseStatementContext):
-        pass
-
-    # Exit a parse tree produced by SqlCurrentParser#applyConfigurationToDatabaseStatement.
-    def exitApplyConfigurationToDatabaseStatement(self, ctx:SqlCurrentParser.ApplyConfigurationToDatabaseStatementContext):
-        pass
-
-
-    # Enter a parse tree produced by SqlCurrentParser#applyConfigurationToDatabaseListStatement.
-    def enterApplyConfigurationToDatabaseListStatement(self, ctx:SqlCurrentParser.ApplyConfigurationToDatabaseListStatementContext):
-        pass
-
-    # Exit a parse tree produced by SqlCurrentParser#applyConfigurationToDatabaseListStatement.
-    def exitApplyConfigurationToDatabaseListStatement(self, ctx:SqlCurrentParser.ApplyConfigurationToDatabaseListStatementContext):
-        pass
-
-
     # Enter a parse tree produced by SqlCurrentParser#printSymbolsStatement.
     def enterPrintSymbolsStatement(self, ctx:SqlCurrentParser.PrintSymbolsStatementContext):
         pass
@@ -512,39 +467,102 @@ class SqlCurrentListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by SqlCurrentParser#removeConfigurationStatement.
-    def enterRemoveConfigurationStatement(self, ctx:SqlCurrentParser.RemoveConfigurationStatementContext):
+    # Enter a parse tree produced by SqlCurrentParser#configStatement.
+    def enterConfigStatement(self, ctx:SqlCurrentParser.ConfigStatementContext):
         pass
 
-    # Exit a parse tree produced by SqlCurrentParser#removeConfigurationStatement.
-    def exitRemoveConfigurationStatement(self, ctx:SqlCurrentParser.RemoveConfigurationStatementContext):
-        pass
-
-
-    # Enter a parse tree produced by SqlCurrentParser#removeConfigurationListStatement.
-    def enterRemoveConfigurationListStatement(self, ctx:SqlCurrentParser.RemoveConfigurationListStatementContext):
-        pass
-
-    # Exit a parse tree produced by SqlCurrentParser#removeConfigurationListStatement.
-    def exitRemoveConfigurationListStatement(self, ctx:SqlCurrentParser.RemoveConfigurationListStatementContext):
+    # Exit a parse tree produced by SqlCurrentParser#configStatement.
+    def exitConfigStatement(self, ctx:SqlCurrentParser.ConfigStatementContext):
         pass
 
 
-    # Enter a parse tree produced by SqlCurrentParser#checkConfigurationStatement.
-    def enterCheckConfigurationStatement(self, ctx:SqlCurrentParser.CheckConfigurationStatementContext):
+    # Enter a parse tree produced by SqlCurrentParser#configPropList.
+    def enterConfigPropList(self, ctx:SqlCurrentParser.ConfigPropListContext):
         pass
 
-    # Exit a parse tree produced by SqlCurrentParser#checkConfigurationStatement.
-    def exitCheckConfigurationStatement(self, ctx:SqlCurrentParser.CheckConfigurationStatementContext):
+    # Exit a parse tree produced by SqlCurrentParser#configPropList.
+    def exitConfigPropList(self, ctx:SqlCurrentParser.ConfigPropListContext):
         pass
 
 
-    # Enter a parse tree produced by SqlCurrentParser#checkConfigurationListStatement.
-    def enterCheckConfigurationListStatement(self, ctx:SqlCurrentParser.CheckConfigurationListStatementContext):
+    # Enter a parse tree produced by SqlCurrentParser#configProp.
+    def enterConfigProp(self, ctx:SqlCurrentParser.ConfigPropContext):
         pass
 
-    # Exit a parse tree produced by SqlCurrentParser#checkConfigurationListStatement.
-    def exitCheckConfigurationListStatement(self, ctx:SqlCurrentParser.CheckConfigurationListStatementContext):
+    # Exit a parse tree produced by SqlCurrentParser#configProp.
+    def exitConfigProp(self, ctx:SqlCurrentParser.ConfigPropContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#precheckConfigStatement.
+    def enterPrecheckConfigStatement(self, ctx:SqlCurrentParser.PrecheckConfigStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#precheckConfigStatement.
+    def exitPrecheckConfigStatement(self, ctx:SqlCurrentParser.PrecheckConfigStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#precheckConfigListStatement.
+    def enterPrecheckConfigListStatement(self, ctx:SqlCurrentParser.PrecheckConfigListStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#precheckConfigListStatement.
+    def exitPrecheckConfigListStatement(self, ctx:SqlCurrentParser.PrecheckConfigListStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#applyConfigStatement.
+    def enterApplyConfigStatement(self, ctx:SqlCurrentParser.ApplyConfigStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#applyConfigStatement.
+    def exitApplyConfigStatement(self, ctx:SqlCurrentParser.ApplyConfigStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#applyConfigListStatement.
+    def enterApplyConfigListStatement(self, ctx:SqlCurrentParser.ApplyConfigListStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#applyConfigListStatement.
+    def exitApplyConfigListStatement(self, ctx:SqlCurrentParser.ApplyConfigListStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#checkConfigStatement.
+    def enterCheckConfigStatement(self, ctx:SqlCurrentParser.CheckConfigStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#checkConfigStatement.
+    def exitCheckConfigStatement(self, ctx:SqlCurrentParser.CheckConfigStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#checkConfigListStatement.
+    def enterCheckConfigListStatement(self, ctx:SqlCurrentParser.CheckConfigListStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#checkConfigListStatement.
+    def exitCheckConfigListStatement(self, ctx:SqlCurrentParser.CheckConfigListStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#revertConfigStatement.
+    def enterRevertConfigStatement(self, ctx:SqlCurrentParser.RevertConfigStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#revertConfigStatement.
+    def exitRevertConfigStatement(self, ctx:SqlCurrentParser.RevertConfigStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SqlCurrentParser#revertConfigListStatement.
+    def enterRevertConfigListStatement(self, ctx:SqlCurrentParser.RevertConfigListStatementContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#revertConfigListStatement.
+    def exitRevertConfigListStatement(self, ctx:SqlCurrentParser.RevertConfigListStatementContext):
         pass
 
 

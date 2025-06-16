@@ -9,6 +9,10 @@ class ConfigurationReference ():
 	propNames['precheck'] = True
 	propNames['check'] = True
 	propNames['revert'] = True
+	propNames['solution'] = False
+	propNames['database'] = False
+	propNames['branch'] = False
+	propNames['server'] = False
 
 	@staticmethod
 	def propNameSupported (name:str) -> bool:

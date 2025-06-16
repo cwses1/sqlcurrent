@@ -16,4 +16,4 @@ class SymbolType ():
 	Int32 = 11
 	PropertyName = 12
 	VersionNumber = 13 # JUST THE VERSION NUMBER '1.2.1' STORED AS A STRING
-	Configuration = 14
+	Config = 14

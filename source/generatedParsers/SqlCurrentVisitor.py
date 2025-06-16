@@ -199,31 +199,6 @@ class SqlCurrentVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by SqlCurrentParser#configurationStatement.
-    def visitConfigurationStatement(self, ctx:SqlCurrentParser.ConfigurationStatementContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by SqlCurrentParser#configurationPropList.
-    def visitConfigurationPropList(self, ctx:SqlCurrentParser.ConfigurationPropListContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by SqlCurrentParser#configurationProp.
-    def visitConfigurationProp(self, ctx:SqlCurrentParser.ConfigurationPropContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by SqlCurrentParser#applyConfigurationToDatabaseStatement.
-    def visitApplyConfigurationToDatabaseStatement(self, ctx:SqlCurrentParser.ApplyConfigurationToDatabaseStatementContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by SqlCurrentParser#applyConfigurationToDatabaseListStatement.
-    def visitApplyConfigurationToDatabaseListStatement(self, ctx:SqlCurrentParser.ApplyConfigurationToDatabaseListStatementContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by SqlCurrentParser#printSymbolsStatement.
     def visitPrintSymbolsStatement(self, ctx:SqlCurrentParser.PrintSymbolsStatementContext):
         return self.visitChildren(ctx)
@@ -289,23 +264,58 @@ class SqlCurrentVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by SqlCurrentParser#removeConfigurationStatement.
-    def visitRemoveConfigurationStatement(self, ctx:SqlCurrentParser.RemoveConfigurationStatementContext):
+    # Visit a parse tree produced by SqlCurrentParser#configStatement.
+    def visitConfigStatement(self, ctx:SqlCurrentParser.ConfigStatementContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by SqlCurrentParser#removeConfigurationListStatement.
-    def visitRemoveConfigurationListStatement(self, ctx:SqlCurrentParser.RemoveConfigurationListStatementContext):
+    # Visit a parse tree produced by SqlCurrentParser#configPropList.
+    def visitConfigPropList(self, ctx:SqlCurrentParser.ConfigPropListContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by SqlCurrentParser#checkConfigurationStatement.
-    def visitCheckConfigurationStatement(self, ctx:SqlCurrentParser.CheckConfigurationStatementContext):
+    # Visit a parse tree produced by SqlCurrentParser#configProp.
+    def visitConfigProp(self, ctx:SqlCurrentParser.ConfigPropContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by SqlCurrentParser#checkConfigurationListStatement.
-    def visitCheckConfigurationListStatement(self, ctx:SqlCurrentParser.CheckConfigurationListStatementContext):
+    # Visit a parse tree produced by SqlCurrentParser#precheckConfigStatement.
+    def visitPrecheckConfigStatement(self, ctx:SqlCurrentParser.PrecheckConfigStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#precheckConfigListStatement.
+    def visitPrecheckConfigListStatement(self, ctx:SqlCurrentParser.PrecheckConfigListStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#applyConfigStatement.
+    def visitApplyConfigStatement(self, ctx:SqlCurrentParser.ApplyConfigStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#applyConfigListStatement.
+    def visitApplyConfigListStatement(self, ctx:SqlCurrentParser.ApplyConfigListStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#checkConfigStatement.
+    def visitCheckConfigStatement(self, ctx:SqlCurrentParser.CheckConfigStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#checkConfigListStatement.
+    def visitCheckConfigListStatement(self, ctx:SqlCurrentParser.CheckConfigListStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#revertConfigStatement.
+    def visitRevertConfigStatement(self, ctx:SqlCurrentParser.RevertConfigStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SqlCurrentParser#revertConfigListStatement.
+    def visitRevertConfigListStatement(self, ctx:SqlCurrentParser.RevertConfigListStatementContext):
         return self.visitChildren(ctx)
 
 

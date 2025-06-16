@@ -24,9 +24,7 @@ statement: serverStatement
 	| revertDatabaseListStatement
 	| checkDatabaseListStatement
 	| revertDatabaseStatement
-	| configurationStatement
-	| applyConfigurationToDatabaseStatement
-	| applyConfigurationToDatabaseListStatement
+	| configStatement
 	| printSymbolsStatement
 	| checkDatabaseStatement
 	| resetDatabaseStatement
@@ -42,10 +40,14 @@ statement: serverStatement
 	| checkServerListStatement
 	| resetServerStatement
 	| resetServerListStatement
-	| removeConfigurationStatement
-	| removeConfigurationListStatement
-	| checkConfigurationStatement
-	| checkConfigurationListStatement
+	| revertConfigStatement
+	| revertConfigListStatement
+	| checkConfigStatement
+	| checkConfigListStatement
+	| precheckConfigStatement
+	| precheckConfigListStatement
+	| applyConfigStatement
+	| applyConfigListStatement
 	;
 
 serverStatement: 'server' SYMBOL_ID '{' serverPropList '}';
@@ -105,13 +107,6 @@ revertDatabaseStatement: 'revert' 'database' SYMBOL_ID toVersionClause ';';
 checkDatabaseStatement: 'check' 'database' SYMBOL_ID ('version' VERSION_ID)? ';';
 resetDatabaseStatement: 'reset' 'database' SYMBOL_ID ';';
 
-configurationStatement: 'configuration' SYMBOL_ID 'in' 'branch' expr? '{' configurationPropList '}';
-configurationPropList: (configurationProp ';')*;
-configurationProp: (SYMBOL_ID | 'environment' | 'version' | 'apply' | 'precheck' | 'check' | 'revert') ':' expr;
-
-applyConfigurationToDatabaseStatement: 'apply' 'configuration'? SYMBOL_ID 'to' 'database'? SYMBOL_ID ';';
-applyConfigurationToDatabaseListStatement: 'apply' 'configuration'? SYMBOL_ID 'to' 'databases' whereClause? orderByClause? ';';
-
 printSymbolsStatement: 'print' 'symbols' ';';
 
 initDatabaseStatement: 'init' ('standalone' | 'branched')? 'database'? SYMBOL_ID ('in'? 'branch' expr)? ';';
@@ -133,8 +128,18 @@ checkServerListStatement: 'check' 'servers' whereClause? orderByClause? ';';
 resetServerStatement: 'reset' 'server' SYMBOL_ID ';';
 resetServerListStatement: 'reset' 'servers' whereClause? orderByClause? ';';
 
-removeConfigurationStatement: 'remove' 'configuration' SYMBOL_ID 'from' 'database'? SYMBOL_ID ';';
-removeConfigurationListStatement: 'remove' 'configuration' SYMBOL_ID 'from' 'databases' whereClause? orderByClause? ';';
+configStatement: 'config' SYMBOL_ID '{' configPropList '}';
+configPropList: (configProp ';')*;
+configProp: (SYMBOL_ID | 'solution' | 'environment' | 'version' | 'apply' | 'precheck' | 'check' | 'revert' | 'database' | 'branch' | 'server') ':' expr;
 
-checkConfigurationStatement: 'check' 'configuration' SYMBOL_ID 'for' 'database' SYMBOL_ID ';';
-checkConfigurationListStatement: 'check' 'configuration' SYMBOL_ID 'for' 'databases' whereClause? orderByClause? ';';
+precheckConfigStatement: 'precheck' 'config' SYMBOL_ID 'for' ('database' | 'server') SYMBOL_ID ';';
+precheckConfigListStatement: 'precheck' 'config' SYMBOL_ID 'for' ('databases' | 'servers') whereClause? orderByClause? ';';
+
+applyConfigStatement: 'apply' 'config' SYMBOL_ID 'to' ('database' | 'server') SYMBOL_ID ';';
+applyConfigListStatement: 'apply' 'config' SYMBOL_ID 'to' ('databases' | 'servers') whereClause? orderByClause? ';';
+
+checkConfigStatement: 'check' 'config' SYMBOL_ID 'for' ('database' | 'server') SYMBOL_ID ';';
+checkConfigListStatement: 'check' 'config' SYMBOL_ID 'for' ('databases' | 'servers') whereClause? orderByClause? ';';
+
+revertConfigStatement: 'revert' 'config' SYMBOL_ID 'from' ('database' | 'server') SYMBOL_ID ';';
+revertConfigListStatement: 'revert' 'config' SYMBOL_ID 'from' ('databases' | 'servers') whereClause? orderByClause? ';';

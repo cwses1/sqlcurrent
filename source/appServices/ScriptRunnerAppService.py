@@ -32,6 +32,9 @@ class ScriptRunnerAppService ():
 		self.batchId:str = None
 		self.serverSymbolName:str = None
 		self.serverSymbol:Symbol = None
+		self.configSymbol:str = None
+		self.configSymbolName:Symbol = None
+		self.targetSymbolType:SymbolType = None
 
 	def runBranchResetScripts (self):
 		symbolTableManager = self.symbolTableManager
@@ -555,6 +558,112 @@ class ScriptRunnerAppService ():
 		#
 		for scriptExpr in scriptExprList:
 			scriptFilePath = scriptFilePathFactory.createCheckPathForServer(scriptExpr.value)
+
+			if not os.path.exists(scriptFilePath):
+				raise Exception('{0}: Error: No such file or directory: \'{}\'.'.format(serverSymbolName, scriptFilePath))
+
+			scriptText = StringFileReader.readFile(scriptFilePath)
+
+			print('{0}: Running \'{1}\'.'.format(serverSymbolName, scriptFilePath))
+			checkResultSet = databaseClient.runCheckScript(scriptText)
+			errorCode:int = checkResultSet[0]
+			errorReason:str = checkResultSet[1]
+
+			if errorCode > 0:
+				#updateTrackingLine.result = 'failure'
+				print('{0}: Failure. Error Code: {1}. Error Reason: {2}'.format(serverSymbolName, errorCode, errorReason))
+				return ScriptRunnerResultSetFactory.createResultSetFromRow(errorCode, errorReason)
+			else:
+				#updateTrackingLine.result = 'success'
+				print('{0}: Success.'.format(serverSymbolName))
+
+		return ScriptRunnerResultSetFactory.createSuccessResultSet()
+
+	def runConfigApplyScripts (self):
+		symbolTableManager = self.symbolTableManager
+		databaseClient = self.databaseClient
+		currentDateTimeFormatted = self.currentDateTimeFormatted
+		batchId = self.batchId
+		serverSymbolName = self.serverSymbolName
+		serverSymbol = self.serverSymbol
+		configSymbolName = self.configSymbolName
+		configSymbol = self.configSymbol
+		databaseSymbolName = self.databaseSymbolName
+		databaseSymbol = self.databaseSymbol
+		targetSymbolType = self.targetSymbolType
+
+		scriptPropName = 'apply'
+
+		if not configSymbol.hasProp(scriptPropName):
+			return
+
+		scriptProp = configSymbol.getProp(scriptPropName)
+		scriptExprList = scriptProp.value
+
+		if len(scriptExprList) == 0:
+			return
+
+		#
+		# GET THE SCRIPT FILE PATH FACTORY AND DETERMINE WHERE THE SCRIPTS SHOULD BE.
+		#
+		scriptFilePathFactory = ScriptFilePathFactory()
+		scriptFilePathFactory.sqlScriptsDir = SymbolReader.readString(symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
+		scriptFilePathFactory.configSymbolName = configSymbolName
+		scriptFilePathFactory.specifiedDir = SymbolReader.readPropAsString(configSymbol, 'dir') if configSymbol.hasProp('dir') else None
+
+		#
+		# RUN THE SCRIPTS.
+		#
+		for scriptExpr in scriptExprList:
+			scriptFilePath = scriptFilePathFactory.createApplyPathForConfig(scriptExpr.value)
+
+			if not os.path.exists(scriptFilePath):
+				raise Exception('{0}: Error: No such file or directory: \'{}\'.'.format(serverSymbolName, scriptFilePath))
+
+			scriptText = StringFileReader.readFile(scriptFilePath)
+
+			print('{0}: Running \'{1}\'.'.format(databaseSymbolName if targetSymbolType == SymbolType.Database else serverSymbolName, scriptFilePath))
+
+			databaseClient.runApplyScript(scriptText)
+
+			print('{0}: Success.'.format(databaseSymbolName if targetSymbolType == SymbolType.Database else serverSymbolName))
+
+		return ScriptRunnerResultSetFactory.createSuccessResultSet()
+
+	def runConfigCheckScripts (self):
+		symbolTableManager = self.symbolTableManager
+		databaseClient = self.databaseClient
+		currentDateTimeFormatted = self.currentDateTimeFormatted
+		batchId = self.batchId
+		serverSymbolName = self.serverSymbolName
+		serverSymbol = self.serverSymbol
+		configSymbolName = self.configSymbolName
+		configSymbol = self.configSymbol
+
+		scriptPropName = 'apply'
+
+		if not configSymbol.hasProp(scriptPropName):
+			return
+
+		scriptProp = serverSymbol.getProp(scriptPropName)
+		scriptExprList = scriptProp.value
+
+		if len(scriptExprList) == 0:
+			return
+
+		#
+		# GET THE SCRIPT FILE PATH FACTORY AND DETERMINE WHERE THE SCRIPTS SHOULD BE.
+		#
+		scriptFilePathFactory = ScriptFilePathFactory()
+		scriptFilePathFactory.sqlScriptsDir = SymbolReader.readString(symbolTableManager.getSymbolByName('globalEnvSqlScriptsDir'))
+		scriptFilePathFactory.configSymbolName = configSymbolName
+		scriptFilePathFactory.specifiedDir = SymbolReader.readPropAsString(configSymbol, 'dir') if configSymbol.hasProp('dir') else None
+
+		#
+		# RUN THE SCRIPTS.
+		#
+		for scriptExpr in scriptExprList:
+			scriptFilePath = scriptFilePathFactory.createApplyPathForConfig(scriptExpr.value)
 
 			if not os.path.exists(scriptFilePath):
 				raise Exception('{0}: Error: No such file or directory: \'{}\'.'.format(serverSymbolName, scriptFilePath))
