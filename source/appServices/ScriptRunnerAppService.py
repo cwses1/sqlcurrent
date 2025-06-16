@@ -739,3 +739,61 @@ class ScriptRunnerAppService ():
 				print('{0}: Success.'.format(targetSymbolName))
 
 		return ScriptRunnerResultSetFactory.createSuccessResultSet()
+
+	def runConfigPrecheckScripts (self):
+		symbolTableManager = self.symbolTableManager
+		databaseClient = self.databaseClient
+		currentDateTimeFormatted = self.currentDateTimeFormatted
+		batchId = self.batchId
+		serverSymbolName = self.serverSymbolName
+		serverSymbol = self.serverSymbol
+		configSymbolName = self.configSymbolName
+		configSymbol = self.configSymbol
+		databaseSymbolName = self.databaseSymbolName
+		databaseSymbol = self.databaseSymbol
+		targetSymbolType = self.targetSymbolType
+		targetSymbolName = self.targetSymbolName
+		scriptPropName = self.scriptPropName
+		scriptFilePathFactory = self.scriptFilePathFactory
+
+		#
+		# IF THE PROPERTY IS NOT DEFINED THERE ARE NO SCRIPTS AND WE ARE DONE.
+		#
+		if not configSymbol.hasProp(scriptPropName):
+			return
+
+		#
+		# GET THE LIST OF SCRIPTS WE NEED TO RUN.
+		#
+		scriptProp = configSymbol.getProp(scriptPropName)
+		scriptExprList = scriptProp.value
+
+		#
+		# IF THE LIST OF SCRIPTS TO RUN IS EMPTY WE ARE DONE.
+		#
+		if len(scriptExprList) == 0:
+			return
+
+		#
+		# RUN THE SCRIPTS.
+		#
+		for scriptExpr in scriptExprList:
+			scriptFilePath = scriptFilePathFactory.createPrecheckPathForConfig(scriptExpr.value)
+
+			if not os.path.exists(scriptFilePath):
+				raise Exception('{0}: Error: No such file or directory: \'{1}\'.'.format(targetSymbolName, scriptFilePath))
+
+			scriptText = StringFileReader.readFile(scriptFilePath)
+
+			print('{0}: Running \'{1}\'.'.format(targetSymbolName, scriptFilePath))
+			checkResultSet = databaseClient.runCheckScript(scriptText)
+			errorCode:int = checkResultSet[0]
+			errorReason:str = checkResultSet[1]
+
+			if errorCode > 0:
+				print('{0}: Failure. Error Code: {1}. Error Reason: {2}'.format(targetSymbolName, errorCode, errorReason))
+				return ScriptRunnerResultSetFactory.createResultSetFromRow(errorCode, errorReason)
+			else:
+				print('{0}: Success.'.format(targetSymbolName))
+
+		return ScriptRunnerResultSetFactory.createSuccessResultSet()
