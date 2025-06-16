@@ -5,19 +5,19 @@ class ScriptRunnerResultSetFactory ():
 	@staticmethod
 	def createSuccessResultSet () -> ScriptRunnerResultSet:
 		createdResultSet = ScriptRunnerResultSet()
-		createdResultSet.scriptFailed = False
+		createdResultSet.errorCode = False
 		return createdResultSet
 
 	@staticmethod
-	def createFailureResultSet (scriptFailedReason:str) -> ScriptRunnerResultSet:
+	def createFailureResultSet (errorReason:str) -> ScriptRunnerResultSet:
 		createdResultSet = ScriptRunnerResultSet()
-		createdResultSet.scriptFailed = True
-		createdResultSet.scriptFailedReason = scriptFailedReason
+		createdResultSet.errorCode = 1
+		createdResultSet.errorReason = errorReason
 		return createdResultSet
 
 	@staticmethod
-	def createResultSetFromRow (scriptFailed:bool, scriptFailedReason:str) -> ScriptRunnerResultSet:
+	def createResultSetFromRow (errorCode:int, errorReason:str) -> ScriptRunnerResultSet:
 		createdResultSet = ScriptRunnerResultSet()
-		createdResultSet.scriptFailed = scriptFailed
-		createdResultSet.scriptFailedReason = scriptFailedReason
+		createdResultSet.errorCode = errorCode
+		createdResultSet.errorReason = errorReason
 		return createdResultSet

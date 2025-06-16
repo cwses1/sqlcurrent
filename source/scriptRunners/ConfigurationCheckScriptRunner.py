@@ -79,15 +79,15 @@ class ConfigurationCheckScriptRunner ():
 		try:
 			checkResultSet = databaseClient.runCheckScript(scriptText)
 
-			scriptFailed:bool = checkResultSet[0]
-			scriptFailedReason:str = checkResultSet[1]
+			errorCode:int = checkResultSet[0]
+			errorReason:str = checkResultSet[1]
 
-			if scriptFailed:
+			if errorCode > 0:
 				updateTrackingLine.result = 'failure'
 			else:
 				updateTrackingLine.result = 'success'
 
-			return ScriptRunnerResultSetFactory.createResultSetFromRow(scriptFailed, scriptFailedReason)
+			return ScriptRunnerResultSetFactory.createResultSetFromRow(errorCode, errorReason)
 		except Exception as e:
 			updateTrackingLine.result = 'failure'
 			return ScriptRunnerResultSetFactory.createFailureResultSet('{0}: Error running check script: \'{1}\' in configuration \'{2}\'.'.format(databaseSymbolName, e, configurationSymbolName))

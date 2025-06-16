@@ -96,6 +96,9 @@ class PrecheckConfigAppService ():
 		scriptRunnerService.targetSymbolName = targetSymbolName
 		scriptRunnerService.scriptPropName = 'precheck'
 		scriptRunnerService.scriptFilePathFactory = pathFactory
-		scriptRunnerService.runConfigPrecheckScripts()
+		scriptRunnerResultSet = scriptRunnerService.runConfigPrecheckScripts()
+
+		if scriptRunnerResultSet.errorCode > 0:
+			raise Exception('{0}: errorCode: {1} errorReason: {2}'.format(targetSymbolName, scriptRunnerResultSet.errorCode, scriptRunnerResultSet.errorReason))
 
 		print('{0}: Precheck complete.'.format(targetSymbolName))

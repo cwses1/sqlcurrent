@@ -97,17 +97,17 @@ class VersionCheckScriptRunner ():
 		try:
 			checkResultSet = databaseClient.runCheckScript(scriptText)
 
-			scriptFailed:bool = checkResultSet[0]
-			scriptFailedReason:str = checkResultSet[1]
+			errorCode:int = checkResultSet[0]
+			errorReason:str = checkResultSet[1]
 
-			if scriptFailed:
+			if errorCode > 0:
 				updateTrackingLine.result = 'failure'
 				print('{0}: Failure.'.format(databaseSymbolName))
 			else:
 				updateTrackingLine.result = 'success'
 				print('{0}: Success.'.format(databaseSymbolName))
 
-			return ScriptRunnerResultSetFactory.createResultSetFromRow(scriptFailed, scriptFailedReason)
+			return ScriptRunnerResultSetFactory.createResultSetFromRow(errorCode, errorReason)
 		except Exception as e:
 			updateTrackingLine.result = 'failure'
 			print('{0}: Failure.'.format(databaseSymbolName))

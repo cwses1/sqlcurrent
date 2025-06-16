@@ -230,9 +230,8 @@ class CheckDatabaseAppService ():
 				scriptRunner.scriptListLength = checkScriptListLength
 				scriptRunnerResultSet = scriptRunner.runScript(checkScriptFilePath)
 
-				if scriptRunnerResultSet.scriptFailed:
-					print('{0}: Failure Reason: {1}'.format(databaseSymbolName, scriptRunnerResultSet.scriptFailedReason))
-					return
+				if scriptRunnerResultSet.errorCode > 0:
+					raise Exception('{0}: Failure Reason: {1}'.format(databaseSymbolName, scriptRunnerResultSet.errorReason))
 
 		#
 		# TELL THE USER THAT THE CONFIGURATION WAS SUCCESSFUL.

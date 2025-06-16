@@ -43,12 +43,13 @@ def main(argv):
 	#
 	# CREATE THE INTERPRETER AND EXECUTE THE SPECIFIED SCRIPT FILE.
 	#
-	#try:
 	interpreter = SqlCurrentScriptInterpreter()
 	interpreter.symbolTableManager = globalSymbolTableManager
-	interpreter.executeScriptFile(absoluteScriptFilePath)
-	#except Exception as e:
-	#	print(e)
+
+	try:
+		interpreter.executeScriptFile(absoluteScriptFilePath)
+	except Exception as e:
+		print('sqlcurrent: Script stopped on error: {0}', e)
 
 if __name__ == '__main__':
 	main(sys.argv)
