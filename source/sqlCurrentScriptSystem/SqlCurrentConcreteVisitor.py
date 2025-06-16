@@ -91,6 +91,7 @@ from appServices.PrecheckConfigListAppService import *
 from appServices.CreateServerListAppService import *
 from appServices.RecreateServerListAppService import *
 from appServices.CheckServerListAppService import *
+from appServices.ResetServerListAppService import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -1979,7 +1980,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 	def visitCheckServerListStatement(self, ctx:SqlCurrentParser.CheckServerListStatementContext):
 		#
-		# recreateServerListStatement: 'recreate' 'servers' whereClause? orderByClause? ';';
+		# checkServerListStatement: 'check' 'servers' whereClause? orderByClause? ';';
 		#
 
 		#
@@ -2057,7 +2058,39 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			print('{0}: Error. {1}'.format(serverSymbolName, e))
 
 	def visitResetServerListStatement(self, ctx:SqlCurrentParser.ResetServerListStatementContext):
-		return self.visitChildren(ctx)
+		#
+		# resetServerListStatement: 'reset' 'servers' whereClause? orderByClause? ';';
+		#
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
+
+		#
+		# SERVERS.
+		#
+		serverSymbolList = self._symbolTableManager.getAllServerSymbols()
+
+		#
+		# WHERE
+		#
+		if ctx.whereClause() != None:
+			serverSymbolList = self.visitWhereClause(ctx.whereClause()).applyConstraint(serverSymbolList)
+
+		#
+		# ORDER BY
+		#
+		if ctx.orderByClause() != None:
+			serverSymbolList = self.visitOrderByClause(ctx.orderByClause()).applyConstraint(serverSymbolList)
+
+		appService = ResetServerListAppService()
+		appService.serverSymbolList = serverSymbolList
+		appService.symbolTableManager = self._symbolTableManager
+		appService.currentDateTime = currentDateTime
+		appService.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
+		appService.batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
+		appService.run()
 
 	def visitConfigStatement(self, ctx:SqlCurrentParser.ConfigStatementContext):
 		#
