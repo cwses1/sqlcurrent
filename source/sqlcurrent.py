@@ -5,6 +5,11 @@ from symbolTables.SymbolTableManager import *
 from sqlCurrentScriptSystem.SqlCurrentScriptInterpreter import *
 
 def main(argv):
+	if len(argv) != 2:
+		print('Usage:')
+		print('sqlcurrent script.txt')
+		return
+
 	#
 	# GET THE SCRIPT FILE PATH.
 	#

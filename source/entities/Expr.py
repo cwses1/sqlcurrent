@@ -4,7 +4,7 @@ class Expr ():
 		self.name = None
 		self.type = None
 		self.value = None
-		self.param = None
+		self.scriptHint:Expr = None
 
 		#
 		# SymbolType.ReferenceToSymbol ONLY

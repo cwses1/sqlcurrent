@@ -8,21 +8,17 @@ SQL Current defines its own proprietary language called **Current Script**.  You
 Current Script looks like a combination of CSS and SQL.  Here's an example of a script that shows some of the language elements you might use:
 
 	//
-	// WELCOME TO CURRENT SCRIPT!
-	// THESE ARE COMMENTS.
-	// YOU CAN ALSO USE /* */ FOR COMMENTS.
+	// THESE ARE COMMENTS. YOU CAN ALSO USE /* */ FOR COMMENTS.
 	//
 
 	//
-	// OUR TOPOLOGY CAN GET BIG.
-	// LET'S INCLUDE OTHER SCRIPTS HERE.
+	// INCLUDE OTHER SCRIPTS.
 	//
 	@include 'servers.txt';
 	@include 'databases.txt';
 
 	//
-	// FIRST, DEFINE YOUR TOPOLOGY.
-	// THIS IS THE PART OF CURRENT SCRIPT THAT LOOKS LIKE CSS.
+	// DEFINE YOUR TOPOLOGY.
 	//
 	database alpha
 	{
@@ -49,8 +45,7 @@ Current Script looks like a combination of CSS and SQL.  Here's an example of a 
 	}
 
 	//
-	// EXECUTE COMMANDS AGAINST YOUR TOPOLOGY.
-	// THIS PART OF CURRENT SCRIPT LOOKS LIKE SQL.
+	// MANIPULATE YOUR TOPOLOGY.
 	//
 	create database alpha;
 	create database zappa;

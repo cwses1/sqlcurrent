@@ -168,20 +168,34 @@ class ScriptRunnerAppService ():
 
 			#
 			# DETERMINE IF WE NEED TO MAKE OUR OWN DATABASE CLIENT FOR THIS SPECIFIC SCRIPT.
-			# THIS IS DONE WITH THIS SYNTAX:
+			# THIS IS DONE VIA SCRIPT HINT SYNTAX.
 			# serverConnString: 'Server=192.168.10.170;User ID=sa;Password=sandy';
 			# create: 'create_database_heavywork_demo.sql' (serverConnString);
 			#
 			# THE CREATE EXPRESSION WILL HAVE A PARAM ATTACHED TO IT.
 			#
-			needsCustomDatabaseClient = scriptExpr.param != None
+			needsCustomDatabaseClient = scriptExpr.scriptHint != None
 
 			#
 			# CREATE THE CUSTOM DATABASE CLIENT.
 			#
 			if needsCustomDatabaseClient:
+				scriptHintExpr:Expr = scriptExpr.scriptHint
+
+				if scriptHintExpr.type == SymbolType.String:
+					connStringValue:str = scriptHintExpr.value
+				elif scriptHintExpr.type == SymbolType.ReferenceToSymbol:
+					serverSymbol:Symbol = scriptHintExpr.value
+					serverSymbolName:str = serverSymbol.name
+
+					if not serverSymbol.hasProp('connString'):
+						raise Exception('{0}: Error. Could not get connection string value. Server {1} has no connString property defined.'.format(databaseSymbolName, serverSymbolName))
+
+					connStringValue = SymbolReader.readPropAsString(serverSymbol, 'connString')
+				else:
+					raise Exception('{0}: Could not get connection string value. Invalid script hint type {1}.'.format(databaseSymbolName, scriptHintExpr.type))
+
 				driverValue = databaseSymbol.getProp('driver').value
-				connStringValue = scriptExpr.param.value
 				customDatabaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
 				customDatabaseClient.connString = connStringValue
 				customDatabaseClient.init()
@@ -387,20 +401,34 @@ class ScriptRunnerAppService ():
 
 			#
 			# DETERMINE IF WE NEED TO MAKE OUR OWN DATABASE CLIENT FOR THIS SPECIFIC SCRIPT.
-			# THIS IS DONE WITH THIS SYNTAX:
+			# THIS IS DONE VIA SCRIPT HINT SYNTAX.
 			# serverConnString: 'Server=192.168.10.170;User ID=sa;Password=sandy';
 			# create: 'create_database_heavywork_demo.sql' (serverConnString);
 			#
 			# THE CREATE EXPRESSION WILL HAVE A PARAM ATTACHED TO IT.
 			#
-			needsCustomDatabaseClient = scriptExpr.param != None
+			needsCustomDatabaseClient = scriptExpr.scriptHint != None
 
 			#
 			# CREATE THE CUSTOM DATABASE CLIENT.
 			#
 			if needsCustomDatabaseClient:
+				scriptHintExpr:Expr = scriptExpr.scriptHint
+
+				if scriptHintExpr.type == SymbolType.String:
+					connStringValue:str = scriptHintExpr.value
+				elif scriptHintExpr.type == SymbolType.ReferenceToSymbol:
+					serverSymbol:Symbol = scriptHintExpr.value
+					serverSymbolName:str = serverSymbol.name
+
+					if not serverSymbol.hasProp('connString'):
+						raise Exception('{0}: Error. Could not get connection string value. Server {1} has no connString property defined.'.format(databaseSymbolName, serverSymbolName))
+
+					connStringValue = SymbolReader.readPropAsString(serverSymbol, 'connString')
+				else:
+					raise Exception('{0}: Could not get connection string value. Invalid script hint type {1}.'.format(databaseSymbolName, scriptHintExpr.type))
+
 				driverValue = databaseSymbol.getProp('driver').value
-				connStringValue = scriptExpr.param.value
 				customDatabaseClient = DatabaseClientProvider.getDatabaseClient(driverValue)
 				customDatabaseClient.connString = connStringValue
 				customDatabaseClient.init()

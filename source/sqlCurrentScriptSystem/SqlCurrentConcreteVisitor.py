@@ -379,14 +379,19 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		databaseSymbol:Symbol = self._symbolTableManager.getCurrentSymbolTable().contextSymbol
 
 		#
-		# IF THIS IS A CREATE PROPERTY THEN CHECK FOR CONNECTION STRING HINTS.
+		# IF THIS IS A CREATE PROPERTY THEN CHECK FOR SCRIPT HINTS.
 		#
 		if (propName == 'create' or propName == 'reset') and ctx.SYMBOL_ID() != None:
-			hintPropName = ctx.SYMBOL_ID().getText()
-			if databaseSymbol.hasProp(hintPropName):
-				propExpr.param = databaseSymbol.getProp(hintPropName)
+			scriptHintName = ctx.SYMBOL_ID().getText()
+			if databaseSymbol.hasProp(scriptHintName):
+				propExpr.scriptHint = databaseSymbol.getProp(scriptHintName)
+			elif self._symbolTableManager.hasSymbolByName(scriptHintName):
+				scriptHintExpr = Expr()
+				scriptHintExpr.type = SymbolType.ReferenceToSymbol
+				scriptHintExpr.value = self._symbolTableManager.getSymbolByName(scriptHintName)
+				propExpr.scriptHint = scriptHintExpr
 			else:
-				print('{0}: Error. No property named: {1}.'.format(databaseSymbol.name, hintPropName))
+				print('{0}: Error. Could not find property or symbol {1}.'.format(databaseSymbol.name, scriptHintName))
 
 		#
 		# TO DO SOMEDAY: APPLY INTERPOLATIONS TO THIS PROPERTY.
