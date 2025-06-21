@@ -80,6 +80,15 @@ class SqlCurrentListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SqlCurrentParser#scriptHint.
+    def enterScriptHint(self, ctx:SqlCurrentParser.ScriptHintContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#scriptHint.
+    def exitScriptHint(self, ctx:SqlCurrentParser.ScriptHintContext):
+        pass
+
+
     # Enter a parse tree produced by SqlCurrentParser#expr.
     def enterExpr(self, ctx:SqlCurrentParser.ExprContext):
         pass

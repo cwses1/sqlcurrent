@@ -342,10 +342,10 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 	def visitDatabaseProp(self, ctx:SqlCurrentParser.DatabasePropContext):
 		#
-		# databaseProp: (SYMBOL_ID | 'solution' | 'branch' | 'server' | 'environment' | 'version' | 'check' | 'reset') ':' expr
-		# | 'create' ':' expr ('(' SYMBOL_ID ')')?
-		# | 'reset' ':' expr ('(' SYMBOL_ID ')')?
-		# ;
+		# databaseProp: (SYMBOL_ID | 'solution' | 'branch' | 'server' | 'environment' | 'version' | 'check' ) ':' expr
+		#	| 'create' ':' expr scriptHint?
+		#	| 'reset' ':' expr scriptHint?
+		#	;
 		#
 
 		#
@@ -381,17 +381,32 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#
 		# IF THIS IS A CREATE PROPERTY THEN CHECK FOR SCRIPT HINTS.
 		#
-		if (propName == 'create' or propName == 'reset') and ctx.SYMBOL_ID() != None:
-			scriptHintName = ctx.SYMBOL_ID().getText()
-			if databaseSymbol.hasProp(scriptHintName):
-				propExpr.scriptHint = databaseSymbol.getProp(scriptHintName)
-			elif self._symbolTableManager.hasSymbolByName(scriptHintName):
-				scriptHintExpr = Expr()
-				scriptHintExpr.type = SymbolType.ReferenceToSymbol
-				scriptHintExpr.value = self._symbolTableManager.getSymbolByName(scriptHintName)
-				propExpr.scriptHint = scriptHintExpr
+		if (propName == 'create' or propName == 'reset') and ctx.scriptHint() != None:
+			
+			scriptHintCode:str = self.visitScriptHint(ctx.scriptHint())
+
+			if scriptHintCode == 'server':
+				#
+				# GET THE VALUE OF THE SERVER PROPERTY.
+				#
+				if databaseSymbol.hasProp('server'):
+					scriptHintExpr = Expr()
+					scriptHintExpr.type = SymbolType.ReferenceToSymbol
+					scriptHintExpr.value = databaseSymbol.getProp('server').value
+					propExpr.scriptHint = scriptHintExpr
+				else:
+					print('{0}: Error. Script hint specified server keyword but server property is not defined.'.format(databaseSymbol.name))
 			else:
-				print('{0}: Error. Could not find property or symbol {1}.'.format(databaseSymbol.name, scriptHintName))
+				scriptHintName = scriptHintCode
+				if databaseSymbol.hasProp(scriptHintName):
+					propExpr.scriptHint = databaseSymbol.getProp(scriptHintName)
+				elif self._symbolTableManager.hasSymbolByName(scriptHintName):
+					scriptHintExpr = Expr()
+					scriptHintExpr.type = SymbolType.ReferenceToSymbol
+					scriptHintExpr.value = self._symbolTableManager.getSymbolByName(scriptHintName)
+					propExpr.scriptHint = scriptHintExpr
+				else:
+					print('{0}: Error. Could not find property or symbol {1}.'.format(databaseSymbol.name, scriptHintName))
 
 		#
 		# TO DO SOMEDAY: APPLY INTERPOLATIONS TO THIS PROPERTY.
@@ -404,6 +419,12 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			databaseSymbol.setProp(propName, propExpr)
 		else:
 			databaseSymbol.appendProp(propName, propExpr)
+
+	def visitScriptHint(self, ctx:SqlCurrentParser.ScriptHintContext):
+		#
+		# scriptHint: '(' (SYMBOL_ID | 'server') ')';
+		#
+		return ctx.SYMBOL_ID().getText() if ctx.SYMBOL_ID() != None else 'server'
 
 	def visitExpr(self, ctx:SqlCurrentParser.ExprContext):
 		#

@@ -55,6 +55,7 @@ def main(argv):
 		interpreter.executeScriptFile(absoluteScriptFilePath)
 	except Exception as e:
 		print('sqlcurrent: Script stopped on error: {0}', e)
+		raise
 
 if __name__ == '__main__':
 	main(sys.argv)

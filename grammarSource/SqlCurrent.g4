@@ -57,9 +57,11 @@ serverProp: (SYMBOL_ID | 'solution' | 'environment' | 'branch' | 'create' | 'res
 databaseStatement: 'database' SYMBOL_ID '{' databasePropList '}';
 databasePropList: (databaseProp ';')*;
 databaseProp: (SYMBOL_ID | 'solution' | 'branch' | 'server' | 'environment' | 'version' | 'check' ) ':' expr
-	| 'create' ':' expr ('(' SYMBOL_ID ')')?
-	| 'reset' ':' expr ('(' SYMBOL_ID ')')?
+	| 'create' ':' expr scriptHint?
+	| 'reset' ':' expr scriptHint?
 	;
+
+scriptHint: '(' (SYMBOL_ID | 'server') ')';
 
 expr: STRING_LITERAL | SYMBOL_ID | VERSION_ID;
 

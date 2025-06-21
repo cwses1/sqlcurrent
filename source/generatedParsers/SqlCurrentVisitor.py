@@ -49,6 +49,11 @@ class SqlCurrentVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SqlCurrentParser#scriptHint.
+    def visitScriptHint(self, ctx:SqlCurrentParser.ScriptHintContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by SqlCurrentParser#expr.
     def visitExpr(self, ctx:SqlCurrentParser.ExprContext):
         return self.visitChildren(ctx)
