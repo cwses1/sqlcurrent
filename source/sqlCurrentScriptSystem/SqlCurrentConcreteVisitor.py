@@ -92,6 +92,7 @@ from appServices.CreateServerListAppService import *
 from appServices.RecreateServerListAppService import *
 from appServices.CheckServerListAppService import *
 from appServices.ResetServerListAppService import *
+from interpolators.Interpolator import *
 
 class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
@@ -360,6 +361,11 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			raise PropNameNotValidError(SymbolTypeFormatter.format(SymbolType.Database), propName)
 
 		#
+		# GET THE CONTEXT SYMBOL (A DATABASE SYMBOL)
+		#
+		databaseSymbol:Symbol = self._symbolTableManager.getCurrentSymbolTable().contextSymbol
+
+		#
 		# GET THE PROPERTY VALUE.
 		#
 		propExpr = self.visitExpr(ctx.expr())
@@ -373,10 +379,13 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			if DatabaseValueValidator.isNotValid(propName, propValue):
 				raise PropValueNotValidError(SymbolTypeFormatter.format(SymbolType.Database), propName, propValue)
 
-		#
-		# GET THE CONTEXT SYMBOL (A DATABASE SYMBOL)
-		#
-		databaseSymbol:Symbol = self._symbolTableManager.getCurrentSymbolTable().contextSymbol
+			#
+			# APPLY INTERPOLATIONS TO THIS PROPERTY.
+			#
+			interpolator = Interpolator()
+			interpolator.symbolTableManager = self._symbolTableManager
+			interpolator.contextSymbol = databaseSymbol
+			propExpr.value = interpolator.interpolate(propValue)
 
 		#
 		# IF THIS IS A CREATE PROPERTY THEN CHECK FOR SCRIPT HINTS.
@@ -408,9 +417,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 				else:
 					print('{0}: Error. Could not find property or symbol {1}.'.format(databaseSymbol.name, scriptHintName))
 
-		#
-		# TO DO SOMEDAY: APPLY INTERPOLATIONS TO THIS PROPERTY.
-		#
+
 
 		#
 		# SET OR APPEND THE PROPERTY TO THE SYMBOL.
