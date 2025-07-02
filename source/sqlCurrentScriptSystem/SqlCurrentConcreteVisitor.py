@@ -417,8 +417,6 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 				else:
 					print('{0}: Error. Could not find property or symbol {1}.'.format(databaseSymbol.name, scriptHintName))
 
-
-
 		#
 		# SET OR APPEND THE PROPERTY TO THE SYMBOL.
 		#

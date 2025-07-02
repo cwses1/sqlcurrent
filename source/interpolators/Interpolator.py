@@ -43,7 +43,6 @@ class Interpolator:
 			#
 			# TURN THE EXPRESS RESULT (EITHER A SYMBOL OR A PROPERTY) INTO A STRING.
 			#
-			#
 			# applecrisp -> SymbolType.ReferenceToSymbol
 			# applecrisp.host -> SymbolType.String
 			# server -> SymbolType.ReferenceToSymbol
@@ -71,6 +70,4 @@ class Interpolator:
 		#
 		# APPLY THE MUSTACHE TEMPLATE.
 		#
-		print('normalizedPropValue: {}'.format(normalizedPropValue))
-		print('mustacheTemplateParams: {}'.format(mustacheTemplateParams))
 		return chevron.render(normalizedPropValue, mustacheTemplateParams)
