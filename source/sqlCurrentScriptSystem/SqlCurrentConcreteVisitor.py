@@ -654,11 +654,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		appService.currentDateTimeFormatted = currentDateTimeFormatted
 		appService.batchId = batchId
 		appService.databaseClient = databaseClient
-
-		try:
-			appService.run()
-		except Exception as e:
-			print('{0}: Error. {1}'.format(databaseSymbolName, e))
+		appService.run()
 
 	def visitSolutionStatement(self, ctx:SqlCurrentParser.SolutionStatementContext):
 		#
@@ -1636,11 +1632,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		appService.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
 		appService.batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
 		appService.databaseClient = databaseClient
-
-		try:
-			appService.run()
-		except Exception as e:
-			print('{0}: Error. {1}'.format(databaseSymbolName, e))
+		appService.run()
 
 	def visitInitDatabaseStatement(self, ctx:SqlCurrentParser.InitDatabaseStatementContext):
 		#
@@ -1770,11 +1762,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		appService.currentDateTimeFormatted = currentDateTimeFormatted
 		appService.batchId = batchId
 		appService.databaseClient = databaseClient
-
-		try:
-			appService.run()
-		except Exception as e:
-			print('{0}: Error. {1}'.format(databaseSymbolName, e))
+		appService.run()
 
 	def visitRecreateDatabaseListStatement(self, ctx:SqlCurrentParser.RecreateDatabaseListStatementContext):
 		#
@@ -1924,11 +1912,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		appService.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
 		appService.batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
 		appService.databaseClient = databaseClient
-
-		try:
-			appService.run()
-		except Exception as e:
-			print('{0}: Error. {1}'.format(serverSymbolName, e))
+		appService.run()
 
 	def visitRecreateServerListStatement(self, ctx:SqlCurrentParser.RecreateServerListStatementContext):
 		#
@@ -2003,11 +1987,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		appService.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
 		appService.batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
 		appService.databaseClient = databaseClient
-
-		try:
-			appService.run()
-		except Exception as e:
-			print('{0}: Error. {1}'.format(serverSymbolName, e))
+		appService.run()
 
 	def visitCheckServerListStatement(self, ctx:SqlCurrentParser.CheckServerListStatementContext):
 		#
@@ -2082,11 +2062,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		appService.currentDateTimeFormatted = DateTimeFormatter.formatForUpdateTrackingFile(currentDateTime)
 		appService.batchId = UUID4Formatter.formatForUpdateTrackingFile(BatchGenerator.generateBatchId())
 		appService.databaseClient = databaseClient
-
-		try:
-			appService.run()
-		except Exception as e:
-			print('{0}: Error. {1}'.format(serverSymbolName, e))
+		appService.run()
 
 	def visitResetServerListStatement(self, ctx:SqlCurrentParser.ResetServerListStatementContext):
 		#

@@ -55,7 +55,10 @@ def main(argv):
 		interpreter.executeScriptFile(absoluteScriptFilePath)
 	except Exception as e:
 		print('sqlcurrent: Script stopped on error: {0}', e)
-		raise
+		#
+		# TO DO: IF STACK TRACES REQUESTED THEN raise.
+		#
+		#raise
 
 if __name__ == '__main__':
 	main(sys.argv)
