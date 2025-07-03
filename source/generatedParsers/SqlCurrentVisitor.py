@@ -134,6 +134,11 @@ class SqlCurrentVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SqlCurrentParser#inBranchClause.
+    def visitInBranchClause(self, ctx:SqlCurrentParser.InBranchClauseContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by SqlCurrentParser#whereExpr.
     def visitWhereExpr(self, ctx:SqlCurrentParser.WhereExprContext):
         return self.visitChildren(ctx)

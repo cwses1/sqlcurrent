@@ -83,9 +83,10 @@ environmentStatement: 'environment' SYMBOL_ID '{' environmentPropList '}';
 environmentPropList: (environmentProp ';')*;
 environmentProp: (SYMBOL_ID | 'solution') ':' expr;
 
-createDatabaseListStatement: 'create' 'databases' whereClause? orderByClause? ';';
+createDatabaseListStatement: 'create' 'databases' inBranchClause? whereClause? orderByClause? ';';
 
 whereClause: 'where' whereExpr;
+inBranchClause: 'not'? 'in' 'branch' SYMBOL_ID;
 
 whereExpr: ('any' | 'every')? (SYMBOL_ID | 'solution' | 'branch' | 'environment' | 'server') ('=' | '!=' | 'not'? 'in' | 'not'? 'like' | 'not'? 'matches') (simpleWhereExprList | simpleWhereExpr | whereExpr) (('and' | 'or') whereExpr)?
 	| '(' whereExpr ')' (('and' | 'or') whereExpr)?;
@@ -101,10 +102,10 @@ orderBySegment: SYMBOL_ID ('asc' | 'descending')?;
 updateDatabaseStatement: 'update' 'database' SYMBOL_ID toVersionClause? ';';
 toVersionClause: 'to' 'version'? VERSION_ID;
 
-updateDatabaseListStatement: 'update' 'databases' toVersionClause? whereClause? orderByClause? ';';
-selectDatabaseListStatement: 'select' 'databases' whereClause? orderByClause? ';';
-revertDatabaseListStatement: 'revert' 'databases' toVersionClause whereClause? orderByClause? ';';
-checkDatabaseListStatement: 'check' 'databases' whereClause? orderByClause? ';';
+updateDatabaseListStatement: 'update' 'databases' inBranchClause? toVersionClause? whereClause? orderByClause? ';';
+selectDatabaseListStatement: 'select' 'databases' inBranchClause? whereClause? orderByClause? ';';
+revertDatabaseListStatement: 'revert' 'databases' inBranchClause? toVersionClause whereClause? orderByClause? ';';
+checkDatabaseListStatement: 'check' 'databases' inBranchClause? whereClause? orderByClause? ';';
 revertDatabaseStatement: 'revert' 'database' SYMBOL_ID toVersionClause ';';
 checkDatabaseStatement: 'check' 'database' SYMBOL_ID ('version' VERSION_ID)? ';';
 resetDatabaseStatement: 'reset' 'database' SYMBOL_ID ';';
@@ -113,10 +114,10 @@ printSymbolsStatement: 'print' 'symbols' ';';
 
 initDatabaseStatement: 'init' ('standalone' | 'branched')? 'database'? SYMBOL_ID ('in'? 'branch' expr)? ';';
 
-resetDatabaseListStatement: 'reset' 'databases' whereClause? orderByClause? ';';
+resetDatabaseListStatement: 'reset' 'databases' inBranchClause? whereClause? orderByClause? ';';
 
 recreateDatabaseStatement: 'recreate' 'database'? SYMBOL_ID ';';
-recreateDatabaseListStatement: 'recreate' 'databases' whereClause? orderByClause? ';';
+recreateDatabaseListStatement: 'recreate' 'databases' inBranchClause? whereClause? orderByClause? ';';
 
 createServerStatement: 'create' 'server' SYMBOL_ID ';';
 createServerListStatement: 'create' 'servers' whereClause? orderByClause? ';';

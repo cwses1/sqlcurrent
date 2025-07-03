@@ -58,7 +58,7 @@ def main(argv):
 		#
 		# TO DO: IF STACK TRACES REQUESTED THEN raise.
 		#
-		#raise
+		raise
 
 if __name__ == '__main__':
 	main(sys.argv)

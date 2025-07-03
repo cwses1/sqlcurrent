@@ -233,6 +233,15 @@ class SqlCurrentListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SqlCurrentParser#inBranchClause.
+    def enterInBranchClause(self, ctx:SqlCurrentParser.InBranchClauseContext):
+        pass
+
+    # Exit a parse tree produced by SqlCurrentParser#inBranchClause.
+    def exitInBranchClause(self, ctx:SqlCurrentParser.InBranchClauseContext):
+        pass
+
+
     # Enter a parse tree produced by SqlCurrentParser#whereExpr.
     def enterWhereExpr(self, ctx:SqlCurrentParser.WhereExprContext):
         pass

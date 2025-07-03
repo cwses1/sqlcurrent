@@ -75,11 +75,11 @@ VERSION_ID=55
 'precheck'=20
 'databases'=21
 'where'=22
-'any'=23
-'every'=24
-'='=25
-'!='=26
-'not'=27
+'not'=23
+'any'=24
+'every'=25
+'='=26
+'!='=27
 'like'=28
 'matches'=29
 'and'=30

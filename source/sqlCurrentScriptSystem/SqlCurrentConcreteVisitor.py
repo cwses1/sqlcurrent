@@ -896,7 +896,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 	def visitCreateDatabaseListStatement(self, ctx:SqlCurrentParser.CreateDatabaseListStatementContext):
 		#
-		# createDatabaseListStatement: 'create' 'databases' whereClause? orderByClause? ';';
+		# createDatabaseListStatement: 'create' 'databases' inBranchClause? whereClause? orderByClause? ';';
 		#
 
 		#
@@ -905,30 +905,22 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		databaseSymbolList = self._symbolTableManager.getAllDatabaseSymbols()
 
 		#
-		# APPLY THE CONSTRAINT TO THE LIST OF DATABASES.
+		# APPLY THE IN BRANCH CONSTRAINT TO THE LIST OF DATABASES.
+		#
+		if ctx.inBranchClause() != None:
+			databaseSymbolList = self.visitInBranchClause(ctx.inBranchClause()).applyConstraint(databaseSymbolList)
+
+		#
+		# APPLY THE WHERE CONSTRAINT TO THE LIST OF DATABASES.
 		#
 		if ctx.whereClause() != None:
-			whereConstraint = self.visitWhereClause(ctx.whereClause())
-			databaseSymbolList = whereConstraint.applyConstraint(databaseSymbolList)
-
-		#
-		# IF THERE ARE NO DATABASES TO UPDATE AFTER THE WHERE CLAUSE IS APPLIED, THEN LET THE USER KNOW.
-		#
-		#if len(databaseSymbolList) == 0:
-		#	print(MessageBuilder.createNoDatabasesAfterWhereClauseMessage())
-		#	return
-
-		#
-		# LET THE USER KNOW HOW MANY DATABASES WE'RE DEALING WITH.
-		#
-		#print(MessageBuilder.createDatabaseCreateCountAfterWhereClauseMessage(databaseSymbolList))
+			databaseSymbolList = self.visitWhereClause(ctx.whereClause()).applyConstraint(databaseSymbolList)
 
 		#
 		# ORDER THE LIST OF DATABASES.
 		#
 		if ctx.orderByClause() != None:
-			orderByConstraint = self.visitOrderByClause(ctx.orderByClause())
-			databaseSymbolList = orderByConstraint.applyConstraint(databaseSymbolList)
+			databaseSymbolList = self.visitOrderByClause(ctx.orderByClause()).applyConstraint(databaseSymbolList)
 
 		#
 		# GET THE CURRENT TIME.
@@ -950,6 +942,50 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		constraint = Constraint()
 		constraint.functionNameOrCode = '()'
 		constraint.onlyChildConstraint = self.visitWhereExpr(ctx.whereExpr())
+		return constraint
+
+	def visitInBranchClause(self, ctx:SqlCurrentParser.InBranchClauseContext):
+		#
+		# inBranchClause: 'not'? 'in' 'branch' SYMBOL_ID;
+		#
+		constraint = Constraint()
+
+		#
+		# CONSTRAINT LEFT OPERAND.
+		#
+		constraint.leftOperand = 'branch'
+
+		#
+		# CONSTRAINT OPERATOR CODE.
+		#
+		operatorIndex = 0
+		operatorStartSymbol = ctx.getChild(operatorIndex).getText()
+		operatorEndSymbol = None
+
+		if operatorStartSymbol == 'not':
+			operatorEndSymbol = ctx.getChild(operatorIndex + 1).getText()
+
+		if operatorEndSymbol != None:
+			constraint.functionNameOrCode = operatorStartSymbol + '_' + operatorEndSymbol
+		else:
+			constraint.functionNameOrCode = operatorStartSymbol
+
+		#
+		# CONSTRAINT RIGHT OPERAND.
+		#
+		branchSymbolName = ctx.SYMBOL_ID().getText()
+
+		if not self._symbolTableManager.hasSymbolByName(branchSymbolName):
+			raise Exception('Branch symbol not found: {}'.format())
+
+		branchSymbol = self._symbolTableManager.getSymbolByName(branchSymbolName)
+
+		expr = Expr()
+		expr.name = branchSymbolName
+		expr.value = branchSymbol
+		expr.type = SymbolType.ReferenceToSymbol
+
+		constraint.rightOperand = [expr]
 		return constraint
 
 	def visitWhereExpr(self, ctx:SqlCurrentParser.WhereExprContext):
@@ -1179,7 +1215,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 	def visitUpdateDatabaseListStatement(self, ctx:SqlCurrentParser.UpdateDatabaseListStatementContext):
 		#
-		# updateDatabaseListStatement: 'update' 'databases' toVersionClause? whereClause? orderByClause? ';';
+		# updateDatabaseListStatement: 'update' 'databases' inBranchClause? toVersionClause? whereClause? orderByClause? ';';
 		#
 
 		#
@@ -1197,11 +1233,10 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		databaseSymbolList = self._symbolTableManager.getAllDatabaseSymbols()
 
 		#
-		# IF THERE ARE NO DATABASES DEFINED THEN WE ARE DONE.
+		# APPLY THE IN BRANCH CONSTRAINT TO THE LIST OF DATABASES.
 		#
-		#if len(databaseSymbolList) == 0:
-		#	print(MessageBuilder.createNoDatabasesDefinedMessage())
-		#	return
+		if ctx.inBranchClause() != None:
+			databaseSymbolList = self.visitInBranchClause(ctx.inBranchClause()).applyConstraint(databaseSymbolList)
 
 		#
 		# APPLY THE CONSTRAINT TO THE LIST OF DATABASES.
@@ -1244,13 +1279,19 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 	def visitSelectDatabaseListStatement(self, ctx:SqlCurrentParser.SelectDatabaseListStatementContext):
 		#
-		# selectDatabaseListStatement: 'select' 'databases' whereClause? orderByClause? ';';
+		# selectDatabaseListStatement: 'select' 'databases' inBranchClause? whereClause? orderByClause? ';';
 		#
 
 		#
 		# GET THE ENTIRE LIST OF DATABASES.
 		#
 		databaseSymbolList = self._symbolTableManager.getAllDatabaseSymbols()
+
+		#
+		# APPLY THE IN BRANCH CONSTRAINT TO THE LIST OF DATABASES.
+		#
+		if ctx.inBranchClause() != None:
+			databaseSymbolList = self.visitInBranchClause(ctx.inBranchClause()).applyConstraint(databaseSymbolList)
 
 		#
 		# APPLY THE CONSTRAINT TO THE LIST OF DATABASES.
@@ -1319,7 +1360,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 	def visitRevertDatabaseListStatement(self, ctx:SqlCurrentParser.RevertDatabaseListStatementContext):
 		#
-		# revertDatabaseListStatement: 'revert' 'databases' toVersionClause whereClause? orderByClause? ';';
+		# revertDatabaseListStatement: 'revert' 'databases' inBranchClause? toVersionClause whereClause? orderByClause? ';';
 		#
 
 		#
@@ -1340,6 +1381,12 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		#if len(databaseSymbolList) == 0:
 		#	print('No databases defined.')
 		#	return
+
+		#
+		# APPLY THE IN BRANCH CONSTRAINT TO THE LIST OF DATABASES.
+		#
+		if ctx.inBranchClause() != None:
+			databaseSymbolList = self.visitInBranchClause(ctx.inBranchClause()).applyConstraint(databaseSymbolList)
 
 		#
 		# APPLY THE CONSTRAINT TO THE LIST OF DATABASES.
@@ -1384,7 +1431,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 	def visitCheckDatabaseListStatement(self, ctx:SqlCurrentParser.CheckDatabaseListStatementContext):
 		#
-		# checkDatabaseListStatement: 'check' 'databases' whereClause? orderByClause? ';';
+		# checkDatabaseListStatement: 'check' 'databases' inBranchClause? whereClause? orderByClause? ';';
 		#
 
 		#
@@ -1398,25 +1445,19 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		databaseSymbolList = self._symbolTableManager.getAllDatabaseSymbols()
 
 		#
-		# APPLY THE CONSTRAINT TO THE LIST OF DATABASES.
+		# APPLY THE IN BRANCH CONSTRAINT.
+		#
+		if ctx.inBranchClause() != None:
+			databaseSymbolList = self.visitInBranchClause(ctx.inBranchClause()).applyConstraint(databaseSymbolList)
+
+		#
+		# APPLY THE WHERE CONSTRAINT.
 		#
 		if ctx.whereClause() != None:
 			databaseSymbolList = self.visitWhereClause(ctx.whereClause()).applyConstraint(databaseSymbolList)
 
 		#
-		# IF THERE ARE NO DATABASES TO UPDATE AFTER THE WHERE CLAUSE IS APPLIED, THEN LET THE USER KNOW.
-		#
-		#if len(databaseSymbolList) == 0:
-		#	print(MessageBuilder.createNoDatabasesAfterWhereClauseMessage())
-		#	return
-
-		#
-		# LET THE USER KNOW HOW MANY DATABASES WE'RE DEALING WITH.
-		#
-		#print(MessageBuilder.createDatabaseCreateCountAfterWhereClauseMessage(databaseSymbolList))
-
-		#
-		# ORDER THE LIST OF DATABASES.
+		# APPLY THE ORDER "CONSTRAINT."
 		#
 		if ctx.orderByClause() != None:
 			databaseSymbolList = self.visitOrderByClause(ctx.orderByClause()).applyConstraint(databaseSymbolList)
@@ -1656,13 +1697,24 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 	def visitResetDatabaseListStatement(self, ctx:SqlCurrentParser.ResetDatabaseListStatementContext):
 		#
-		# resetDatabaseListStatement: 'reset' 'databases' whereClause? orderByClause? ';';
+		# resetDatabaseListStatement: 'reset' 'databases' inBranchClause? whereClause? orderByClause? ';';
 		#
+
+		#
+		# GET THE CURRENT TIME.
+		#
+		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
 
 		#
 		# GET THE ENTIRE LIST OF DATABASES.
 		#
 		databaseSymbolList = self._symbolTableManager.getAllDatabaseSymbols()
+
+		#
+		# APPLY THE IN BRANCH CONSTRAINT TO THE LIST OF DATABASES.
+		#
+		if ctx.inBranchClause() != None:
+			databaseSymbolList = self.visitInBranchClause(ctx.inBranchClause()).applyConstraint(databaseSymbolList)
 
 		#
 		# APPLY THE CONSTRAINT TO THE LIST OF DATABASES.
@@ -1671,27 +1723,10 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 			databaseSymbolList = self.visitWhereClause(ctx.whereClause()).applyConstraint(databaseSymbolList)
 
 		#
-		# IF THERE ARE NO DATABASES TO UPDATE AFTER THE WHERE CLAUSE IS APPLIED, THEN LET THE USER KNOW.
-		#
-		#if len(databaseSymbolList) == 0:
-		#	print(MessageBuilder.createNoDatabasesAfterWhereClauseMessage())
-		#	return
-
-		#
-		# LET THE USER KNOW HOW MANY DATABASES WE'RE DEALING WITH.
-		#
-		#print(MessageBuilder.createDatabaseCreateCountAfterWhereClauseMessage(databaseSymbolList))
-
-		#
 		# ORDER THE LIST OF DATABASES.
 		#
 		if ctx.orderByClause() != None:
 			databaseSymbolList = self.visitOrderByClause(ctx.orderByClause()).applyConstraint(databaseSymbolList)
-
-		#
-		# GET THE CURRENT TIME.
-		#
-		currentDateTime = DateTimeUtil.getCurrentLocalDateTime()
 
 		appService = ResetDatabaseListAppService()
 		appService.databaseSymbolList = databaseSymbolList
@@ -1766,7 +1801,7 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 
 	def visitRecreateDatabaseListStatement(self, ctx:SqlCurrentParser.RecreateDatabaseListStatementContext):
 		#
-		# recreateDatabaseListStatement: 'recreate' 'databases' whereClause? orderByClause? ';';
+		# recreateDatabaseListStatement: 'recreate' 'databases' inBranchClause? whereClause? orderByClause? ';';
 		#
 
 		#
@@ -1778,6 +1813,12 @@ class SqlCurrentConcreteVisitor (SqlCurrentVisitor):
 		# GET THE ENTIRE LIST OF DATABASES.
 		#
 		databaseSymbolList = self._symbolTableManager.getAllDatabaseSymbols()
+
+		#
+		# APPLY THE IN BRANCH CONSTRAINT TO THE LIST OF DATABASES.
+		#
+		if ctx.inBranchClause() != None:
+			databaseSymbolList = self.visitInBranchClause(ctx.inBranchClause()).applyConstraint(databaseSymbolList)
 
 		#
 		# APPLY THE CONSTRAINT TO THE LIST OF DATABASES.
